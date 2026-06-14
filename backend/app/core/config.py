@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     files_root: Path = Path("./data/files")
     anthropic_api_key: str = ""
+    registration_enabled: bool = True
 
 
 settings = Settings()

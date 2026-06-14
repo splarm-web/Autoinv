@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ...api.deps import get_current_user
+from ...core.config import settings
 from ...core.database import get_db
 from ...core.security import create_access_token, hash_password, verify_password
 from ...models.user import User
@@ -12,6 +13,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=TokenOut, status_code=201)
 def register(data: UserCreate, db: Session = Depends(get_db)):
+    if not settings.registration_enabled:
+        raise HTTPException(status_code=403, detail="El registro está desactivado")
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="El email ya está registrado")
     user = User(
