@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; }
+  * { box-sizing: border-box; }
+  ::selection { background: rgba(69,212,155,0.28); }
+</style>
+</helmet>
+
+<div style="min-height:100vh; background:#0e1014; color:#eaedf2; font-family:'Hanken Grotesk',system-ui,sans-serif; -webkit-font-smoothing:antialiased; padding:0 0 100px;">
+
+  <!-- ===== TOP BAR ===== -->
+  <div style="position:sticky; top:0; z-index:20; backdrop-filter:blur(12px); background:rgba(14,16,20,0.72); border-bottom:1px solid rgba(255,255,255,0.07);">
+    <div style="max-width:1120px; margin:0 auto; padding:16px 32px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:26px; height:26px; border-radius:7px; background:#45d49b; display:flex; align-items:center; justify-content:center; color:#0e1014; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px;">a</div>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; letter-spacing:-0.01em;">auto<span style="color:#45d49b;">inv</span></span>
+      </div>
+      <span style="font-size:13px; color:#868d99; letter-spacing:0.01em;">Propuesta de diseño · v1 · jun 2026</span>
+    </div>
+  </div>
+
+  <div style="max-width:1120px; margin:0 auto; padding:0 32px;">
+
+    <!-- ===== HERO / INTRO ===== -->
+    <section style="padding:72px 0 56px; max-width:760px;">
+      <div style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; color:#45d49b; margin-bottom:22px;">Gestión de facturas y gastos · autónomos</div>
+      <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:46px; line-height:1.05; letter-spacing:-0.02em; margin:0 0 22px; text-wrap:balance;">Menos papeleo.<br>Más claridad sobre tu dinero.</h1>
+      <p style="font-size:17px; line-height:1.6; color:#a7adb8; margin:0; max-width:600px;">Esta es la propuesta visual inicial de <strong style="color:#eaedf2; font-weight:600;">autoinv</strong>. Empiezo por lo que pediste validar primero —el <strong style="color:#eaedf2; font-weight:600;">diseño de la factura</strong>— y sigo con el <strong style="color:#eaedf2; font-weight:600;">dashboard</strong> de resumen fiscal. Revísala y dame feedback antes de pasar a producción.</p>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:28px;">
+        <span style="font-size:13px; color:#c5cad2; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:7px 13px; border-radius:99px;">Dark mode</span>
+        <span style="font-size:13px; color:#c5cad2; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:7px 13px; border-radius:99px;">Responsive (móvil + escritorio)</span>
+        <span style="font-size:13px; color:#c5cad2; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:7px 13px; border-radius:99px;">IVA 21% + IRPF 15%</span>
+        <span style="font-size:13px; color:#c5cad2; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08); padding:7px 13px; border-radius:99px;">PWA</span>
+      </div>
+    </section>
+
+    <!-- ===== 01 · SISTEMA VISUAL ===== -->
+    <section style="padding:40px 0;">
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:28px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:#45d49b; letter-spacing:0.08em;">01</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; letter-spacing:-0.01em; margin:0;">Dirección de diseño</h2>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
+
+        <!-- Paleta -->
+        <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px;">
+          <div style="font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#868d99; margin-bottom:18px;">Paleta</div>
+          <div style="display:flex; flex-direction:column; gap:11px;">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="width:30px; height:30px; border-radius:8px; background:#0e1014; border:1px solid rgba(255,255,255,0.12);"></span><div><div style="font-size:13px; font-weight:600;">Ink · fondo</div><div style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">#0E1014</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px;"><span style="width:30px; height:30px; border-radius:8px; background:#1c1f27; border:1px solid rgba(255,255,255,0.08);"></span><div><div style="font-size:13px; font-weight:600;">Superficie</div><div style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">#1C1F27</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px;"><span style="width:30px; height:30px; border-radius:8px; background:#45d49b;"></span><div><div style="font-size:13px; font-weight:600;">Menta · acento / ingresos</div><div style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">#45D49B</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px;"><span style="width:30px; height:30px; border-radius:8px; background:#f0876a;"></span><div><div style="font-size:13px; font-weight:600;">Coral · gastos</div><div style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">#F0876A</div></div></div>
+            <div style="display:flex; align-items:center; gap:12px;"><span style="width:30px; height:30px; border-radius:8px; background:#6fa8ff;"></span><div><div style="font-size:13px; font-weight:600;">Cielo · info / IVA</div><div style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">#6FA8FF</div></div></div>
+          </div>
+        </div>
+
+        <!-- Tipografía -->
+        <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px;">
+          <div style="font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#868d99; margin-bottom:18px;">Tipografía</div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; line-height:1; margin-bottom:4px;">Space Grotesk</div>
+          <div style="font-size:13px; color:#868d99; margin-bottom:22px;">Titulares, marca y cifras destacadas</div>
+          <div style="font-family:'Hanken Grotesk',sans-serif; font-weight:500; font-size:22px; margin-bottom:4px;">Hanken Grotesk</div>
+          <div style="font-size:13px; color:#868d99; margin-bottom:22px;">Interfaz, etiquetas y texto corrido</div>
+          <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:26px; font-variant-numeric:tabular-nums; letter-spacing:-0.01em;">€ 12.480,00</div>
+          <div style="font-size:13px; color:#868d99; margin-top:2px;">Números tabulares para alinear importes</div>
+        </div>
+
+        <!-- Principios -->
+        <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:24px;">
+          <div style="font-size:12px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#868d99; margin-bottom:18px;">Principios</div>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; gap:11px;"><span style="color:#45d49b; font-weight:700; flex-shrink:0;">·</span><div style="font-size:14px; line-height:1.5; color:#c5cad2;"><strong style="color:#eaedf2;">El dato manda.</strong> Importes grandes y legibles; el cromo, al mínimo.</div></div>
+            <div style="display:flex; gap:11px;"><span style="color:#45d49b; font-weight:700; flex-shrink:0;">·</span><div style="font-size:14px; line-height:1.5; color:#c5cad2;"><strong style="color:#eaedf2;">Color con sentido.</strong> Verde = entra, coral = sale. Nada decorativo.</div></div>
+            <div style="display:flex; gap:11px;"><span style="color:#45d49b; font-weight:700; flex-shrink:0;">·</span><div style="font-size:14px; line-height:1.5; color:#c5cad2;"><strong style="color:#eaedf2;">Aire.</strong> Espacio en blanco generoso, sobre todo en la factura.</div></div>
+            <div style="display:flex; gap:11px;"><span style="color:#45d49b; font-weight:700; flex-shrink:0;">·</span><div style="font-size:14px; line-height:1.5; color:#c5cad2;"><strong style="color:#eaedf2;">Mobile-first real.</strong> Áreas táctiles ≥ 44px para capturar tickets.</div></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== 02 · FACTURA ===== -->
+    <section style="padding:48px 0 40px;">
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:10px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:#45d49b; letter-spacing:0.08em;">02</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; letter-spacing:-0.01em; margin:0;">Prototipo de factura</h2>
+      </div>
+      <p style="font-size:15px; color:#868d99; margin:0 0 30px; max-width:620px;">El documento que recibe tu cliente y la base del generador de PDF. Diseño claro, una sola tinta de acento, con casillas de IVA e IRPF bien diferenciadas. <span style="color:#c5cad2;">← Esto es lo que quiero que valides primero.</span></p>
+
+      <!-- Marco del documento -->
+      <div style="background:#070809; border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:40px; display:flex; justify-content:center;">
+        <!-- Hoja A4 -->
+        <div style="width:100%; max-width:720px; background:#ffffff; color:#15171c; border-radius:6px; box-shadow:0 30px 70px -30px rgba(0,0,0,0.7); padding:56px 56px 44px; font-family:'Hanken Grotesk',sans-serif;">
+
+          <!-- Cabecera -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom:48px;">
+            <div style="display:flex; gap:13px; align-items:center;">
+              <div style="width:42px; height:42px; border-radius:11px; background:#0f9b6b; display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px;">L</div>
+              <div>
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:17px; letter-spacing:-0.01em; color:#15171c;">Laura Méndez Castro</div>
+                <div style="font-size:13px; color:#6b7280;">Diseño &amp; desarrollo web</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:34px; letter-spacing:-0.02em; line-height:1; color:#15171c;">Factura</div>
+              <div style="font-family:'Space Grotesk',sans-serif; font-size:14px; color:#6b7280; margin-top:6px; font-variant-numeric:tabular-nums;">Nº 2026-014</div>
+            </div>
+          </div>
+
+          <!-- Meta -->
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; padding:18px 0; border-top:1px solid #ececee; border-bottom:1px solid #ececee; margin-bottom:34px;">
+            <div><div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:5px;">Emisión</div><div style="font-size:14px; font-weight:500; color:#15171c; font-variant-numeric:tabular-nums;">12 jun 2026</div></div>
+            <div><div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:5px;">Vencimiento</div><div style="font-size:14px; font-weight:500; color:#15171c; font-variant-numeric:tabular-nums;">12 jul 2026</div></div>
+            <div><div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:5px;">Forma de pago</div><div style="font-size:14px; font-weight:500; color:#15171c;">Transferencia · 30 días</div></div>
+          </div>
+
+          <!-- De / Para -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-bottom:40px;">
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:9px;">De</div>
+              <div style="font-size:14px; font-weight:600; color:#15171c; margin-bottom:3px;">Laura Méndez Castro</div>
+              <div style="font-size:13px; line-height:1.6; color:#6b7280;">NIF 51234567X<br>C/ Sagasta 14, 3ºB<br>28004 Madrid<br>laura@estudio.es</div>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:9px;">Para</div>
+              <div style="font-size:14px; font-weight:600; color:#15171c; margin-bottom:3px;">Tarima Studio S.L.</div>
+              <div style="font-size:13px; line-height:1.6; color:#6b7280;">CIF B87654321<br>Av. Diagonal 405<br>08008 Barcelona</div>
+            </div>
+          </div>
+
+          <!-- Líneas -->
+          <div style="display:grid; grid-template-columns:1fr 56px 96px 104px; gap:0; font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#9ca3af; padding-bottom:11px; border-bottom:1px solid #e6e7ea;">
+            <div>Concepto</div>
+            <div style="text-align:right;">Cant.</div>
+            <div style="text-align:right;">Precio</div>
+            <div style="text-align:right;">Importe</div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 56px 96px 104px; gap:0; padding:15px 0; border-bottom:1px solid #f1f2f4; align-items:center;">
+            <div style="font-size:14px; color:#15171c; font-weight:500;">Diseño de identidad visual</div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">1</div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">1.800,00</div>
+            <div style="text-align:right; font-size:14px; color:#15171c; font-weight:600; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">1.800,00</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 56px 96px 104px; gap:0; padding:15px 0; border-bottom:1px solid #f1f2f4; align-items:center;">
+            <div style="font-size:14px; color:#15171c; font-weight:500;">Maquetación web responsive <span style="color:#9ca3af; font-weight:400;">(12 plantillas)</span></div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">12</div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">95,00</div>
+            <div style="text-align:right; font-size:14px; color:#15171c; font-weight:600; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">1.140,00</div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 56px 96px 104px; gap:0; padding:15px 0; border-bottom:1px solid #f1f2f4; align-items:center;">
+            <div style="font-size:14px; color:#15171c; font-weight:500;">Sesión de consultoría UX</div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">4</div>
+            <div style="text-align:right; font-size:14px; color:#6b7280; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">80,00</div>
+            <div style="text-align:right; font-size:14px; color:#15171c; font-weight:600; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">320,00</div>
+          </div>
+
+          <!-- Totales -->
+          <div style="display:flex; justify-content:flex-end; margin-top:28px;">
+            <div style="width:300px;">
+              <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;"><span style="color:#6b7280;">Base imponible</span><span style="color:#15171c; font-weight:500; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">3.260,00 €</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px;"><span style="color:#6b7280;">IVA (21%)</span><span style="color:#15171c; font-weight:500; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">684,60 €</span></div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0; font-size:14px; border-bottom:1px solid #e6e7ea;"><span style="color:#6b7280;">Retención IRPF (15%)</span><span style="color:#c0563a; font-weight:500; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">−489,00 €</span></div>
+              <div style="display:flex; justify-content:space-between; align-items:baseline; padding:16px 0 0;">
+                <span style="font-size:14px; font-weight:600; color:#15171c;">Total a percibir</span>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; letter-spacing:-0.01em; color:#0f9b6b; font-variant-numeric:tabular-nums;">3.455,60 €</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top:44px; padding-top:22px; border-top:1px solid #ececee; display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#9ca3af; margin-bottom:5px;">Pago por transferencia</div>
+              <div style="font-size:13px; color:#15171c; font-variant-numeric:tabular-nums; font-family:'Space Grotesk',sans-serif;">ES12 3456 7890 1234 5678 9012</div>
+            </div>
+            <div style="font-size:12px; color:#9ca3af; max-width:260px; text-align:right; line-height:1.5;">Operación sujeta a retención de IRPF según art. 95 RIRPF. Gracias por tu confianza.</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 03 · DASHBOARD ===== -->
+    <section style="padding:48px 0 40px;">
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:10px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:#45d49b; letter-spacing:0.08em;">03</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; letter-spacing:-0.01em; margin:0;">Dashboard de resumen</h2>
+      </div>
+      <p style="font-size:15px; color:#868d99; margin:0 0 30px; max-width:620px;">Pantalla principal de la app. Cambia el periodo para ver cómo responden los KPIs, el IVA a liquidar y el gráfico. <span style="color:#c5cad2;">Es interactivo →</span></p>
+
+      <!-- Ventana app -->
+      <div style="background:#070809; border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:14px;">
+        <div style="display:flex; border:1px solid rgba(255,255,255,0.07); border-radius:13px; overflow:hidden; background:#0e1014; min-height:560px;">
+
+          <!-- Sidebar -->
+          <div style="width:212px; flex-shrink:0; background:#121419; border-right:1px solid rgba(255,255,255,0.06); padding:22px 14px; display:flex; flex-direction:column;">
+            <div style="display:flex; align-items:center; gap:9px; padding:0 8px 24px;">
+              <div style="width:24px; height:24px; border-radius:7px; background:#45d49b; display:flex; align-items:center; justify-content:center; color:#0e1014; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px;">a</div>
+              <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:16px;">auto<span style="color:#45d49b;">inv</span></span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; background:rgba(69,212,155,0.12); color:#45d49b; font-size:14px; font-weight:600;"><span style="width:7px; height:7px; border-radius:2px; background:#45d49b;"></span>Resumen</div>
+              <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; color:#868d99; font-size:14px; font-weight:500;"><span style="width:7px; height:7px; border-radius:2px; background:#3a3f49;"></span>Gastos</div>
+              <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; color:#868d99; font-size:14px; font-weight:500;"><span style="width:7px; height:7px; border-radius:2px; background:#3a3f49;"></span>Facturas</div>
+              <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; color:#868d99; font-size:14px; font-weight:500;"><span style="width:7px; height:7px; border-radius:2px; background:#3a3f49;"></span>Exportar</div>
+              <div style="display:flex; align-items:center; gap:11px; padding:10px 12px; border-radius:9px; color:#868d99; font-size:14px; font-weight:500;"><span style="width:7px; height:7px; border-radius:2px; background:#3a3f49;"></span>Ajustes</div>
+            </div>
+            <div style="margin-top:auto; display:flex; align-items:center; gap:10px; padding:10px 8px; border-top:1px solid rgba(255,255,255,0.06);">
+              <div style="width:30px; height:30px; border-radius:99px; background:#2a2e38; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#c5cad2;">LM</div>
+              <div style="line-height:1.2;"><div style="font-size:13px; font-weight:600;">Laura M.</div><div style="font-size:11px; color:#868d99;">Plan autónomo</div></div>
+            </div>
+          </div>
+
+          <!-- Contenido -->
+          <div style="flex:1; padding:28px; min-width:0;">
+
+            <!-- Header contenido -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:26px;">
+              <div>
+                <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:22px; margin:0 0 3px; letter-spacing:-0.01em;">Resumen</h3>
+                <div style="font-size:13px; color:#868d99;">{{ periodoLabel }}</div>
+              </div>
+              <div style="display:flex; gap:3px; background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:11px; padding:4px;">
+                <sc-for list="{{ periodOpts }}" as="opt" hint-placeholder-count="3">
+                  <button onClick="{{ opt.onClick }}" style="border:none; cursor:pointer; padding:8px 16px; border-radius:8px; font-family:'Hanken Grotesk',sans-serif; font-size:13px; background: {{ opt.bg }}; color: {{ opt.color }}; font-weight: {{ opt.weight }};">{{ opt.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px;">
+              <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:18px 20px;">
+                <div style="font-size:12px; color:#868d99; font-weight:500; margin-bottom:12px;">Ingresos</div>
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:28px; letter-spacing:-0.01em; color:#45d49b; font-variant-numeric:tabular-nums;">{{ ingresosEur }}</div>
+              </div>
+              <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:18px 20px;">
+                <div style="font-size:12px; color:#868d99; font-weight:500; margin-bottom:12px;">Gastos</div>
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:28px; letter-spacing:-0.01em; color:#f0876a; font-variant-numeric:tabular-nums;">{{ gastosEur }}</div>
+              </div>
+              <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:18px 20px;">
+                <div style="font-size:12px; color:#868d99; font-weight:500; margin-bottom:12px;">Resultado neto <span style="opacity:0.6;">aprox.</span></div>
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:28px; letter-spacing:-0.01em; color:#eaedf2; font-variant-numeric:tabular-nums;">{{ netoEur }}</div>
+              </div>
+            </div>
+
+            <!-- IVA + chart -->
+            <div style="display:grid; grid-template-columns:1fr 1.25fr; gap:14px;">
+
+              <!-- IVA -->
+              <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:20px;">
+                <div style="font-size:12px; color:#868d99; font-weight:500; margin-bottom:18px;">IVA del periodo</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:13px; border-bottom:1px solid rgba(255,255,255,0.06);">
+                  <div style="display:flex; align-items:center; gap:9px;"><span style="width:9px; height:9px; border-radius:99px; background:#45d49b;"></span><span style="font-size:13px; color:#c5cad2;">Repercutido</span></div>
+                  <span style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:15px; font-variant-numeric:tabular-nums;">{{ ivaRepEur }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:13px 0;">
+                  <div style="display:flex; align-items:center; gap:9px;"><span style="width:9px; height:9px; border-radius:99px; background:#6fa8ff;"></span><span style="font-size:13px; color:#c5cad2;">Soportado</span></div>
+                  <span style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:15px; font-variant-numeric:tabular-nums;">{{ ivaSopEur }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px; padding:14px 16px; background:rgba(111,168,255,0.09); border-radius:11px;">
+                  <span style="font-size:13px; font-weight:600; color:#c5cad2;">A liquidar</span>
+                  <span style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; color:#6fa8ff; font-variant-numeric:tabular-nums;">{{ ivaLiquidarEur }}</span>
+                </div>
+              </div>
+
+              <!-- Chart -->
+              <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+                  <div style="font-size:12px; color:#868d99; font-weight:500;">Ingresos vs. gastos</div>
+                  <div style="display:flex; gap:14px;">
+                    <span style="display:flex; align-items:center; gap:6px; font-size:11px; color:#868d99;"><span style="width:8px; height:8px; border-radius:2px; background:#45d49b;"></span>Ingresos</span>
+                    <span style="display:flex; align-items:center; gap:6px; font-size:11px; color:#868d99;"><span style="width:8px; height:8px; border-radius:2px; background:#f0876a;"></span>Gastos</span>
+                  </div>
+                </div>
+                <div style="display:flex; align-items:flex-end; justify-content:space-around; gap:14px; height:200px; padding-top:8px;">
+                  <sc-for list="{{ bars }}" as="bar" hint-placeholder-count="3">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:9px; flex:1; height:100%; justify-content:flex-end;">
+                      <div style="display:flex; align-items:flex-end; gap:6px; height:100%; width:100%; justify-content:center;">
+                        <div title="{{ bar.ingresoEur }}" style="width:30%; max-width:26px; background:#45d49b; border-radius:5px 5px 0 0; transition:height 0.4s cubic-bezier(0.2,0.8,0.2,1); height: {{ bar.ingresoPct }};"></div>
+                        <div title="{{ bar.gastoEur }}" style="width:30%; max-width:26px; background:#f0876a; border-radius:5px 5px 0 0; transition:height 0.4s cubic-bezier(0.2,0.8,0.2,1); height: {{ bar.gastoPct }};"></div>
+                      </div>
+                      <span style="font-size:12px; color:#868d99; font-family:'Space Grotesk',sans-serif;">{{ bar.label }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Movimientos -->
+            <div style="background:#16181e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:6px 20px; margin-top:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:13px;"><span style="width:8px; height:8px; border-radius:99px; background:#45d49b; flex-shrink:0;"></span><div><div style="font-size:14px; font-weight:500;">Factura 2026-014 · Tarima Studio</div><div style="font-size:12px; color:#868d99;">12 jun · Ingreso</div></div></div>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:#45d49b; font-variant-numeric:tabular-nums;">+3.455,60 €</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:13px;"><span style="width:8px; height:8px; border-radius:99px; background:#f0876a; flex-shrink:0;"></span><div><div style="font-size:14px; font-weight:500;">Adobe Creative Cloud</div><div style="font-size:12px; color:#868d99;">10 jun · Software</div></div></div>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:#f0876a; font-variant-numeric:tabular-nums;">−60,49 €</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; gap:13px;"><span style="width:8px; height:8px; border-radius:99px; background:#45d49b; flex-shrink:0;"></span><div><div style="font-size:14px; font-weight:500;">Factura 2026-013 · Nodo Agency</div><div style="font-size:12px; color:#868d99;">5 jun · Ingreso</div></div></div>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:#45d49b; font-variant-numeric:tabular-nums;">+1.815,00 €</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 0;">
+                <div style="display:flex; align-items:center; gap:13px;"><span style="width:8px; height:8px; border-radius:99px; background:#f0876a; flex-shrink:0;"></span><div><div style="font-size:14px; font-weight:500;">Coworking La Nave</div><div style="font-size:12px; color:#868d99;">1 jun · Oficina</div></div></div>
+                <span style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:15px; color:#f0876a; font-variant-numeric:tabular-nums;">−180,00 €</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 04 · ARQUITECTURA ===== -->
+    <section style="padding:48px 0 20px;">
+      <div style="display:flex; align-items:baseline; gap:14px; margin-bottom:10px;">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:#45d49b; letter-spacing:0.08em;">04</span>
+        <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; letter-spacing:-0.01em; margin:0;">Arquitectura propuesta</h2>
+      </div>
+      <p style="font-size:15px; color:#868d99; margin:0 0 30px; max-width:620px;">Estructura modular, lista para crecer: SQLite→PostgreSQL sin refactor, almacenamiento local→nube, y el <strong style="color:#c5cad2;">generador de facturas como módulo intercambiable</strong> (un diseño = una carpeta). Referencia para implementación.</p>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px;">
+        <div style="background:#121419; border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden;">
+          <div style="padding:13px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#45d49b;">Backend · FastAPI</div>
+          <pre style="margin:0; padding:18px; font-family:'Space Grotesk',ui-monospace,monospace; font-size:12.5px; line-height:1.65; color:#b6bcc6; overflow-x:auto; white-space:pre;">backend/
+├─ app/
+│  ├─ main.py            arranque, CORS, routers
+│  ├─ core/
+│  │  ├─ config.py       .env: DB_URL, FILES_ROOT
+│  │  ├─ security.py     hash + JWT
+│  │  └─ database.py     SQLite → Postgres
+│  ├─ models/            ORM: user, expense, invoice
+│  ├─ schemas/           Pydantic in/out
+│  ├─ api/routers/       auth · expenses · invoices
+│  │                     dashboard · export
+│  ├─ services/
+│  │  ├─ ocr_claude.py   visión Claude → JSON
+│  │  ├─ storage.py      ficheros (local→nube)
+│  │  └─ export_zip.py   ZIP + CSV
+│  └─ invoicing/         ← módulo desacoplado
+│     ├─ base.py         InvoiceData + Renderer
+│     └─ designs/
+│        └─ minimal/     1 diseño = 1 carpeta
+│           ├─ render.py implementa Renderer
+│           └─ template.html
+└─ data/
+   ├─ app.db
+   └─ files/&lt;user_id&gt;/  justificantes + PDFs</pre>
+        </div>
+
+        <div style="background:#121419; border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden;">
+          <div style="padding:13px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#6fa8ff;">Frontend · React + Vite (PWA)</div>
+          <pre style="margin:0; padding:18px; font-family:'Space Grotesk',ui-monospace,monospace; font-size:12.5px; line-height:1.65; color:#b6bcc6; overflow-x:auto; white-space:pre;">frontend/
+├─ public/
+│  ├─ manifest.webmanifest
+│  └─ icons/
+├─ src/
+│  ├─ main.jsx
+│  ├─ app/router.jsx
+│  ├─ lib/api.js          fetch + auth
+│  ├─ features/
+│  │  ├─ auth/
+│  │  ├─ expenses/        alta · captura · listado
+│  │  ├─ invoices/        alta + preview
+│  │  ├─ dashboard/
+│  │  ├─ settings/        datos fiscales
+│  │  └─ export/
+│  ├─ components/         UI compartida
+│  └─ styles/tokens.css
+├─ service-worker.js
+└─ vite.config.js</pre>
+        </div>
+      </div>
+
+      <!-- Esquema BD -->
+      <div style="background:#121419; border:1px solid rgba(255,255,255,0.07); border-radius:14px; overflow:hidden; margin-top:14px;">
+        <div style="padding:13px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:#f0876a;">Esquema de base de datos</div>
+        <pre style="margin:0; padding:18px; font-family:'Space Grotesk',ui-monospace,monospace; font-size:12.5px; line-height:1.65; color:#b6bcc6; overflow-x:auto; white-space:pre;">users          id · email · password_hash · created_at
+               legal_name · nif · address
+               default_vat (21) · irpf_rate (15) · invoice_number_format ('YYYY-NNN')
+               settings_json          ← config extensible (futuro)
+
+expenses       id · user_id→users
+               date · amount · vat_rate · vat_amount
+               supplier · concept · category
+               source   (manual | foto | pdf | email-futuro)
+               file_path              ← justificante original
+               created_at
+
+invoices       id · user_id→users
+               number · date · due_date
+               client_name · client_tax_id · client_address
+               subtotal · vat_total · irpf_total · total
+               pdf_path · created_at
+
+invoice_lines  id · invoice_id→invoices
+               description · quantity · unit_price · vat_rate · line_total</pre>
+      </div>
+    </section>
+
+    <!-- ===== CIERRE / NEXT STEPS ===== -->
+    <section style="margin-top:46px; background:linear-gradient(180deg, rgba(69,212,155,0.06), rgba(69,212,155,0.02)); border:1px solid rgba(69,212,155,0.18); border-radius:18px; padding:32px 34px;">
+      <h3 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; margin:0 0 16px;">Siguientes pasos</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px;">
+        <div style="font-size:14px; line-height:1.55; color:#c5cad2;"><span style="color:#45d49b; font-weight:600;">1 · Validar factura.</span> Dime qué ajustar: jerarquía, datos obligatorios (registro mercantil, etc.), tinta de acento.</div>
+        <div style="font-size:14px; line-height:1.55; color:#c5cad2;"><span style="color:#45d49b; font-weight:600;">2 · Flujo de captura.</span> Prototipar foto/PDF → extracción → formulario editable (móvil).</div>
+        <div style="font-size:14px; line-height:1.55; color:#c5cad2;"><span style="color:#45d49b; font-weight:600;">3 · Resto de pantallas.</span> Listado con filtros, alta de factura, ajustes y exportación.</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { periodo: 'trimestre' };
+
+  renderVals() {
+    const datasets = {
+      mes: {
+        ingresos: 4180, gastos: 1390, ivaRep: 877.80, ivaSop: 291.90,
+        label: 'Junio 2026',
+        bars: [
+          { label: 'Sem 1', ingreso: 980, gasto: 420 },
+          { label: 'Sem 2', ingreso: 1340, gasto: 260 },
+          { label: 'Sem 3', ingreso: 760, gasto: 510 },
+          { label: 'Sem 4', ingreso: 1100, gasto: 200 },
+        ],
+      },
+      trimestre: {
+        ingresos: 12480, gastos: 4215, ivaRep: 2620.80, ivaSop: 885.15,
+        label: 'T2 2026 · abr – jun',
+        bars: [
+          { label: 'Abr', ingreso: 3420, gasto: 1180 },
+          { label: 'May', ingreso: 4880, gasto: 1645 },
+          { label: 'Jun', ingreso: 4180, gasto: 1390 },
+        ],
+      },
+      anio: {
+        ingresos: 48650, gastos: 17320, ivaRep: 10216.50, ivaSop: 3637.20,
+        label: 'Año 2026',
+        bars: [
+          { label: 'T1', ingreso: 11200, gasto: 4100 },
+          { label: 'T2', ingreso: 12480, gasto: 4215 },
+          { label: 'T3', ingreso: 12300, gasto: 4600 },
+          { label: 'T4', ingreso: 12670, gasto: 4405 },
+        ],
+      },
+    };
+
+    const d = datasets[this.state.periodo] || datasets.trimestre;
+    const maxBar = Math.max.apply(null, d.bars.map(function (b) { return Math.max(b.ingreso, b.gasto); }));
+    const fmt0 = function (n) { return n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); };
+    const fmt2 = function (n) { return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+    const bars = d.bars.map(function (b) {
+      return {
+        label: b.label,
+        ingresoEur: fmt0(b.ingreso) + ' €',
+        gastoEur: fmt0(b.gasto) + ' €',
+        ingresoPct: Math.round((b.ingreso / maxBar) * 100) + '%',
+        gastoPct: Math.round((b.gasto / maxBar) * 100) + '%',
+      };
+    });
+
+    const self = this;
+    const mk = function (key, label) {
+      const active = self.state.periodo === key;
+      return {
+        key: key,
+        label: label,
+        onClick: function () { self.setState({ periodo: key }); },
+        bg: active ? 'rgba(69,212,155,0.14)' : 'transparent',
+        color: active ? '#45d49b' : '#868d99',
+        weight: active ? '600' : '500',
+      };
+    };
+
+    const neto = d.ingresos - d.gastos;
+    const ivaLiquidar = d.ivaRep - d.ivaSop;
+
+    return {
+      periodoLabel: d.label,
+      ingresosEur: fmt0(d.ingresos) + ' €',
+      gastosEur: fmt0(d.gastos) + ' €',
+      netoEur: fmt0(neto) + ' €',
+      ivaRepEur: fmt2(d.ivaRep) + ' €',
+      ivaSopEur: fmt2(d.ivaSop) + ' €',
+      ivaLiquidarEur: fmt2(ivaLiquidar) + ' €',
+      bars: bars,
+      periodOpts: [mk('mes', 'Mes'), mk('trimestre', 'Trimestre'), mk('anio', 'Año')],
+    };
+  }
+}
+</script>
+</body>
+</html>
