@@ -1,0 +1,80 @@
+/* =========================================================
+   autoinv — Design tokens
+   Fuente de verdad: design_handoff_autoinv/README.md
+   ========================================================= */
+
+:root {
+  /* Colores — App (dark) */
+  --ink:         #0E1014;
+  --surface:     #16181E;
+  --surface-2:   #121419;
+  --surface-3:   #1C1F27;
+  --border:      rgba(255, 255, 255, 0.07);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --text:        #EAEDF2;
+  --text-muted:  #868D99;
+  --text-soft:   #C5CAD2;
+  --menta:       #45D49B;
+  --coral:       #F0876A;
+  --cielo:       #6FA8FF;
+
+  /* Colores — Factura (light) */
+  --paper:       #FFFFFF;
+  --ink-light:   #15171C;
+  --muted-light: #6B7280;
+  --label-light: #9CA3AF;
+  --hairline:    #E6E7EA;
+  --accent-inv:  #0F9B6B;
+  --irpf-inv:    #C0563A;
+
+  /* Tipografía */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-ui:      'Hanken Grotesk', system-ui, sans-serif;
+
+  /* Bordes */
+  --r-card:   14px;
+  --r-lg:     16px;
+  --r-md:     11px;
+  --r-sm:     8px;
+  --r-pill:   99px;
+
+  /* Espaciado */
+  --gap-cards:   14px;
+  --gap-section: 18px;
+  --pad-card:    20px;
+  --pad-content: 28px;
+
+  /* Layout */
+  --sidebar-w: 212px;
+}
+
+/* =========================================================
+   Reset & base
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(69, 212, 155, 0.28);
+}
+
+/* Números tabulares por defecto en importes */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Scrollbar sutil */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }

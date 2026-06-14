@@ -1,0 +1,23 @@
+from sqlalchemy import Column, DateTime, Float, Integer, String, func
+from ..core.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+
+    # Datos fiscales
+    legal_name = Column(String)
+    nif = Column(String)
+    address = Column(String)
+    default_vat = Column(Float, default=21.0)
+    irpf_rate = Column(Float, default=15.0)
+    invoice_number_format = Column(String, default="YYYY-NNN")
+
+    # Extensible sin migraciones
+    settings_json = Column(String, default="{}")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

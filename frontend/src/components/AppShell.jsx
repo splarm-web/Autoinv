@@ -1,0 +1,179 @@
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useAuth } from '../app/AuthContext'
+import './AppShell.css'
+
+const NAV = [
+  { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
+  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos },
+  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas },
+  { to: '/export',    label: 'Exportar', Icon: IconExportar },
+  { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
+]
+
+export default function AppShell() {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const initials = (user?.legal_name || user?.email || 'U')
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+
+  const handleLogout = () => { logout(); navigate('/login') }
+
+  return (
+    <div className="shell-root">
+      {/* Desktop sidebar */}
+      <aside className="shell-sidebar">
+        <SidebarContent initials={initials} user={user} onLogout={handleLogout} />
+      </aside>
+
+      {/* Mobile overlay sidebar */}
+      {mobileOpen && (
+        <div className="shell-overlay" onClick={() => setMobileOpen(false)}>
+          <aside className="shell-sidebar-mobile" onClick={(e) => e.stopPropagation()}>
+            <SidebarContent
+              initials={initials}
+              user={user}
+              onLogout={handleLogout}
+              onNavClick={() => setMobileOpen(false)}
+            />
+          </aside>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="shell-content">
+        <div className="shell-mobile-bar">
+          <button className="shell-burger" onClick={() => setMobileOpen(true)}>
+            <IconMenu />
+          </button>
+          <Logo />
+        </div>
+        <main className="shell-main">
+          <Outlet />
+        </main>
+      </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="shell-bottom-nav">
+        {NAV.map(({ to, label, Icon }) => (
+          <NavLink key={to} to={to} className={({ isActive }) =>
+            'bottom-nav-item' + (isActive ? ' active' : '')
+          }>
+            <Icon />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
+function SidebarContent({ initials, user, onLogout, onNavClick }) {
+  return (
+    <div className="shell-sidebar-inner">
+      <div className="shell-logo-wrap">
+        <Logo />
+      </div>
+      <nav className="shell-nav">
+        {NAV.map(({ to, label, Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onNavClick}
+            className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}
+          >
+            <Icon />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="shell-user">
+        <div className="shell-avatar">{initials}</div>
+        <div style={{ lineHeight: 1.3, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user?.legal_name || user?.email?.split('@')[0]}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Plan autónomo</div>
+        </div>
+        <button className="shell-logout" onClick={onLogout} title="Cerrar sesión">
+          <IconLogout />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function Logo() {
+  return (
+    <div className="logo-wrap">
+      <div className="logo-mark">a</div>
+      <span className="logo-text">
+        auto<span style={{ color: 'var(--menta)' }}>inv</span>
+      </span>
+    </div>
+  )
+}
+
+// ── SVG Icons ──
+
+function IconResumen() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
+      <rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
+      <rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
+      <rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
+    </svg>
+  )
+}
+function IconGastos() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M7.5 1v13M2 5l5.5 5.5L13 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function IconFacturas() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <rect x="2" y="1" width="11" height="13" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function IconExportar() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M7.5 1v9M4 7l3.5 3.5L11 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function IconAjustes() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3.11 3.11l1.06 1.06M10.83 10.83l1.06 1.06M3.11 11.89l1.06-1.06M10.83 4.17l1.06-1.06" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function IconLogout() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M5 1H2a1 1 0 00-1 1v10a1 1 0 001 1h3M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function IconMenu() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  )
+}
