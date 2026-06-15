@@ -205,6 +205,8 @@
   cursor: pointer;
   text-decoration: none;
   transition: opacity 0.12s;
+  flex: none;
+  width: fit-content;
 }
 
 .btn-primary:hover { opacity: 0.88; }
