@@ -10,6 +10,7 @@ import InvoicesPage from '../features/invoices/InvoicesPage'
 import NewInvoicePage from '../features/invoices/NewInvoicePage'
 import SettingsPage from '../features/settings/SettingsPage'
 import ExportPage from '../features/export/ExportPage'
+import ClientsPage from '../features/clients/ClientsPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -42,6 +43,7 @@ export default function AppRouter() {
         <Route path="expenses/new" element={<NewExpensePage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/new" element={<NewInvoicePage />} />
+        <Route path="clients" element={<ClientsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="export" element={<ExportPage />} />
       </Route>

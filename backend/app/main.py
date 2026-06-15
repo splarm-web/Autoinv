@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .core.database import create_tables
-from .api.routers import auth, dashboard, expenses, invoices, export
+from .api.routers import auth, dashboard, expenses, invoices, export, clients
 
 app = FastAPI(
     title="autoinv API",
@@ -25,6 +25,7 @@ app.include_router(dashboard.router, prefix="/api")
 app.include_router(expenses.router, prefix="/api")
 app.include_router(invoices.router, prefix="/api")
 app.include_router(export.router, prefix="/api")
+app.include_router(clients.router, prefix="/api")
 
 
 @app.on_event("startup")

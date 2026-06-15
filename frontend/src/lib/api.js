@@ -72,6 +72,15 @@ export const invoicesApi = {
   delete: (id) => apiFetch(`/api/invoices/${id}`, { method: 'DELETE' }),
 }
 
+// Clients
+export const clientsApi = {
+  list: () => apiFetch('/api/clients'),
+  create: (data) => apiFetch('/api/clients', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/api/clients/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  setDefault: (id) => apiFetch(`/api/clients/${id}/set-default`, { method: 'POST' }),
+  delete: (id) => apiFetch(`/api/clients/${id}`, { method: 'DELETE' }),
+}
+
 // Export
 export const exportApi = {
   download: (from, to) => {

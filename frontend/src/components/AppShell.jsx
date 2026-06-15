@@ -7,6 +7,7 @@ const NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas },
+  { to: '/clients',   label: 'Clientes', Icon: IconClientes },
   { to: '/export',    label: 'Exportar', Icon: IconExportar },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
@@ -152,6 +153,16 @@ function IconExportar() {
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <path d="M7.5 1v9M4 7l3.5 3.5L11 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M2 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function IconClientes() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="5.5" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M1 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M10.5 6.5c1.5 0 2.5 1 2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="10.5" cy="3.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   )
 }
