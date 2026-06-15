@@ -12,6 +12,14 @@ const NAV = [
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
+const BOTTOM_NAV = [
+  { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
+  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos },
+  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas },
+  { to: '/export',    label: 'Exportar', Icon: IconExportar },
+  { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
+]
+
 export default function AppShell() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -62,7 +70,7 @@ export default function AppShell() {
 
       {/* Mobile bottom nav */}
       <nav className="shell-bottom-nav">
-        {NAV.map(({ to, label, Icon }) => (
+        {BOTTOM_NAV.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) =>
             'bottom-nav-item' + (isActive ? ' active' : '')
           }>
