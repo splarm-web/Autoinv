@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { invoicesApi } from '../../lib/api'
+import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import InvoicePreview from './InvoicePreview'
 
@@ -9,6 +9,7 @@ const EMPTY_LINE = { description: '', quantity: 1, unit_price: '', vat_rate: 21 
 const EMPTY_FORM = {
   date: new Date().toISOString().split('T')[0],
   due_date: '',
+  client_id: null,
   client_name: '',
   client_tax_id: '',
   client_address: '',
@@ -21,9 +22,37 @@ export default function NewInvoicePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY_FORM)
+  const [clients, setClients] = useState([])
   const [showPreview, setShowPreview] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    clientsApi.list().then((list) => {
+      setClients(list)
+      const def = list.find((c) => c.is_default)
+      if (def) applyClient(def)
+    })
+  }, [])
+
+  const applyClient = (client) => {
+    setForm((f) => ({
+      ...f,
+      client_id: client ? client.id : null,
+      client_name: client ? client.nombre : '',
+      client_tax_id: client ? (client.cif ?? '') : '',
+      client_address: client
+        ? [client.direccion, client.ciudad].filter(Boolean).join(', ')
+        : '',
+    }))
+  }
+
+  const handleClientSelect = (e) => {
+    const id = e.target.value
+    if (!id) { applyClient(null); return }
+    const client = clients.find((c) => c.id === parseInt(id))
+    if (client) applyClient(client)
+  }
 
   const handle = (e) => {
     const { name, value } = e.target
@@ -71,6 +100,7 @@ export default function NewInvoicePage() {
     try {
       await invoicesApi.create({
         ...form,
+        client_id: form.client_id ?? null,
         irpf_rate: parseFloat(form.irpf_rate),
         lines: form.lines.map((l) => ({
           ...l,
@@ -118,6 +148,22 @@ export default function NewInvoicePage() {
             {/* Datos cliente */}
             <div style={s.card}>
               <div style={s.sectionTitle}>Cliente</div>
+              {clients.length > 0 && (
+                <Field label="Seleccionar cliente">
+                  <select
+                    value={form.client_id ?? ''}
+                    onChange={handleClientSelect}
+                    style={{ ...s.input, appearance: 'auto' }}
+                  >
+                    <option value="">— Introducir manualmente —</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}{c.is_default ? ' ★' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <Field label="Nombre / Razón social">
                 <input name="client_name" value={form.client_name} onChange={handle} required placeholder="Tarima Studio S.L." style={s.input} />
               </Field>

@@ -60,6 +60,7 @@ def create_invoice(
 
     invoice = Invoice(
         user_id=current_user.id,
+        client_id=data.client_id,
         number=number,
         date=data.date,
         due_date=data.due_date,

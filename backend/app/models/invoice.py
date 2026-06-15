@@ -8,6 +8,7 @@ class Invoice(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True, index=True)
 
     number = Column(String, nullable=False)
     date = Column(Date, nullable=False)

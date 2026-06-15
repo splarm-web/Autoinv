@@ -26,6 +26,7 @@ class InvoiceCreate(BaseModel):
     number: Optional[str] = None   # auto-generado si None
     date: date
     due_date: Optional[date] = None
+    client_id: Optional[int] = None
     client_name: str
     client_tax_id: Optional[str] = None
     client_address: Optional[str] = None
@@ -42,6 +43,7 @@ class InvoiceOut(BaseModel):
     number: str
     date: date
     due_date: Optional[date] = None
+    client_id: Optional[int] = None
     client_name: str
     client_tax_id: Optional[str] = None
     client_address: Optional[str] = None

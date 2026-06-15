@@ -40,7 +40,7 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - **Frontend:** https://autoinv.vercel.app (Vercel, React PWA)
 - **GitHub:** https://github.com/splarm-web/Autoinv
 - **BD:** SQLite en Railway (migrable a PostgreSQL con solo cambiar `DATABASE_URL`)
-- **Variables Railway:** `SECRET_KEY`, `REGISTRATION_ENABLED`, `ALLOWED_ORIGINS`, `ANTHROPIC_API_KEY` (vacía), `DATABASE_URL`, `FILES_ROOT`
+- **Variables Railway:** `SECRET_KEY`, `REGISTRATION_ENABLED`, `ALLOWED_ORIGINS`, `ANTHROPIC_API_KEY` (vacía — OCR desactivado), `DATABASE_URL`, `FILES_ROOT`
 
 ### Hecho y funcionando en producción
 
@@ -53,10 +53,11 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - Export: `GET /api/export?from_date=&to_date=` → ZIP con justificantes + PDFs + CSV
 - Módulo invoicing desacoplado (`InvoiceData` + `InvoiceRenderer`)
 - CORS configurable via `ALLOWED_ORIGINS` en variables de entorno
+- **Clients:** CRUD completo — `GET/POST /api/clients`, `PUT /api/clients/{id}`, `DELETE /api/clients/{id}`, `POST /api/clients/{id}/set-default`
 
 **Frontend:**
 - Design tokens en `src/styles/tokens.css` (paleta menta/coral/cielo, Space Grotesk + Hanken Grotesk)
-- AppShell: sidebar desktop 212px + bottom nav móvil + overlay
+- AppShell: sidebar desktop 212px + bottom nav móvil (5 items, Clientes solo en sidebar) + overlay
 - Dashboard: KPIs, card IVA, gráfico de barras animado, lista movimientos, skeleton loading
 - Auth: Login + Register
 - Expenses: listado, alta manual, captura foto/PDF con OCR
@@ -64,15 +65,39 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - Settings: datos fiscales del usuario
 - Export: descarga ZIP por rango de fechas
 - `vercel.json` con rewrite para routing SPA
+- **Clients:** listado de clientes, modal alta/edición, badge "Principal", acciones (editar, eliminar, marcar principal), empty state
 
-### Pendiente (próximos pasos en orden)
+**Decisiones tomadas:**
+- OCR (Claude Vision) desactivado por ahora — requiere cuenta Anthropic de pago
+- Registro abierto temporalmente para setup inicial; cerrar con `REGISTRATION_ENABLED=false` en Railway
+- passlib eliminado (incompatible Python 3.14) → bcrypt directo
 
-1. **Cerrar registro** — en Railway Variables cambiar `REGISTRATION_ENABLED` a `false`
-2. **Activar OCR** — añadir `ANTHROPIC_API_KEY` real en Railway Variables
-3. **Renderer PDF** (`backend/app/invoicing/designs/minimal/render.py`) — implementar `render_pdf()` con WeasyPrint. La interfaz `InvoiceRenderer` ya está lista; es solo conectar
+### Próximos pasos en orden de prioridad
+
+0. **⚠️ URGENTE — Migrar BD a PostgreSQL en Railway** — SQLite en Railway es efímero: cada redeploy borra todos los datos. El código ya está preparado (SQLAlchemy + psycopg2-binary en requirements). Pasos:
+   - En Railway proyecto → **New** → **Database** → **Add PostgreSQL**
+   - Railway auto-inyecta `DATABASE_URL` como variable de entorno (pydantic-settings la recoge automáticamente)
+   - Redeploy del backend — `create_tables()` recrea las tablas en PostgreSQL al arrancar
+   - No hace falta tocar ningún código
+
+1. **Modelo de factura "Alfredo"** — flujo específico para un tipo de factura con formato propio:
+   - Input: Excel con líneas de servicio (similar a `generador_facturas.py` que el usuario tiene)
+   - Output: PDF con diseño concreto (distinto del diseño "minimal" existente)
+   - Pendiente de definir: si el input será Excel upload o formulario manual con tabla editable
+   - El selector de cliente ya está listo (módulo Clients)
+
+2. **Selector de cliente en alta de facturas** — conectar `ClientsPage` con `NewInvoicePage`:
+   - Añadir campo `client_id` al formulario de nueva factura
+   - El cliente principal se pre-selecciona por defecto
+   - Backend ya tiene el modelo; falta el campo en el schema de Invoice
+
+3. **Renderer PDF** (`backend/app/invoicing/designs/minimal/render.py`) — implementar `render_pdf()` con WeasyPrint o reportlab. La interfaz `InvoiceRenderer` ya está lista; hoy genera un `.txt` placeholder
+
 4. **Filtros en gastos** — la API ya acepta `from_date`, `to_date`, `category`; falta el UI en `ExpensesPage`
-5. **Paginación** en movimientos del dashboard y listados
-6. **Múltiples diseños de factura** — añadir `designs/professional/` implementando la misma interfaz
+
+5. **Paginación** en movimientos del dashboard y listados de gastos/facturas
+
+6. **Activar OCR** — cuando haya API key de Anthropic, añadir `ANTHROPIC_API_KEY` en Railway Variables
 
 ## Arquitectura clave
 
@@ -112,7 +137,7 @@ autoinv/
 │   │   ├── schemas/         pydantic in/out + dashboard
 │   │   ├── api/
 │   │   │   ├── deps.py      get_current_user
-│   │   │   └── routers/     auth · dashboard · expenses · invoices · export
+│   │   │   └── routers/     auth · dashboard · expenses · invoices · export · clients
 │   │   ├── services/        ocr_claude · storage · export_zip
 │   │   └── invoicing/       base.py + designs/minimal/
 │   ├── data/                app.db + files/ (gitignored)
@@ -126,7 +151,7 @@ autoinv/
         ├── lib/             api.js · format.js
         ├── styles/          tokens.css
         ├── components/      AppShell
-        └── features/        auth · dashboard · expenses · invoices · settings · export
+        └── features/        auth · dashboard · expenses · invoices · settings · export · clients
 ```
 
 ## Decisiones de diseño
