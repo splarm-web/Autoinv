@@ -4,7 +4,7 @@ PWA de gestión de facturas y gastos para autónomos en España. Multiusuario.
 
 ## Stack
 
-- **Backend:** Python + FastAPI, SQLite (migrable a PostgreSQL), SQLAlchemy ORM, JWT auth (python-jose + passlib/bcrypt)
+- **Backend:** Python + FastAPI, SQLite (migrable a PostgreSQL), SQLAlchemy ORM, JWT auth (python-jose + bcrypt directo — passlib eliminado por incompatibilidad con Python 3.14)
 - **Frontend:** React + Vite, configurado como PWA (vite-plugin-pwa), sin framework CSS — solo CSS custom properties
 - **OCR:** Claude Vision vía `anthropic` SDK (extracción de tickets/facturas)
 - **PDFs:** WeasyPrint (pendiente de implementar, interfaz lista)
@@ -34,15 +34,25 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 
 ## Estado del MVP (jun 2026)
 
-### Hecho y commiteado
+## Infraestructura desplegada
+
+- **Backend:** https://autoinv-production.up.railway.app (Railway, Python 3.14)
+- **Frontend:** https://autoinv.vercel.app (Vercel, React PWA)
+- **GitHub:** https://github.com/splarm-web/Autoinv
+- **BD:** SQLite en Railway (migrable a PostgreSQL con solo cambiar `DATABASE_URL`)
+- **Variables Railway:** `SECRET_KEY`, `REGISTRATION_ENABLED`, `ALLOWED_ORIGINS`, `ANTHROPIC_API_KEY` (vacía), `DATABASE_URL`, `FILES_ROOT`
+
+### Hecho y funcionando en producción
 
 **Backend:**
 - Auth completa: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PATCH /api/auth/me`
+- Toggle registro: `REGISTRATION_ENABLED` en Railway Variables (poner `false` tras registrarte)
 - Dashboard: `GET /api/dashboard?periodo=mes|trimestre|anio` → KPIs, IVA, barras por subperiodo, últimos movimientos
 - Expenses: CRUD completo + upload foto/PDF + extracción OCR con Claude Vision + confirmación
 - Invoices: CRUD + auto-numeración según formato del usuario (`YYYY-NNN`)
 - Export: `GET /api/export?from_date=&to_date=` → ZIP con justificantes + PDFs + CSV
 - Módulo invoicing desacoplado (`InvoiceData` + `InvoiceRenderer`)
+- CORS configurable via `ALLOWED_ORIGINS` en variables de entorno
 
 **Frontend:**
 - Design tokens en `src/styles/tokens.css` (paleta menta/coral/cielo, Space Grotesk + Hanken Grotesk)
@@ -53,12 +63,13 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - Invoices: listado, alta con formulario + vista previa React (`InvoicePreview`)
 - Settings: datos fiscales del usuario
 - Export: descarga ZIP por rango de fechas
+- `vercel.json` con rewrite para routing SPA
 
 ### Pendiente (próximos pasos en orden)
 
-1. **Instalar Python y probar el flujo completo end-to-end** — Python no estaba instalado cuando se creó el scaffold
-2. **Renderer PDF** (`backend/app/invoicing/designs/minimal/render.py`) — implementar `render_pdf()` con WeasyPrint usando el HTML del prototipo como `template.html`. La interfaz `InvoiceRenderer` ya está lista; es solo conectar
-3. **ANTHROPIC_API_KEY** en `backend/.env` para activar OCR de tickets
+1. **Cerrar registro** — en Railway Variables cambiar `REGISTRATION_ENABLED` a `false`
+2. **Activar OCR** — añadir `ANTHROPIC_API_KEY` real en Railway Variables
+3. **Renderer PDF** (`backend/app/invoicing/designs/minimal/render.py`) — implementar `render_pdf()` con WeasyPrint. La interfaz `InvoiceRenderer` ya está lista; es solo conectar
 4. **Filtros en gastos** — la API ya acepta `from_date`, `to_date`, `category`; falta el UI en `ExpensesPage`
 5. **Paginación** en movimientos del dashboard y listados
 6. **Múltiples diseños de factura** — añadir `designs/professional/` implementando la misma interfaz
