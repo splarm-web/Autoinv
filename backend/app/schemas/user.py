@@ -11,7 +11,7 @@ class UserCreate(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str  # admite usuario plano ("sergio") o email
     password: str
 
 

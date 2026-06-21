@@ -40,16 +40,16 @@ export default function LoginPage() {
 
         <form onSubmit={submit}>
           <div className="field">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Usuario</label>
             <input
               id="email"
               name="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               required
               value={form.email}
               onChange={handle}
-              placeholder="tu@email.com"
+              placeholder="sergio"
             />
           </div>
           <div className="field">
