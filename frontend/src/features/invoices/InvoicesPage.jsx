@@ -6,6 +6,7 @@ import { eur2, fmtDate } from '../../lib/format'
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(null)
 
   useEffect(() => {
     invoicesApi.list().then(setInvoices).finally(() => setLoading(false))
@@ -15,6 +16,17 @@ export default function InvoicesPage() {
     if (!confirm('¿Eliminar esta factura?')) return
     await invoicesApi.delete(id)
     setInvoices((prev) => prev.filter((i) => i.id !== id))
+  }
+
+  const download = async (inv) => {
+    setDownloading(inv.id)
+    try {
+      await invoicesApi.downloadPdf(inv.id, inv.number)
+    } catch (e) {
+      alert(e.message || 'No se pudo descargar el PDF')
+    } finally {
+      setDownloading(null)
+    }
   }
 
   return (
@@ -42,10 +54,18 @@ export default function InvoicesPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums' }}>
                   +{eur2(inv.total)}
                 </span>
+                <button
+                  onClick={() => download(inv)}
+                  disabled={downloading === inv.id}
+                  style={s.pdfBtn}
+                  title="Descargar PDF"
+                >
+                  {downloading === inv.id ? '…' : 'PDF'}
+                </button>
                 <button onClick={() => remove(inv.id)} style={s.delBtn} title="Eliminar">✕</button>
               </div>
             </div>
@@ -74,5 +94,6 @@ const s = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
   dot: { width: 8, height: 8, borderRadius: 99, flexShrink: 0 },
+  pdfBtn: { background: 'none', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-sm)', letterSpacing: '0.02em' },
   delBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: '2px 4px', borderRadius: 4 },
 }

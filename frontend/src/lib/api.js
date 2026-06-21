@@ -70,6 +70,20 @@ export const invoicesApi = {
     apiFetch('/api/invoices', { method: 'POST', body: JSON.stringify(data) }),
   get: (id) => apiFetch(`/api/invoices/${id}`),
   delete: (id) => apiFetch(`/api/invoices/${id}`, { method: 'DELETE' }),
+  downloadPdf: async (id, number) => {
+    const token = localStorage.getItem('autoinv_token')
+    const res = await fetch(`${API_URL}/api/invoices/${id}/pdf`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error('No se pudo generar el PDF')
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = `Factura-${(number || id).toString().replace(/[/\\]/g, '-')}.pdf`
+    a.click()
+    URL.revokeObjectURL(blobUrl)
+  },
 }
 
 // Clients

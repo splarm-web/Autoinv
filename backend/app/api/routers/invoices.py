@@ -2,15 +2,64 @@ from datetime import date
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from ...api.deps import get_current_user
+from ...core.config import settings
 from ...core.database import get_db
+from ...invoicing.base import (
+    ClientData,
+    InvoiceData,
+    InvoiceLineData,
+    IssuerData,
+    get_renderer,
+)
 from ...models.invoice import Invoice, InvoiceLine
 from ...models.user import User
 from ...schemas.invoice import InvoiceCreate, InvoiceOut
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
+
+
+def _to_invoice_data(inv: Invoice, user: User) -> InvoiceData:
+    """Convierte el modelo de BD al contrato InvoiceData del renderer."""
+    vat_rate = inv.lines[0].vat_rate if inv.lines else (user.default_vat or 21.0)
+    irpf_rate = round(inv.irpf_total / inv.subtotal * 100, 2) if inv.subtotal else (
+        user.irpf_rate or 15.0
+    )
+    return InvoiceData(
+        number=inv.number,
+        date=inv.date,
+        due_date=inv.due_date,
+        payment_method=inv.payment_method,
+        issuer=IssuerData(
+            legal_name=user.legal_name or user.email,
+            nif=user.nif or "",
+            address=user.address or "",
+        ),
+        client=ClientData(
+            name=inv.client_name,
+            tax_id=inv.client_tax_id,
+            address=inv.client_address,
+        ),
+        lines=[
+            InvoiceLineData(
+                description=ln.description,
+                quantity=ln.quantity,
+                unit_price=ln.unit_price,
+                vat_rate=ln.vat_rate,
+                line_total=ln.line_total,
+            )
+            for ln in inv.lines
+        ],
+        subtotal=inv.subtotal,
+        vat_total=inv.vat_total,
+        irpf_total=inv.irpf_total,
+        total=inv.total,
+        irpf_rate=irpf_rate,
+        vat_rate=vat_rate,
+    )
 
 
 def _next_number(db: Session, user: User) -> str:
@@ -104,6 +153,35 @@ def get_invoice(
     if not inv:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     return inv
+
+
+@router.get("/{invoice_id}/pdf")
+def download_invoice_pdf(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    inv = db.query(Invoice).filter(
+        Invoice.id == invoice_id, Invoice.user_id == current_user.id
+    ).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+    out_dir = settings.files_root / str(current_user.id) / "invoices"
+    safe_number = inv.number.replace("/", "-").replace("\\", "-")
+    out_path = out_dir / f"{safe_number}.pdf"
+
+    renderer = get_renderer("minimal")
+    renderer.render_pdf(_to_invoice_data(inv, current_user), out_path)
+
+    inv.pdf_path = str(out_path.relative_to(settings.files_root))
+    db.commit()
+
+    return FileResponse(
+        out_path,
+        media_type="application/pdf",
+        filename=f"Factura-{safe_number}.pdf",
+    )
 
 
 @router.delete("/{invoice_id}", status_code=204)
