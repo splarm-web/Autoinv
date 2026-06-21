@@ -109,6 +109,11 @@ def _bars_anio(db: Session, user_id: int, year: int) -> List[BarData]:
     return bars
 
 
+def _fmt_day(d: date) -> str:
+    """Día + mes abreviado, cross-platform (strftime('%-d') no existe en Windows)."""
+    return f"{d.day} {_MONTH_NAMES[d.month].lower()}"
+
+
 def _recent_movements(db: Session, user_id: int, limit: int = 10) -> List[MovementItem]:
     invoices = (
         db.query(Invoice)
@@ -124,34 +129,36 @@ def _recent_movements(db: Session, user_id: int, limit: int = 10) -> List[Moveme
         .limit(limit)
         .all()
     )
-    items: List[MovementItem] = []
+    items: List[Tuple[date, MovementItem]] = []
     for inv in invoices:
         concepto = f"Factura {inv.number}"
         if inv.client_name:
             concepto += f" · {inv.client_name}"
-        items.append(
+        items.append((
+            inv.date,
             MovementItem(
                 id=inv.id,
                 tipo="ingreso",
                 concepto=concepto,
-                meta=f"{inv.date.strftime('%-d %b').lower()} · Ingreso",
+                meta=f"{_fmt_day(inv.date)} · Ingreso",
                 importe=inv.total,
-            )
-        )
+            ),
+        ))
     for exp in expenses:
         concepto = exp.concept or exp.supplier or "Gasto"
         cat = exp.category or "Gasto"
-        items.append(
+        items.append((
+            exp.date,
             MovementItem(
                 id=exp.id,
                 tipo="gasto",
                 concepto=concepto,
-                meta=f"{exp.date.strftime('%-d %b').lower()} · {cat}",
+                meta=f"{_fmt_day(exp.date)} · {cat}",
                 importe=exp.amount,
-            )
-        )
-    items.sort(key=lambda x: x.meta, reverse=True)
-    return items[:limit]
+            ),
+        ))
+    items.sort(key=lambda t: t[0], reverse=True)
+    return [m for _, m in items[:limit]]
 
 
 @router.get("", response_model=DashboardOut)
