@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class UserCreate(BaseModel):
@@ -26,7 +26,15 @@ class UserOut(BaseModel):
     default_vat: float
     irpf_rate: float
     invoice_number_format: str
+    features: List[str] = []
     created_at: datetime
+
+    @field_validator("features", mode="before")
+    @classmethod
+    def _split_features(cls, v):
+        if isinstance(v, str):
+            return [f for f in v.split(",") if f]
+        return v or []
 
 
 class UserUpdate(BaseModel):

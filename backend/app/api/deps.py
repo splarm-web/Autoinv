@@ -24,3 +24,20 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado"
         )
     return user
+
+
+def require_feature(key: str):
+    """Dependency que exige que el usuario tenga activada la función `key`.
+
+    Uso: current_user: User = Depends(require_feature("transporte"))
+    """
+    def checker(user: User = Depends(get_current_user)) -> User:
+        feats = (user.features or "").split(",")
+        if key not in feats:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Tu cuenta no tiene acceso a la función '{key}'",
+            )
+        return user
+
+    return checker

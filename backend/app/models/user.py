@@ -1,6 +1,10 @@
 from sqlalchemy import Column, DateTime, Float, Integer, String, func
 from ..core.database import Base
 
+# Funciones disponibles. Cada usuario tiene una lista (CSV en `features`).
+# Funciones siempre disponibles (no se filtran): dashboard, settings.
+DEFAULT_FEATURES = "gastos,facturas,clientes,export"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -16,6 +20,9 @@ class User(Base):
     default_vat = Column(Float, default=21.0)
     irpf_rate = Column(Float, default=15.0)
     invoice_number_format = Column(String, default="YYYY-NNN")
+
+    # Funcionalidades activadas por usuario (CSV: "gastos,facturas,transporte,…")
+    features = Column(String, default=DEFAULT_FEATURES, nullable=False)
 
     # Extensible sin migraciones
     settings_json = Column(String, default="{}")

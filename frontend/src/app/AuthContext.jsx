@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { authApi } from '../lib/api'
 
 const AuthContext = createContext(null)
 
@@ -11,6 +12,19 @@ export function AuthProvider({ children }) {
       return null
     }
   })
+
+  // Al cargar, si hay sesión, refrescamos el usuario desde /me para tener
+  // las features actualizadas (p. ej. si cambian los permisos en el servidor).
+  useEffect(() => {
+    const token = localStorage.getItem('autoinv_token')
+    if (!token) return
+    authApi.me()
+      .then((u) => {
+        localStorage.setItem('autoinv_user', JSON.stringify(u))
+        setUser(u)
+      })
+      .catch(() => {})
+  }, [])
 
   const login = (token, userData) => {
     localStorage.setItem('autoinv_token', token)
@@ -30,8 +44,11 @@ export function AuthProvider({ children }) {
     setUser(updated)
   }
 
+  const hasFeature = (key) =>
+    Array.isArray(user?.features) ? user.features.includes(key) : false
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, hasFeature }}>
       {children}
     </AuthContext.Provider>
   )

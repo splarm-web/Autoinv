@@ -18,6 +18,12 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/login" replace />
 }
 
+// Exige una feature concreta; si no, redirige al dashboard.
+function FeatureRoute({ feature, children }) {
+  const { hasFeature } = useAuth()
+  return hasFeature(feature) ? children : <Navigate to="/dashboard" replace />
+}
+
 function PublicRoute({ children }) {
   const { user } = useAuth()
   return user ? <Navigate to="/" replace /> : children
@@ -40,14 +46,14 @@ export default function AppRouter() {
       >
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="expenses" element={<ExpensesPage />} />
-        <Route path="expenses/new" element={<NewExpensePage />} />
+        <Route path="expenses" element={<FeatureRoute feature="gastos"><ExpensesPage /></FeatureRoute>} />
+        <Route path="expenses/new" element={<FeatureRoute feature="gastos"><NewExpensePage /></FeatureRoute>} />
         <Route path="invoices" element={<InvoicesPage />} />
-        <Route path="invoices/new" element={<NewInvoicePage />} />
-        <Route path="invoices/transporte" element={<TransporteInvoicePage />} />
-        <Route path="clients" element={<ClientsPage />} />
+        <Route path="invoices/new" element={<FeatureRoute feature="facturas"><NewInvoicePage /></FeatureRoute>} />
+        <Route path="invoices/transporte" element={<FeatureRoute feature="transporte"><TransporteInvoicePage /></FeatureRoute>} />
+        <Route path="clients" element={<FeatureRoute feature="clientes"><ClientsPage /></FeatureRoute>} />
         <Route path="settings" element={<SettingsPage />} />
-        <Route path="export" element={<ExportPage />} />
+        <Route path="export" element={<FeatureRoute feature="export"><ExportPage /></FeatureRoute>} />
       </Route>
     </Routes>
   )

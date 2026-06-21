@@ -3,27 +3,35 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import './AppShell.css'
 
+// `feature`: exige esa función. `anyFeature`: basta con tener una. Sin nada: siempre.
 const NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
-  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos },
-  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas },
-  { to: '/clients',   label: 'Clientes', Icon: IconClientes },
-  { to: '/export',    label: 'Exportar', Icon: IconExportar },
+  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
+  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
+  { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
+  { to: '/export',    label: 'Exportar', Icon: IconExportar, feature: 'export' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
 const BOTTOM_NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
-  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos },
-  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas },
-  { to: '/export',    label: 'Exportar', Icon: IconExportar },
+  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
+  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
+  { to: '/export',    label: 'Exportar', Icon: IconExportar, feature: 'export' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
+function navAllowed(item, hasFeature) {
+  if (item.feature) return hasFeature(item.feature)
+  if (item.anyFeature) return item.anyFeature.some(hasFeature)
+  return true
+}
+
 export default function AppShell() {
-  const { user, logout } = useAuth()
+  const { user, logout, hasFeature } = useAuth()
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const bottomNav = BOTTOM_NAV.filter((item) => navAllowed(item, hasFeature))
 
   const initials = (user?.legal_name || user?.email || 'U')
     .split(' ')
@@ -38,7 +46,7 @@ export default function AppShell() {
     <div className="shell-root">
       {/* Desktop sidebar */}
       <aside className="shell-sidebar">
-        <SidebarContent initials={initials} user={user} onLogout={handleLogout} />
+        <SidebarContent initials={initials} user={user} onLogout={handleLogout} hasFeature={hasFeature} />
       </aside>
 
       {/* Mobile overlay sidebar */}
@@ -49,6 +57,7 @@ export default function AppShell() {
               initials={initials}
               user={user}
               onLogout={handleLogout}
+              hasFeature={hasFeature}
               onNavClick={() => setMobileOpen(false)}
             />
           </aside>
@@ -70,7 +79,7 @@ export default function AppShell() {
 
       {/* Mobile bottom nav */}
       <nav className="shell-bottom-nav">
-        {BOTTOM_NAV.map(({ to, label, Icon }) => (
+        {bottomNav.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) =>
             'bottom-nav-item' + (isActive ? ' active' : '')
           }>
@@ -83,14 +92,15 @@ export default function AppShell() {
   )
 }
 
-function SidebarContent({ initials, user, onLogout, onNavClick }) {
+function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature }) {
+  const items = NAV.filter((item) => navAllowed(item, hasFeature))
   return (
     <div className="shell-sidebar-inner">
       <div className="shell-logo-wrap">
         <Logo />
       </div>
       <nav className="shell-nav">
-        {NAV.map(({ to, label, Icon }) => (
+        {items.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}

@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 
-from ...api.deps import get_current_user
+from ...api.deps import get_current_user, require_feature
 from ...core.config import settings
 from ...core.database import get_db
 from ...invoicing.base import (
@@ -161,7 +161,7 @@ def get_invoice(
 @router.post("/transporte/parse-excel")
 async def parse_transporte_excel(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_feature("transporte")),
 ):
     """Lee un Excel de transporte y devuelve líneas + extras + totales calculados."""
     name = (file.filename or "").lower()
@@ -177,7 +177,7 @@ async def parse_transporte_excel(
 @router.post("/transporte/pdf")
 def generate_transporte_pdf(
     data: TransporteInvoiceIn,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_feature("transporte")),
 ):
     """Genera el PDF de factura de transporte (diseño 'alfredo').
 

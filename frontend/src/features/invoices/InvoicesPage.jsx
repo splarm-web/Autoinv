@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { invoicesApi } from '../../lib/api'
 import { eur2, fmtDate } from '../../lib/format'
+import { useAuth } from '../../app/AuthContext'
 
 export default function InvoicesPage() {
+  const { hasFeature } = useAuth()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
@@ -34,8 +36,8 @@ export default function InvoicesPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 10, flexWrap: 'wrap' }}>
         <h1 style={s.title}>Facturas</h1>
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link to="/invoices/transporte" style={s.btnSecondary}>+ Factura de transporte</Link>
-          <Link to="/invoices/new" style={s.btnPrimary}>+ Nueva factura</Link>
+          {hasFeature('transporte') && <Link to="/invoices/transporte" style={s.btnSecondary}>+ Factura de transporte</Link>}
+          {hasFeature('facturas') && <Link to="/invoices/new" style={s.btnPrimary}>+ Nueva factura</Link>}
         </div>
       </div>
 
