@@ -39,65 +39,64 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - **Backend:** https://autoinv-production.up.railway.app (Railway, Python 3.14)
 - **Frontend:** https://autoinv.vercel.app (Vercel, React PWA)
 - **GitHub:** https://github.com/splarm-web/Autoinv
-- **BD:** SQLite en Railway (migrable a PostgreSQL con solo cambiar `DATABASE_URL`)
+- **BD:** PostgreSQL en Railway (servicio "Postgres", `DATABASE_URL` por referencia `${{Postgres.DATABASE_URL}}`). Ya NO es efímera. `database.py` normaliza `postgres://`→`postgresql://`
 - **Variables Railway:** `SECRET_KEY`, `REGISTRATION_ENABLED`, `ALLOWED_ORIGINS`, `ANTHROPIC_API_KEY` (vacía — OCR desactivado), `DATABASE_URL`, `FILES_ROOT`
 
 ### Hecho y funcionando en producción
 
 **Backend:**
-- Auth completa: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PATCH /api/auth/me`
+- Auth completa: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PATCH /api/auth/me`. **Login admite usuario plano** (no solo email): `UserLogin.email` es `str` (registro sí exige email)
 - Toggle registro: `REGISTRATION_ENABLED` en Railway Variables (poner `false` tras registrarte)
-- Dashboard: `GET /api/dashboard?periodo=mes|trimestre|anio` → KPIs, IVA, barras por subperiodo, últimos movimientos
-- Expenses: CRUD completo + upload foto/PDF + extracción OCR con Claude Vision + confirmación
-- Invoices: CRUD + auto-numeración según formato del usuario (`YYYY-NNN`)
+- Dashboard: `GET /api/dashboard?periodo=mes|trimestre|anio` → KPIs (ingresos=Σ totales, gastos, **ingresos netos = ingresos − IVA − IRPF**), card impuestos (IVA repercutido/soportado/a liquidar + **IRPF retenido**), barras, últimos movimientos
+- Expenses: CRUD completo + filtros (`from_date`, `to_date`, `category`) + upload foto/PDF + OCR Claude Vision + confirmación
+- Invoices: CRUD + auto-numeración (`YYYY-NNN`) + `client_id` + **renderer PDF real** + **facturas de transporte**
 - Export: `GET /api/export?from_date=&to_date=` → ZIP con justificantes + PDFs + CSV
-- Módulo invoicing desacoplado (`InvoiceData` + `InvoiceRenderer`)
-- CORS configurable via `ALLOWED_ORIGINS` en variables de entorno
+- Módulo invoicing desacoplado (`InvoiceData` + `InvoiceRenderer`), 2 diseños: `minimal` (fpdf2) y `alfredo` (transporte, reportlab)
 - **Clients:** CRUD completo — `GET/POST /api/clients`, `PUT /api/clients/{id}`, `DELETE /api/clients/{id}`, `POST /api/clients/{id}/set-default`
+- **Feature flags por usuario:** `users.features` (CSV); `deps.require_feature(key)` → 403 si no la tiene. Endpoints de transporte protegidos
 
 **Frontend:**
 - Design tokens en `src/styles/tokens.css` (paleta menta/coral/cielo, Space Grotesk + Hanken Grotesk)
-- AppShell: sidebar desktop 212px + bottom nav móvil (5 items, Clientes solo en sidebar) + overlay
-- Dashboard: KPIs, card IVA, gráfico de barras animado, lista movimientos, skeleton loading
-- Auth: Login + Register
-- Expenses: listado, alta manual, captura foto/PDF con OCR
-- Invoices: listado, alta con formulario + vista previa React (`InvoicePreview`)
+- AppShell: sidebar + bottom nav **filtrados por feature** del usuario
+- Dashboard: KPIs (con ingresos netos en verde + hints), card impuestos (IVA + IRPF), gráfico barras, movimientos, skeleton
+- Auth: Login (campo "Usuario") + Register
+- Expenses: listado **con filtros de fecha/categoría + total**, alta manual, captura foto/PDF con OCR
+- Invoices: listado (con badge "Transporte" + botón PDF), alta estándar con preview, **alta de transporte** (Excel → tabla editable → guardar/PDF). Botones de crear **según el tipo de factura del rol**
 - Settings: datos fiscales del usuario
 - Export: descarga ZIP por rango de fechas
 - `vercel.json` con rewrite para routing SPA
-- **Clients:** listado de clientes, modal alta/edición, badge "Principal", acciones (editar, eliminar, marcar principal), empty state
+- **Clients:** listado, modal alta/edición, badge "Principal", acciones, empty state
+- `AuthContext`: `hasFeature()` + refresh de `/me` al cargar; `router` con `FeatureRoute`
 
 **Decisiones tomadas:**
 - OCR (Claude Vision) desactivado por ahora — requiere cuenta Anthropic de pago
 - Registro abierto temporalmente para setup inicial; cerrar con `REGISTRATION_ENABLED=false` en Railway
 - passlib eliminado (incompatible Python 3.14) → bcrypt directo
+- **Sergio = autónomo** (features: gastos,facturas,clientes,export); **Alfredo = transportista** (features: transporte,clientes,export). Cuentas separadas; el emisor sale del perfil fiscal del usuario logueado
+- PDF: **fpdf2** para minimal (encoding cp1252 para €) y **reportlab** para alfredo; ambos Python puro (sin libs de sistema → despliegan en Railway sin config). WeasyPrint descartado por dependencias nativas
+
+### Hecho esta iteración (2026-06-21)
+
+- ✅ BD migrada a PostgreSQL en Railway
+- ✅ Filtros de fecha/categoría en gastos (con total)
+- ✅ `client_id` + selector de cliente en alta de facturas
+- ✅ Renderer PDF real `minimal` con fpdf2 + endpoint `GET /invoices/{id}/pdf` + botón PDF en listado
+- ✅ **Facturas de transporte ("Alfredo")**: parser de Excel (`services/transporte_excel.py`), diseño `alfredo` (reportlab), endpoints `POST /invoices/transporte/parse-excel`, `/transporte/pdf`, `/transporte` (guardar). Frontend `TransporteInvoicePage`
+- ✅ Persistencia de transporte: `Invoice.kind` + `Invoice.extra_json` → aparece en el listado y regenera PDF
+- ✅ Feature flags por usuario (gating backend + frontend)
+- ✅ Login con usuario plano (sergio/alfredo)
+- ✅ Botones de crear factura según tipo de rol
+- ✅ Fix: dashboard crasheaba en Windows por `strftime('%-d')`
+- ✅ Dashboard: IRPF retenido + ingresos netos
 
 ### Próximos pasos en orden de prioridad
 
-0. **⚠️ URGENTE — Migrar BD a PostgreSQL en Railway** — SQLite en Railway es efímero: cada redeploy borra todos los datos. El código ya está preparado (SQLAlchemy + psycopg2-binary en requirements). Pasos:
-   - En Railway proyecto → **New** → **Database** → **Add PostgreSQL**
-   - Railway auto-inyecta `DATABASE_URL` como variable de entorno (pydantic-settings la recoge automáticamente)
-   - Redeploy del backend — `create_tables()` recrea las tablas en PostgreSQL al arrancar
-   - No hace falta tocar ningún código
-
-1. **Modelo de factura "Alfredo"** — flujo específico para un tipo de factura con formato propio:
-   - Input: Excel con líneas de servicio (similar a `generador_facturas.py` que el usuario tiene)
-   - Output: PDF con diseño concreto (distinto del diseño "minimal" existente)
-   - Pendiente de definir: si el input será Excel upload o formulario manual con tabla editable
-   - El selector de cliente ya está listo (módulo Clients)
-
-2. **Selector de cliente en alta de facturas** — conectar `ClientsPage` con `NewInvoicePage`:
-   - Añadir campo `client_id` al formulario de nueva factura
-   - El cliente principal se pre-selecciona por defecto
-   - Backend ya tiene el modelo; falta el campo en el schema de Invoice
-
-3. **Renderer PDF** (`backend/app/invoicing/designs/minimal/render.py`) — implementar `render_pdf()` con WeasyPrint o reportlab. La interfaz `InvoiceRenderer` ya está lista; hoy genera un `.txt` placeholder
-
-4. **Filtros en gastos** — la API ya acepta `from_date`, `to_date`, `category`; falta el UI en `ExpensesPage`
-
-5. **Paginación** en movimientos del dashboard y listados de gastos/facturas
-
-6. **Activar OCR** — cuando haya API key de Anthropic, añadir `ANTHROPIC_API_KEY` en Railway Variables
+1. **Endurecer enforcement de features en backend** — hoy solo `transporte` está gateado en el backend; gastos/facturas/clientes/export se ocultan en UI pero sus endpoints no rechazan aún. Añadir `require_feature` a esos routers
+2. **Pantalla de admin de features** — gestionar `users.features` desde la UI sin tocar la BD (necesario para asignar features a usuarios nuevos en producción)
+3. **Igualar "Descargar PDF" en factura estándar** — la de transporte tiene Guardar + Descargar PDF; la estándar solo guarda (PDF desde el listado)
+4. **Paginación** en movimientos del dashboard y listados de gastos/facturas
+5. **Activar OCR** — cuando haya API key de Anthropic, añadir `ANTHROPIC_API_KEY` en Railway Variables
+6. **Cerrar registro** en producción tras dar de alta a los usuarios (`REGISTRATION_ENABLED=false`)
 
 ## Arquitectura clave
 
@@ -107,11 +106,14 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 backend/app/invoicing/
   base.py                    # InvoiceData + InvoiceRenderer (ABC)
   designs/
-    minimal/render.py        # implementa render_pdf() → placeholder txt hoy
+    minimal/render.py        # render_pdf() real con fpdf2 (factura estándar)
+    alfredo/render.py        # render_transporte_pdf() con reportlab (transporte)
     <nuevo>/render.py        # añadir diseños sin tocar nada más
 ```
 
-Para añadir un diseño: crear carpeta `designs/<nombre>/`, implementar `InvoiceRenderer`, registrar en `base.py:get_renderer()`.
+Para añadir un diseño estándar: crear `designs/<nombre>/`, implementar `InvoiceRenderer`, registrar en `base.py:get_renderer()`.
+
+**Facturas de transporte ("Alfredo"):** flujo aparte del contrato `InvoiceRenderer` (datos distintos: viajes/kilos/cabeza/cisterna, IRPF 1%). `services/transporte_excel.py` parsea el Excel; `designs/alfredo/render.py:render_transporte_pdf(dict)` genera el PDF. Se persiste como `Invoice` con `kind="transporte"` y el payload completo en `extra_json` (para regenerar el PDF desde el listado). Origen: el script `generador_facturas.py` que tenía el usuario (en Descargas, no en el repo).
 
 ### Vista previa de factura en React
 
