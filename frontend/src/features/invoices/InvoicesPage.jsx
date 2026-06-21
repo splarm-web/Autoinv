@@ -31,9 +31,12 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 10, flexWrap: 'wrap' }}>
         <h1 style={s.title}>Facturas</h1>
-        <Link to="/invoices/new" style={s.btnPrimary}>+ Nueva factura</Link>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link to="/invoices/transporte" style={s.btnSecondary}>+ Factura de transporte</Link>
+          <Link to="/invoices/new" style={s.btnPrimary}>+ Nueva factura</Link>
+        </div>
       </div>
 
       {loading ? (
@@ -90,6 +93,7 @@ function EmptyState() {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
+  btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '0 20px' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },

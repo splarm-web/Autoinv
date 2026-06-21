@@ -8,6 +8,7 @@ import ExpensesPage from '../features/expenses/ExpensesPage'
 import NewExpensePage from '../features/expenses/NewExpensePage'
 import InvoicesPage from '../features/invoices/InvoicesPage'
 import NewInvoicePage from '../features/invoices/NewInvoicePage'
+import TransporteInvoicePage from '../features/invoices/TransporteInvoicePage'
 import SettingsPage from '../features/settings/SettingsPage'
 import ExportPage from '../features/export/ExportPage'
 import ClientsPage from '../features/clients/ClientsPage'
@@ -43,6 +44,7 @@ export default function AppRouter() {
         <Route path="expenses/new" element={<NewExpensePage />} />
         <Route path="invoices" element={<InvoicesPage />} />
         <Route path="invoices/new" element={<NewInvoicePage />} />
+        <Route path="invoices/transporte" element={<TransporteInvoicePage />} />
         <Route path="clients" element={<ClientsPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="export" element={<ExportPage />} />

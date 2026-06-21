@@ -84,6 +84,34 @@ export const invoicesApi = {
     a.click()
     URL.revokeObjectURL(blobUrl)
   },
+  // Facturas de transporte (formato "Alfredo")
+  parseTransporteExcel: (file) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return apiFetch('/api/invoices/transporte/parse-excel', { method: 'POST', body: fd })
+  },
+  transportePdf: async (data) => {
+    const token = localStorage.getItem('autoinv_token')
+    const res = await fetch(`${API_URL}/api/invoices/transporte/pdf`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'No se pudo generar el PDF' }))
+      throw new Error(err.detail || 'No se pudo generar el PDF')
+    }
+    const blob = await res.blob()
+    const blobUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = `Factura-${(data.numero_factura || 'transporte').toString().replace(/[/\\]/g, '-')}.pdf`
+    a.click()
+    URL.revokeObjectURL(blobUrl)
+  },
 }
 
 // Clients

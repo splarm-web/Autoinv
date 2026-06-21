@@ -1,9 +1,9 @@
 from datetime import date
-from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from typing import List
 
 from ...api.deps import get_current_user
 from ...core.config import settings
@@ -15,9 +15,12 @@ from ...invoicing.base import (
     IssuerData,
     get_renderer,
 )
+from ...invoicing.designs.alfredo.render import render_transporte_pdf
 from ...models.invoice import Invoice, InvoiceLine
 from ...models.user import User
 from ...schemas.invoice import InvoiceCreate, InvoiceOut
+from ...schemas.transporte import TransporteInvoiceIn
+from ...services import transporte_excel
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -153,6 +156,73 @@ def get_invoice(
     if not inv:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     return inv
+
+
+@router.post("/transporte/parse-excel")
+async def parse_transporte_excel(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """Lee un Excel de transporte y devuelve líneas + extras + totales calculados."""
+    name = (file.filename or "").lower()
+    if not name.endswith((".xlsx", ".xlsm", ".xls")):
+        raise HTTPException(status_code=400, detail="Sube un fichero Excel (.xlsx)")
+    content = await file.read()
+    try:
+        return transporte_excel.parse(content)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"No se pudo leer el Excel: {e}")
+
+
+@router.post("/transporte/pdf")
+def generate_transporte_pdf(
+    data: TransporteInvoiceIn,
+    current_user: User = Depends(get_current_user),
+):
+    """Genera el PDF de factura de transporte (diseño 'alfredo').
+
+    Recalcula los totales en servidor a partir de las líneas editadas:
+    total línea = (kilos / 1000) * precio · IRPF 1% · IVA 21%.
+    """
+    viajes = []
+    base = 0.0
+    for v in data.viajes:
+        total = round((v.kilos / 1000) * v.precio, 2)
+        base += total
+        viajes.append({
+            "fecha": v.fecha,
+            "viaje": v.viaje,
+            "kilos": v.kilos,
+            "precio": v.precio,
+            "total": total,
+        })
+    base = round(base, 2)
+    irpf = round(base * 0.01, 2)
+    iva = round(base * 0.21, 2)
+    total = round(base - irpf + iva, 2)
+
+    payload = {
+        "emisor": data.emisor.model_dump(),
+        "cliente": data.cliente.model_dump(),
+        "numero_factura": data.numero_factura,
+        "fecha_factura": data.fecha_factura,
+        "concepto_mes": data.concepto_mes,
+        "cabeza": data.cabeza,
+        "cisterna": data.cisterna,
+        "viajes": viajes,
+        "base": base, "irpf": irpf, "iva": iva, "total": total,
+    }
+
+    out_dir = settings.files_root / str(current_user.id) / "invoices"
+    safe_number = (data.numero_factura or "transporte").replace("/", "-").replace("\\", "-")
+    out_path = out_dir / f"transporte-{safe_number}.pdf"
+    render_transporte_pdf(payload, out_path)
+
+    return FileResponse(
+        out_path,
+        media_type="application/pdf",
+        filename=f"Factura-{safe_number}.pdf",
+    )
 
 
 @router.get("/{invoice_id}/pdf")
