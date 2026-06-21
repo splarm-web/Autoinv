@@ -7,10 +7,10 @@ const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
 
 const EMPTY_VIAJE = { fecha: '', viaje: '', kilos: '', precio: '' }
+const EMPTY_CLIENTE = { nombre: '', cif: '', direccion: '', ciudad: '' }
 
 const eur = (v) => `${(v || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
 
-// Deriva "MES AÑO" a partir de una fecha ISO (yyyy-mm-dd)
 function conceptoFromIso(iso) {
   if (!iso) return ''
   const d = new Date(iso)
@@ -18,7 +18,6 @@ function conceptoFromIso(iso) {
   return `${MESES[d.getMonth()]} ${d.getFullYear()}`
 }
 
-// yyyy-mm-dd → dd/mm/yyyy
 function toDdmmyyyy(iso) {
   if (!iso) return ''
   const [y, m, d] = iso.split('-')
@@ -31,10 +30,11 @@ export default function TransporteInvoicePage() {
   const navigate = useNavigate()
   const fileRef = useRef(null)
 
-  const [emisor, setEmisor] = useState({ nombre: '', nif: '', direccion: '', ciudad: '', telefono: '' })
-  const [cliente, setCliente] = useState({ nombre: '', cif: '', direccion: '', ciudad: '' })
+  const [emisor, setEmisor] = useState({ nombre: '', nif: '', direccion: '' })
+  const [cliente, setCliente] = useState({ ...EMPTY_CLIENTE })
   const [clients, setClients] = useState([])
   const [clientId, setClientId] = useState('')
+  const [savingClient, setSavingClient] = useState(false)
 
   const [meta, setMeta] = useState({
     numero_factura: 'A-1',
@@ -50,15 +50,14 @@ export default function TransporteInvoicePage() {
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
-  // Pre-rellenar emisor con datos fiscales del usuario
+  // Pre-rellenar emisor con datos fiscales del usuario logueado (Alfredo)
   useEffect(() => {
     if (user) {
-      setEmisor((e) => ({
-        ...e,
+      setEmisor({
         nombre: user.legal_name || '',
         nif: user.nif || '',
         direccion: user.address || '',
-      }))
+      })
     }
   }, [user])
 
@@ -69,9 +68,28 @@ export default function TransporteInvoicePage() {
   const selectClient = (e) => {
     const id = e.target.value
     setClientId(id)
-    if (!id) { setCliente({ nombre: '', cif: '', direccion: '', ciudad: '' }); return }
+    if (!id) { setCliente({ ...EMPTY_CLIENTE }); return }
     const c = clients.find((x) => x.id === parseInt(id))
     if (c) setCliente({ nombre: c.nombre || '', cif: c.cif || '', direccion: c.direccion || '', ciudad: c.ciudad || '' })
+  }
+
+  const saveNewClient = async () => {
+    if (!cliente.nombre.trim()) { setError('Pon al menos el nombre del cliente para guardarlo'); return }
+    setError(''); setSavingClient(true)
+    try {
+      const created = await clientsApi.create({
+        nombre: cliente.nombre, cif: cliente.cif,
+        direccion: cliente.direccion, ciudad: cliente.ciudad,
+      })
+      const list = await clientsApi.list()
+      setClients(list)
+      setClientId(String(created.id))
+      setInfo(`✓ Cliente "${created.nombre}" guardado`)
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar el cliente')
+    } finally {
+      setSavingClient(false)
+    }
   }
 
   const handleUpload = async (e) => {
@@ -81,10 +99,8 @@ export default function TransporteInvoicePage() {
     try {
       const data = await invoicesApi.parseTransporteExcel(file)
       const parsed = (data.viajes || []).map((v) => ({
-        fecha: v.fecha || '',
-        viaje: v.viaje || '',
-        kilos: v.kilos ?? '',
-        precio: v.precio ?? '',
+        fecha: v.fecha || '', viaje: v.viaje || '',
+        kilos: v.kilos ?? '', precio: v.precio ?? '',
       }))
       setViajes(parsed.length ? parsed : [{ ...EMPTY_VIAJE }])
       setMeta((m) => ({
@@ -115,6 +131,20 @@ export default function TransporteInvoicePage() {
   const iva = base * 0.21
   const total = base - irpf + iva
 
+  // Avisos de campos vacíos (no bloquean, solo informan)
+  const warnings = []
+  if (!emisor.nombre.trim()) warnings.push('Nombre del emisor')
+  if (!emisor.nif.trim()) warnings.push('NIF del emisor')
+  if (!emisor.direccion.trim()) warnings.push('Dirección del emisor')
+  if (!cliente.nombre.trim()) warnings.push('Nombre del cliente')
+  if (!cliente.cif.trim()) warnings.push('CIF/DNI del cliente')
+  if (!cliente.direccion.trim()) warnings.push('Dirección del cliente')
+  if (!meta.numero_factura.trim()) warnings.push('Nº de factura')
+  if (!meta.fecha) warnings.push('Fecha')
+  if (!meta.concepto_mes.trim()) warnings.push('Concepto (mes)')
+  const viajesValidos = viajes.filter((v) => v.viaje || v.kilos || v.precio)
+  if (viajesValidos.length === 0) warnings.push('Al menos un viaje')
+
   const generate = async () => {
     setError(''); setGenerating(true)
     try {
@@ -126,9 +156,9 @@ export default function TransporteInvoicePage() {
         concepto_mes: meta.concepto_mes,
         cabeza: meta.cabeza,
         cisterna: meta.cisterna,
-        viajes: viajes
-          .filter((v) => v.viaje || v.kilos || v.precio)
-          .map((v) => ({ fecha: v.fecha, viaje: v.viaje, kilos: num(v.kilos), precio: num(v.precio) })),
+        viajes: viajesValidos.map((v) => ({
+          fecha: v.fecha, viaje: v.viaje, kilos: num(v.kilos), precio: num(v.precio),
+        })),
       })
     } catch (err) {
       setError(err.message || 'No se pudo generar el PDF')
@@ -139,15 +169,18 @@ export default function TransporteInvoicePage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8, flexWrap: 'wrap' }}>
-        <h1 style={s.title}>Factura de transporte</h1>
-      </div>
-      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 0, marginBottom: 20 }}>
+      <h1 style={s.title}>Factura de transporte</h1>
+      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, marginBottom: 20 }}>
         Sube el Excel para autorellenar los viajes, edítalos si hace falta y genera el PDF.
       </p>
 
       {error && <div style={{ ...s.banner, color: 'var(--coral)', borderColor: 'rgba(240,135,106,0.3)' }}>{error}</div>}
       {info && <div style={{ ...s.banner, color: 'var(--menta)', borderColor: 'rgba(69,212,155,0.3)' }}>{info}</div>}
+      {warnings.length > 0 && (
+        <div style={{ ...s.banner, color: '#E8B84B', borderColor: 'rgba(232,184,75,0.35)', background: 'rgba(232,184,75,0.06)' }}>
+          ⚠ Campos sin rellenar (puedes generar igualmente): {warnings.join(' · ')}
+        </div>
+      )}
 
       {/* Subida de Excel */}
       <div style={{ ...s.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -169,26 +202,30 @@ export default function TransporteInvoicePage() {
           <div style={s.sectionTitle}>Emisor</div>
           <Field label="Nombre"><input value={emisor.nombre} onChange={(e) => setEmisor({ ...emisor, nombre: e.target.value })} style={s.input} placeholder="TRANSPORTES…" /></Field>
           <Field label="NIF"><input value={emisor.nif} onChange={(e) => setEmisor({ ...emisor, nif: e.target.value })} style={s.input} /></Field>
-          <Field label="Dirección"><input value={emisor.direccion} onChange={(e) => setEmisor({ ...emisor, direccion: e.target.value })} style={s.input} /></Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Field label="Ciudad"><input value={emisor.ciudad} onChange={(e) => setEmisor({ ...emisor, ciudad: e.target.value })} style={s.input} /></Field>
-            <Field label="Teléfono"><input value={emisor.telefono} onChange={(e) => setEmisor({ ...emisor, telefono: e.target.value })} style={s.input} /></Field>
-          </div>
+          <Field label="Dirección" hint="Una línea por renglón (dirección, ciudad, teléfono…)">
+            <textarea value={emisor.direccion} onChange={(e) => setEmisor({ ...emisor, direccion: e.target.value })} rows={3} style={{ ...s.input, resize: 'vertical' }} placeholder={'C/ Apostol Santiago 16 1º\n46740 Carcaixent (VALENCIA)\nTlf. 607411838'} />
+          </Field>
+          <div style={s.hintBox}>Estos datos salen de tu perfil fiscal (Ajustes).</div>
         </div>
 
         {/* Cliente */}
         <div style={s.card}>
-          <div style={s.sectionTitle}>Cliente</div>
-          {clients.length > 0 && (
-            <Field label="Seleccionar cliente">
-              <select value={clientId} onChange={selectClient} style={{ ...s.input, appearance: 'auto' }}>
-                <option value="">— Introducir manualmente —</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nombre}{c.is_default ? ' ★' : ''}</option>
-                ))}
-              </select>
-            </Field>
-          )}
+          <div style={{ ...s.sectionTitle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Cliente</span>
+            {clientId === '' && cliente.nombre.trim() && (
+              <button type="button" onClick={saveNewClient} disabled={savingClient} style={s.saveClientBtn}>
+                {savingClient ? 'Guardando…' : '＋ Guardar como cliente'}
+              </button>
+            )}
+          </div>
+          <Field label="Cliente guardado">
+            <select value={clientId} onChange={selectClient} style={{ ...s.input, appearance: 'auto' }}>
+              <option value="">— Nuevo / introducir manualmente —</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.nombre}{c.is_default ? ' ★' : ''}</option>
+              ))}
+            </select>
+          </Field>
           <Field label="Nombre"><input value={cliente.nombre} onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })} style={s.input} /></Field>
           <Field label="CIF / DNI"><input value={cliente.cif} onChange={(e) => setCliente({ ...cliente, cif: e.target.value })} style={s.input} /></Field>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -258,11 +295,12 @@ export default function TransporteInvoicePage() {
   )
 }
 
-function Field({ label, children }) {
+function Field({ label, hint, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label style={s.label}>{label}</label>
       {children}
+      {hint && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5 }}>{hint}</div>}
     </div>
   )
 }
@@ -274,6 +312,8 @@ const s = {
   sectionTitle: { fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 },
   label: { display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 },
   input: { width: '100%', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '9px 12px', color: 'var(--text)', fontFamily: 'var(--font-ui)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' },
+  hintBox: { fontSize: 11, color: 'var(--text-muted)', marginTop: 2 },
+  saveClientBtn: { background: 'rgba(69,212,155,0.12)', border: '1px solid rgba(69,212,155,0.3)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', letterSpacing: 0, textTransform: 'none' },
   linesHead: { display: 'grid', gridTemplateColumns: '150px 1fr 90px 80px 90px 28px', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 },
   lineRow: { display: 'grid', gridTemplateColumns: '150px 1fr 90px 80px 90px 28px', gap: 8, marginBottom: 8, alignItems: 'center' },
   addLineBtn: { background: 'none', border: '1px dashed rgba(255,255,255,0.12)', borderRadius: 'var(--r-sm)', color: 'var(--text-muted)', padding: '8px 14px', cursor: 'pointer', fontSize: 13, marginTop: 4 },

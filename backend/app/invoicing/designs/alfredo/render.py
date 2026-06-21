@@ -74,10 +74,14 @@ def _encabezado(c, width, height, emisor, numero_factura, fecha_factura):
     c.setFont("Helvetica-Bold", 11)
     c.drawString(margen_izq, y, emisor.get("nombre", ""))
     c.setFont("Helvetica", 9)
-    for linea in [emisor.get("nif", ""), emisor.get("direccion", ""),
-                  emisor.get("ciudad", ""), emisor.get("telefono", "")]:
-        y -= 13
+    # NIF + dirección (multilínea) + ciudad/teléfono opcionales, una línea cada uno
+    lineas = [emisor.get("nif", "")]
+    lineas += (emisor.get("direccion", "") or "").split("\n")
+    lineas += [emisor.get("ciudad", ""), emisor.get("telefono", "")]
+    for linea in lineas:
+        linea = (linea or "").strip()
         if linea:
+            y -= 13
             c.drawString(margen_izq, y, linea)
 
     # Número de factura + fecha (derecha)
