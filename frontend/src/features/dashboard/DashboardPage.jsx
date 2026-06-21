@@ -50,16 +50,16 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <div className="kpi-grid">
-        <KpiCard label="Ingresos" value={eur0(data?.ingresos)} color="menta" loading={loading}
-          hint="Base imponible facturada" />
+        <KpiCard label="Ingresos" value={eur0(data?.ingresos)} color="white" loading={loading}
+          hint="Total facturado (con impuestos)" />
         <KpiCard label="Gastos"   value={eur0(data?.gastos)}   color="coral" loading={loading}
           hint="Total pagado (con IVA)" />
         <KpiCard
           label="Ingresos netos"
           value={eur0(data?.ingreso_neto)}
-          color="white"
+          color="menta"
           loading={loading}
-          hint="Ingresos − IRPF (el IVA se liquida aparte)"
+          hint="Ingresos − IVA − IRPF"
         />
       </div>
 

@@ -39,9 +39,12 @@ def _quarter_range(year: int, q: int) -> Tuple[date, date]:
 def _kpis(
     db: Session, user_id: int, start: date, end: date
 ) -> Tuple[float, float, float, float]:
-    """Returns (ingresos, gastos, iva_rep, iva_sop) for the date range."""
+    """Returns (ingresos, gastos, iva_rep, iva_sop) for the date range.
+
+    ingresos = suma de los TOTALES de las facturas (con impuestos).
+    """
     ingresos = (
-        db.query(func.coalesce(func.sum(Invoice.subtotal), 0))
+        db.query(func.coalesce(func.sum(Invoice.total), 0))
         .filter(Invoice.user_id == user_id, Invoice.date >= start, Invoice.date <= end)
         .scalar()
     )
@@ -205,7 +208,7 @@ def dashboard(
         iva_sop=iva_sop,
         iva_liquidar=iva_rep - iva_sop,
         irpf_ret=irpf_ret,
-        ingreso_neto=ingresos - irpf_ret,
+        ingreso_neto=ingresos - iva_rep - irpf_ret,
         bars=bars,
         periodo=periodo,
         periodo_label=label,
