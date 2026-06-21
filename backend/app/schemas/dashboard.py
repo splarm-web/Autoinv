@@ -24,6 +24,8 @@ class DashboardOut(BaseModel):
     iva_rep: float
     iva_sop: float
     iva_liquidar: float
+    irpf_ret: float          # IRPF retenido en facturas del periodo
+    ingreso_neto: float      # ingresos (base) − IRPF retenido
     bars: List[BarData]
     periodo: str
     periodo_label: str

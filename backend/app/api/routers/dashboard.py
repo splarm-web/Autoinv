@@ -191,6 +191,12 @@ def dashboard(
 
     ingresos, gastos, iva_rep, iva_sop = _kpis(db, uid, start, end)
 
+    irpf_ret = float(
+        db.query(func.coalesce(func.sum(Invoice.irpf_total), 0))
+        .filter(Invoice.user_id == uid, Invoice.date >= start, Invoice.date <= end)
+        .scalar()
+    )
+
     return DashboardOut(
         ingresos=ingresos,
         gastos=gastos,
@@ -198,6 +204,8 @@ def dashboard(
         iva_rep=iva_rep,
         iva_sop=iva_sop,
         iva_liquidar=iva_rep - iva_sop,
+        irpf_ret=irpf_ret,
+        ingreso_neto=ingresos - irpf_ret,
         bars=bars,
         periodo=periodo,
         periodo_label=label,

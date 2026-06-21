@@ -50,13 +50,16 @@ export default function DashboardPage() {
 
       {/* KPIs */}
       <div className="kpi-grid">
-        <KpiCard label="Ingresos" value={eur0(data?.ingresos)} color="menta" loading={loading} />
-        <KpiCard label="Gastos"   value={eur0(data?.gastos)}   color="coral" loading={loading} />
+        <KpiCard label="Ingresos" value={eur0(data?.ingresos)} color="menta" loading={loading}
+          hint="Base imponible facturada" />
+        <KpiCard label="Gastos"   value={eur0(data?.gastos)}   color="coral" loading={loading}
+          hint="Total pagado (con IVA)" />
         <KpiCard
-          label={<>Resultado neto <span style={{ opacity: 0.5, fontWeight: 400 }}>aprox.</span></>}
-          value={eur0(data?.neto)}
+          label="Ingresos netos"
+          value={eur0(data?.ingreso_neto)}
           color="white"
           loading={loading}
+          hint="Ingresos − IRPF (el IVA se liquida aparte)"
         />
       </div>
 
@@ -74,7 +77,7 @@ export default function DashboardPage() {
   )
 }
 
-function KpiCard({ label, value, color, loading }) {
+function KpiCard({ label, value, color, loading, hint }) {
   return (
     <div className="card">
       <div className="kpi-label">{label}</div>
@@ -82,6 +85,7 @@ function KpiCard({ label, value, color, loading }) {
         ? <div className="skeleton" style={{ height: 34, width: '80%' }} />
         : <div className={`kpi-value ${color}`}>{value}</div>
       }
+      {hint && !loading && <div className="kpi-hint">{hint}</div>}
     </div>
   )
 }
@@ -89,12 +93,12 @@ function KpiCard({ label, value, color, loading }) {
 function IvaCard({ data, loading }) {
   return (
     <div className="card">
-      <div className="kpi-label" style={{ marginBottom: 18 }}>IVA del periodo</div>
+      <div className="kpi-label" style={{ marginBottom: 18 }}>Impuestos del periodo</div>
 
       <div className="iva-row">
         <div className="iva-label-wrap">
           <span className="iva-dot" style={{ background: 'var(--menta)' }} />
-          <span className="iva-label">Repercutido</span>
+          <span className="iva-label">IVA repercutido</span>
         </div>
         {loading
           ? <div className="skeleton" style={{ height: 18, width: 70 }} />
@@ -105,7 +109,7 @@ function IvaCard({ data, loading }) {
       <div className="iva-row">
         <div className="iva-label-wrap">
           <span className="iva-dot" style={{ background: 'var(--cielo)' }} />
-          <span className="iva-label">Soportado</span>
+          <span className="iva-label">IVA soportado</span>
         </div>
         {loading
           ? <div className="skeleton" style={{ height: 18, width: 70 }} />
@@ -113,8 +117,19 @@ function IvaCard({ data, loading }) {
         }
       </div>
 
+      <div className="iva-row">
+        <div className="iva-label-wrap">
+          <span className="iva-dot" style={{ background: 'var(--coral)' }} />
+          <span className="iva-label">IRPF retenido</span>
+        </div>
+        {loading
+          ? <div className="skeleton" style={{ height: 18, width: 70 }} />
+          : <span className="iva-amount">{eur2(data?.irpf_ret)}</span>
+        }
+      </div>
+
       <div className="iva-liquidar">
-        <span className="iva-liquidar-label">A liquidar</span>
+        <span className="iva-liquidar-label">IVA a liquidar</span>
         {loading
           ? <div className="skeleton" style={{ height: 24, width: 90 }} />
           : <span className="iva-liquidar-value">{eur2(data?.iva_liquidar)}</span>

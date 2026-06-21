@@ -69,6 +69,12 @@
 .kpi-value.menta  { color: var(--menta); }
 .kpi-value.coral  { color: var(--coral); }
 .kpi-value.white  { color: var(--text); }
+.kpi-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 7px;
+  line-height: 1.3;
+}
 
 /* Middle row: IVA + chart */
 .mid-grid {
