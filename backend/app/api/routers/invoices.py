@@ -9,61 +9,14 @@ from typing import List
 from ...api.deps import get_current_user, require_feature
 from ...core.config import settings
 from ...core.database import get_db
-from ...invoicing.base import (
-    ClientData,
-    InvoiceData,
-    InvoiceLineData,
-    IssuerData,
-    get_renderer,
-)
 from ...invoicing.designs.alfredo.render import render_transporte_pdf
 from ...models.invoice import Invoice, InvoiceLine
 from ...models.user import User
 from ...schemas.invoice import InvoiceCreate, InvoiceOut
 from ...schemas.transporte import TransporteInvoiceIn
-from ...services import transporte_excel
+from ...services import invoice_pdf, transporte_excel
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
-
-
-def _to_invoice_data(inv: Invoice, user: User) -> InvoiceData:
-    """Convierte el modelo de BD al contrato InvoiceData del renderer."""
-    vat_rate = inv.lines[0].vat_rate if inv.lines else (user.default_vat or 21.0)
-    irpf_rate = round(inv.irpf_total / inv.subtotal * 100, 2) if inv.subtotal else (
-        user.irpf_rate or 15.0
-    )
-    return InvoiceData(
-        number=inv.number,
-        date=inv.date,
-        due_date=inv.due_date,
-        payment_method=inv.payment_method,
-        issuer=IssuerData(
-            legal_name=user.legal_name or user.email,
-            nif=user.nif or "",
-            address=user.address or "",
-        ),
-        client=ClientData(
-            name=inv.client_name,
-            tax_id=inv.client_tax_id,
-            address=inv.client_address,
-        ),
-        lines=[
-            InvoiceLineData(
-                description=ln.description,
-                quantity=ln.quantity,
-                unit_price=ln.unit_price,
-                vat_rate=ln.vat_rate,
-                line_total=ln.line_total,
-            )
-            for ln in inv.lines
-        ],
-        subtotal=inv.subtotal,
-        vat_total=inv.vat_total,
-        irpf_total=inv.irpf_total,
-        total=inv.total,
-        irpf_rate=irpf_rate,
-        vat_rate=vat_rate,
-    )
 
 
 def _next_number(db: Session, user: User) -> str:
@@ -284,20 +237,11 @@ def download_invoice_pdf(
     if not inv:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-    safe_number = inv.number.replace("/", "-").replace("\\", "-")
-
-    if inv.kind == "transporte":
-        # Re-genera desde el payload guardado (diseño alfredo)
-        payload = json.loads(inv.extra_json or "{}")
-        out_path = _render_transporte_to(payload, current_user.id)
-    else:
-        out_dir = settings.files_root / str(current_user.id) / "invoices"
-        out_path = out_dir / f"{safe_number}.pdf"
-        get_renderer("minimal").render_pdf(_to_invoice_data(inv, current_user), out_path)
-
+    out_path = invoice_pdf.render_invoice_pdf(inv, current_user)
     inv.pdf_path = str(out_path.relative_to(settings.files_root))
     db.commit()
 
+    safe_number = inv.number.replace("/", "-").replace("\\", "-")
     return FileResponse(
         out_path,
         media_type="application/pdf",

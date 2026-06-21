@@ -1,39 +1,43 @@
-"""Genera un ZIP con justificantes + PDFs de facturas + CSV resumen del periodo."""
+"""Genera un ZIP con justificantes + PDFs de facturas + CSV resumen del periodo.
+
+Acepta una lista de rangos de fechas (p.ej. varios trimestres); incluye los
+movimientos cuya fecha caiga en CUALQUIERA de ellos. Los PDF de facturas se
+generan al vuelo (no dependen de que se hayan descargado antes).
+"""
 
 import csv
 import io
 import zipfile
 from datetime import date
-from pathlib import Path
+from typing import List, Tuple
 
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from ..core.config import settings
 from ..models.expense import Expense
 from ..models.invoice import Invoice
 from ..models.user import User
+from . import invoice_pdf
+
+Range = Tuple[date, date]
 
 
-def build_export_zip(
-    db: Session, user: User, from_date: date, to_date: date
-) -> io.BytesIO:
+def _date_in_ranges(model, ranges: List[Range]):
+    """Condición SQL: model.date dentro de alguno de los rangos."""
+    return or_(*[and_(model.date >= s, model.date <= e) for s, e in ranges])
+
+
+def build_export_zip(db: Session, user: User, ranges: List[Range]) -> io.BytesIO:
     expenses = (
         db.query(Expense)
-        .filter(
-            Expense.user_id == user.id,
-            Expense.date >= from_date,
-            Expense.date <= to_date,
-        )
+        .filter(Expense.user_id == user.id, _date_in_ranges(Expense, ranges))
         .order_by(Expense.date)
         .all()
     )
     invoices = (
         db.query(Invoice)
-        .filter(
-            Invoice.user_id == user.id,
-            Invoice.date >= from_date,
-            Invoice.date <= to_date,
-        )
+        .filter(Invoice.user_id == user.id, _date_in_ranges(Invoice, ranges))
         .order_by(Invoice.date)
         .all()
     )
@@ -63,12 +67,15 @@ def build_export_zip(
                 if src.exists():
                     zf.write(src, f"gastos/{src.name}")
 
-        # PDFs de facturas
+        # PDFs de facturas (generados al vuelo)
         for inv in invoices:
-            if inv.pdf_path:
-                src = settings.files_root / inv.pdf_path
-                if src.exists():
-                    zf.write(src, f"facturas/{src.name}")
+            try:
+                pdf_path = invoice_pdf.render_invoice_pdf(inv, user)
+                safe_number = inv.number.replace("/", "-").replace("\\", "-")
+                zf.write(pdf_path, f"facturas/Factura-{safe_number}.pdf")
+            except Exception:
+                # No abortar el export por una factura problemática
+                continue
 
     buf.seek(0)
     return buf

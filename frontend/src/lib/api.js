@@ -126,23 +126,29 @@ export const clientsApi = {
 }
 
 // Export
+async function downloadZip(url, fallbackName) {
+  const token = localStorage.getItem('autoinv_token')
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'No se pudo exportar' }))
+    throw new Error(err.detail || 'No se pudo exportar')
+  }
+  const blob = await res.blob()
+  const blobUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = blobUrl
+  a.download = fallbackName
+  a.click()
+  URL.revokeObjectURL(blobUrl)
+}
+
 export const exportApi = {
-  download: (from, to) => {
-    const token = localStorage.getItem('autoinv_token')
-    const url = `${API_URL}/api/export?from_date=${from}&to_date=${to}`
-    // Descarga directa via anchor
-    const a = document.createElement('a')
-    a.href = url
-    a.setAttribute('download', '')
-    // Añadir token como query param no es lo ideal pero es la manera más simple
-    // para descarga de fichero sin fetch
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.blob())
-      .then((blob) => {
-        const blobUrl = URL.createObjectURL(blob)
-        a.href = blobUrl
-        a.click()
-        URL.revokeObjectURL(blobUrl)
-      })
+  download: (from, to) =>
+    downloadZip(`${API_URL}/api/export?from_date=${from}&to_date=${to}`, `autoinv_${from}_${to}.zip`),
+  downloadQuarters: (years, quarters) => {
+    const params = new URLSearchParams()
+    years.forEach((y) => params.append('years', y))
+    quarters.forEach((q) => params.append('quarters', q))
+    return downloadZip(`${API_URL}/api/export?${params.toString()}`, 'autoinv_trimestres.zip')
   },
 }
