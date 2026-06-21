@@ -4,11 +4,20 @@ import { invoicesApi } from '../../lib/api'
 import { eur2, fmtDate } from '../../lib/format'
 import { useAuth } from '../../app/AuthContext'
 
+// Tipos de factura disponibles, cada uno detrás de su feature.
+const INVOICE_TYPES = [
+  { key: 'facturas',   label: 'Nueva factura',         to: '/invoices/new' },
+  { key: 'transporte', label: 'Factura de transporte', to: '/invoices/transporte' },
+]
+
 export default function InvoicesPage() {
   const { hasFeature } = useAuth()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
+
+  // Tipos que este usuario puede crear según su rol
+  const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
 
   useEffect(() => {
     invoicesApi.list().then(setInvoices).finally(() => setLoading(false))
@@ -33,18 +42,29 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, gap: 10, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10, flexWrap: 'wrap' }}>
         <h1 style={s.title}>Facturas</h1>
-        <div style={{ display: 'flex', gap: 10 }}>
-          {hasFeature('transporte') && <Link to="/invoices/transporte" style={s.btnSecondary}>+ Factura de transporte</Link>}
-          {hasFeature('facturas') && <Link to="/invoices/new" style={s.btnPrimary}>+ Nueva factura</Link>}
-        </div>
+        {/* Un solo tipo: botón arriba a la derecha */}
+        {types.length === 1 && (
+          <Link to={types[0].to} style={s.btnPrimary}>+ {types[0].label}</Link>
+        )}
       </div>
+
+      {/* Varios tipos: CTAs prominentes (no arriba a la derecha) */}
+      {types.length >= 2 && (
+        <div style={s.ctaRow}>
+          {types.map((t, i) => (
+            <Link key={t.key} to={t.to} style={i === 0 ? s.ctaPrimary : s.ctaSecondary}>
+              + {t.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div style={{ color: 'var(--text-muted)', fontSize: 14 }}>Cargando…</div>
       ) : invoices.length === 0 ? (
-        <EmptyState />
+        <EmptyState types={types} />
       ) : (
         <div style={s.card}>
           {invoices.map((inv, i) => (
@@ -81,13 +101,27 @@ export default function InvoicesPage() {
   )
 }
 
-function EmptyState() {
+function EmptyState({ types }) {
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '48px 24px', textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
       <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Sin facturas todavía</div>
-      <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>Crea tu primera factura y verás la vista previa antes de guardar.</div>
-      <Link to="/invoices/new" style={{ display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>+ Nueva factura</Link>
+      <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
+        Crea tu primera factura para empezar.
+      </div>
+      {types.length === 0 ? (
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          Tu cuenta no tiene ningún tipo de factura asignado.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {types.map((t, i) => (
+            <Link key={t.key} to={t.to} style={i === 0 ? s.btnPrimary : s.btnSecondary}>
+              + {t.label}
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -96,6 +130,9 @@ const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
+  ctaRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
+  ctaPrimary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
+  ctaSecondary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
   card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '0 20px' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
