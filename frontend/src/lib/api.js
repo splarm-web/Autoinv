@@ -90,6 +90,8 @@ export const invoicesApi = {
     fd.append('file', file)
     return apiFetch('/api/invoices/transporte/parse-excel', { method: 'POST', body: fd })
   },
+  saveTransporte: (data) =>
+    apiFetch('/api/invoices/transporte', { method: 'POST', body: JSON.stringify(data) }),
   transportePdf: async (data) => {
     const token = localStorage.getItem('autoinv_token')
     const res = await fetch(`${API_URL}/api/invoices/transporte/pdf`, {

@@ -52,6 +52,7 @@ class InvoiceOut(BaseModel):
     vat_total: float
     irpf_total: float
     total: float
+    kind: str = "standard"
     pdf_path: Optional[str] = None
     created_at: datetime
     lines: List[InvoiceLineOut] = []

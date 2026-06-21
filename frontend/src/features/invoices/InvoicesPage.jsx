@@ -72,7 +72,10 @@ export default function InvoicesPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                 <span style={{ ...s.dot, background: 'var(--menta)' }} />
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>Factura {inv.number} · {inv.client_name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span>Factura {inv.number} · {inv.client_name}</span>
+                    {inv.kind === 'transporte' && <span style={s.badge}>Transporte</span>}
+                  </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>
                     {fmtDate(inv.date)}
                     {inv.due_date ? ` · Vence ${fmtDate(inv.due_date)}` : ''}
@@ -137,6 +140,7 @@ const s = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
   dot: { width: 8, height: 8, borderRadius: 99, flexShrink: 0 },
+  badge: { fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--cielo)', background: 'rgba(111,168,255,0.12)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 999, padding: '2px 8px' },
   pdfBtn: { background: 'none', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-sm)', letterSpacing: '0.02em' },
   delBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: '2px 4px', borderRadius: 4 },
 }

@@ -24,6 +24,11 @@ class Invoice(Base):
     irpf_total = Column(Float, default=0.0)      # retención (positivo, se resta)
     total = Column(Float, nullable=False)         # subtotal + vat - irpf
 
+    # Tipo de factura: "standard" (diseño minimal) o "transporte" (diseño alfredo)
+    kind = Column(String, default="standard", nullable=False)
+    # Datos específicos del tipo (p.ej. viajes/cabeza/cisterna en transporte), JSON
+    extra_json = Column(String, default="{}")
+
     pdf_path = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

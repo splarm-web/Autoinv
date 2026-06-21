@@ -1,4 +1,5 @@
-from datetime import date
+import json
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -174,15 +175,10 @@ async def parse_transporte_excel(
         raise HTTPException(status_code=400, detail=f"No se pudo leer el Excel: {e}")
 
 
-@router.post("/transporte/pdf")
-def generate_transporte_pdf(
-    data: TransporteInvoiceIn,
-    current_user: User = Depends(require_feature("transporte")),
-):
-    """Genera el PDF de factura de transporte (diseño 'alfredo').
+def _build_transporte_payload(data: TransporteInvoiceIn) -> dict:
+    """Calcula viajes + totales (IRPF 1%, IVA 21%) y arma el dict del renderer.
 
-    Recalcula los totales en servidor a partir de las líneas editadas:
-    total línea = (kilos / 1000) * precio · IRPF 1% · IVA 21%.
+    total línea = (kilos / 1000) * precio · base = suma · total = base - irpf + iva.
     """
     viajes = []
     base = 0.0
@@ -190,18 +186,14 @@ def generate_transporte_pdf(
         total = round((v.kilos / 1000) * v.precio, 2)
         base += total
         viajes.append({
-            "fecha": v.fecha,
-            "viaje": v.viaje,
-            "kilos": v.kilos,
-            "precio": v.precio,
-            "total": total,
+            "fecha": v.fecha, "viaje": v.viaje,
+            "kilos": v.kilos, "precio": v.precio, "total": total,
         })
     base = round(base, 2)
     irpf = round(base * 0.01, 2)
     iva = round(base * 0.21, 2)
     total = round(base - irpf + iva, 2)
-
-    payload = {
+    return {
         "emisor": data.emisor.model_dump(),
         "cliente": data.cliente.model_dump(),
         "numero_factura": data.numero_factura,
@@ -213,16 +205,71 @@ def generate_transporte_pdf(
         "base": base, "irpf": irpf, "iva": iva, "total": total,
     }
 
-    out_dir = settings.files_root / str(current_user.id) / "invoices"
-    safe_number = (data.numero_factura or "transporte").replace("/", "-").replace("\\", "-")
-    out_path = out_dir / f"transporte-{safe_number}.pdf"
-    render_transporte_pdf(payload, out_path)
 
+def _ddmmyyyy_to_date(s: str) -> date:
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except (ValueError, TypeError):
+            continue
+    return date.today()
+
+
+def _render_transporte_to(payload: dict, user_id: int) -> "object":
+    """Renderiza el payload a un PDF bajo la carpeta del usuario y devuelve la ruta."""
+    out_dir = settings.files_root / str(user_id) / "invoices"
+    safe_number = (payload.get("numero_factura") or "transporte").replace("/", "-").replace("\\", "-")
+    out_path = out_dir / f"transporte-{safe_number}.pdf"
+    return render_transporte_pdf(payload, out_path)
+
+
+@router.post("/transporte/pdf")
+def generate_transporte_pdf(
+    data: TransporteInvoiceIn,
+    current_user: User = Depends(require_feature("transporte")),
+):
+    """Genera y descarga el PDF de transporte SIN guardarlo (vista previa rápida)."""
+    payload = _build_transporte_payload(data)
+    out_path = _render_transporte_to(payload, current_user.id)
+    safe_number = (data.numero_factura or "transporte").replace("/", "-").replace("\\", "-")
     return FileResponse(
-        out_path,
-        media_type="application/pdf",
-        filename=f"Factura-{safe_number}.pdf",
+        out_path, media_type="application/pdf", filename=f"Factura-{safe_number}.pdf",
     )
+
+
+@router.post("/transporte", response_model=InvoiceOut, status_code=201)
+def save_transporte_invoice(
+    data: TransporteInvoiceIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_feature("transporte")),
+):
+    """Guarda la factura de transporte en el listado (kind='transporte').
+
+    Persiste el payload completo en extra_json para poder re-generar el PDF
+    fielmente más tarde desde el listado.
+    """
+    payload = _build_transporte_payload(data)
+    invoice = Invoice(
+        user_id=current_user.id,
+        number=data.numero_factura or "A-1",
+        date=_ddmmyyyy_to_date(data.fecha_factura),
+        client_name=data.cliente.nombre or "—",
+        client_tax_id=data.cliente.cif,
+        client_address=", ".join(
+            p for p in [data.cliente.direccion, data.cliente.ciudad] if p
+        ),
+        payment_method="Transferencia",
+        subtotal=payload["base"],
+        vat_total=payload["iva"],
+        irpf_total=payload["irpf"],
+        total=payload["total"],
+        kind="transporte",
+        extra_json=json.dumps(payload, ensure_ascii=False),
+    )
+    db.add(invoice)
+    db.commit()
+    db.refresh(invoice)
+    return invoice
 
 
 @router.get("/{invoice_id}/pdf")
@@ -237,12 +284,16 @@ def download_invoice_pdf(
     if not inv:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-    out_dir = settings.files_root / str(current_user.id) / "invoices"
     safe_number = inv.number.replace("/", "-").replace("\\", "-")
-    out_path = out_dir / f"{safe_number}.pdf"
 
-    renderer = get_renderer("minimal")
-    renderer.render_pdf(_to_invoice_data(inv, current_user), out_path)
+    if inv.kind == "transporte":
+        # Re-genera desde el payload guardado (diseño alfredo)
+        payload = json.loads(inv.extra_json or "{}")
+        out_path = _render_transporte_to(payload, current_user.id)
+    else:
+        out_dir = settings.files_root / str(current_user.id) / "invoices"
+        out_path = out_dir / f"{safe_number}.pdf"
+        get_renderer("minimal").render_pdf(_to_invoice_data(inv, current_user), out_path)
 
     inv.pdf_path = str(out_path.relative_to(settings.files_root))
     db.commit()

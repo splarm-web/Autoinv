@@ -47,6 +47,7 @@ export default function TransporteInvoicePage() {
 
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
@@ -145,25 +146,39 @@ export default function TransporteInvoicePage() {
   const viajesValidos = viajes.filter((v) => v.viaje || v.kilos || v.precio)
   if (viajesValidos.length === 0) warnings.push('Al menos un viaje')
 
+  const buildPayload = () => ({
+    emisor,
+    cliente,
+    numero_factura: meta.numero_factura,
+    fecha_factura: toDdmmyyyy(meta.fecha),
+    concepto_mes: meta.concepto_mes,
+    cabeza: meta.cabeza,
+    cisterna: meta.cisterna,
+    viajes: viajesValidos.map((v) => ({
+      fecha: v.fecha, viaje: v.viaje, kilos: num(v.kilos), precio: num(v.precio),
+    })),
+  })
+
   const generate = async () => {
     setError(''); setGenerating(true)
     try {
-      await invoicesApi.transportePdf({
-        emisor,
-        cliente,
-        numero_factura: meta.numero_factura,
-        fecha_factura: toDdmmyyyy(meta.fecha),
-        concepto_mes: meta.concepto_mes,
-        cabeza: meta.cabeza,
-        cisterna: meta.cisterna,
-        viajes: viajesValidos.map((v) => ({
-          fecha: v.fecha, viaje: v.viaje, kilos: num(v.kilos), precio: num(v.precio),
-        })),
-      })
+      await invoicesApi.transportePdf(buildPayload())
     } catch (err) {
       setError(err.message || 'No se pudo generar el PDF')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const save = async () => {
+    setError(''); setSaving(true)
+    try {
+      await invoicesApi.saveTransporte(buildPayload())
+      navigate('/invoices')
+    } catch (err) {
+      setError(err.message || 'No se pudo guardar la factura')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -285,9 +300,12 @@ export default function TransporteInvoicePage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <button type="button" onClick={generate} style={s.btnPrimary} disabled={generating}>
-          {generating ? 'Generando…' : '⬇ Generar PDF'}
+      <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+        <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
+          {saving ? 'Guardando…' : 'Guardar factura'}
+        </button>
+        <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
+          {generating ? 'Generando…' : '⬇ Descargar PDF'}
         </button>
         <button type="button" onClick={() => navigate('/invoices')} style={s.btnGhost}>Cancelar</button>
       </div>
