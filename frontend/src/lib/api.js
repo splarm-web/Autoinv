@@ -36,6 +36,11 @@ export const authApi = {
 // Dashboard
 export const dashboardApi = {
   get: (periodo = 'trimestre') => apiFetch(`/api/dashboard?periodo=${periodo}`),
+  chart: (view = 'meses', year) => {
+    const qs = new URLSearchParams({ view })
+    if (year) qs.set('year', year)
+    return apiFetch(`/api/dashboard/chart?${qs.toString()}`)
+  },
 }
 
 // Expenses
