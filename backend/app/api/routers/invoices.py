@@ -52,7 +52,7 @@ def list_invoices(
 def create_invoice(
     data: InvoiceCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_feature("facturas")),
 ):
     number = data.number or _next_number(db, current_user)
 

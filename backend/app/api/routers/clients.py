@@ -3,13 +3,17 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ...api.deps import get_current_user
+from ...api.deps import get_current_user, require_feature
 from ...core.database import get_db
 from ...models.client import Client
 from ...models.user import User
 from ...schemas.client import ClientCreate, ClientOut, ClientUpdate
 
-router = APIRouter(prefix="/clients", tags=["clients"])
+router = APIRouter(
+    prefix="/clients",
+    tags=["clients"],
+    dependencies=[Depends(require_feature("clientes"))],
+)
 
 
 def _unset_defaults(db: Session, user_id: int):

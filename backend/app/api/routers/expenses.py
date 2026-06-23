@@ -6,14 +6,18 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from ...api.deps import get_current_user
+from ...api.deps import get_current_user, require_feature
 from ...core.database import get_db
 from ...models.expense import Expense
 from ...models.user import User
 from ...schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, OcrResult
 from ...services import ocr_claude, storage
 
-router = APIRouter(prefix="/expenses", tags=["expenses"])
+router = APIRouter(
+    prefix="/expenses",
+    tags=["expenses"],
+    dependencies=[Depends(require_feature("gastos"))],
+)
 
 CATEGORIES = [
     "Software / Servicios digitales",

@@ -6,12 +6,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from ...api.deps import get_current_user
+from ...api.deps import get_current_user, require_feature
 from ...core.database import get_db
 from ...models.user import User
 from ...services.export_zip import build_export_zip
 
-router = APIRouter(prefix="/export", tags=["export"])
+router = APIRouter(
+    prefix="/export",
+    tags=["export"],
+    dependencies=[Depends(require_feature("export"))],
+)
 
 
 def _quarter_range(year: int, q: int) -> Tuple[date, date]:
