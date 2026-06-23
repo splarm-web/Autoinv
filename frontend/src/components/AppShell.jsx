@@ -10,6 +10,7 @@ const NAV = [
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
   { to: '/export',    label: 'Exportar', Icon: IconExportar, feature: 'export' },
+  { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
@@ -181,6 +182,15 @@ function IconClientes() {
       <path d="M1 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <path d="M10.5 6.5c1.5 0 2.5 1 2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <circle cx="10.5" cy="3.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+function IconAdmin() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="7.5" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 13c0-3 2.5-4.5 5.5-4.5S13 10 13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M11.5 2.5l.6 1.2 1.3.2-.95.9.22 1.3-1.17-.62-1.17.62.22-1.3-.95-.9 1.3-.2z" fill="currentColor" />
     </svg>
   )
 }

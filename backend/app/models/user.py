@@ -5,6 +5,16 @@ from ..core.database import Base
 # Funciones siempre disponibles (no se filtran): dashboard, settings.
 DEFAULT_FEATURES = "gastos,facturas,clientes,export"
 
+# Catálogo de features asignables (clave + etiqueta para el panel admin)
+FEATURE_CATALOG = [
+    {"key": "gastos", "label": "Gastos"},
+    {"key": "facturas", "label": "Facturas estándar"},
+    {"key": "transporte", "label": "Facturas de transporte"},
+    {"key": "clientes", "label": "Clientes"},
+    {"key": "export", "label": "Exportar"},
+    {"key": "admin", "label": "Administración"},
+]
+
 
 class User(Base):
     __tablename__ = "users"

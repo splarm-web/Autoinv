@@ -130,6 +130,14 @@ export const clientsApi = {
   delete: (id) => apiFetch(`/api/clients/${id}`, { method: 'DELETE' }),
 }
 
+// Admin
+export const adminApi = {
+  featuresCatalog: () => apiFetch('/api/admin/features'),
+  listUsers: () => apiFetch('/api/admin/users'),
+  setUserFeatures: (id, features) =>
+    apiFetch(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ features }) }),
+}
+
 // Export
 async function downloadZip(url, fallbackName) {
   const token = localStorage.getItem('autoinv_token')

@@ -46,6 +46,10 @@ class UserUpdate(BaseModel):
     invoice_number_format: Optional[str] = None
 
 
+class FeaturesUpdate(BaseModel):
+    features: List[str]
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
