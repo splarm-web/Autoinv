@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
-from .core.database import create_tables
+from .core.database import create_tables, ensure_schema
 from .api.routers import admin, auth, dashboard, expenses, invoices, export, clients
 
 app = FastAPI(
@@ -33,6 +33,7 @@ app.include_router(admin.router, prefix="/api")
 def on_startup():
     settings.files_root.mkdir(parents=True, exist_ok=True)
     create_tables()
+    ensure_schema()
 
 
 @app.get("/api/health")

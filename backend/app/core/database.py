@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 from .config import settings
 
@@ -25,3 +25,28 @@ def get_db():
 
 def create_tables():
     Base.metadata.create_all(bind=engine)
+
+
+# Columnas añadidas tras la creación inicial de las tablas. Como no usamos
+# Alembic, este migrador ligero las añade si faltan (idempotente, seguro en
+# SQLite y PostgreSQL). Se ejecuta en cada arranque tras create_tables().
+_COLUMN_MIGRATIONS = [
+    ("users", "features", "VARCHAR DEFAULT 'gastos,facturas,clientes,export'"),
+    ("invoices", "client_id", "INTEGER"),
+    ("invoices", "kind", "VARCHAR DEFAULT 'standard'"),
+    ("invoices", "extra_json", "VARCHAR DEFAULT '{}'"),
+]
+
+
+def ensure_schema(target_engine=None):
+    """Añade columnas que falten en tablas existentes (mini-migración)."""
+    eng = target_engine or engine
+    insp = inspect(eng)
+    tables = set(insp.get_table_names())
+    with eng.begin() as conn:
+        for table, column, ddl in _COLUMN_MIGRATIONS:
+            if table not in tables:
+                continue
+            existing = {c["name"] for c in insp.get_columns(table)}
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
