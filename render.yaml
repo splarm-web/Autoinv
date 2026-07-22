@@ -1,0 +1,26 @@
+# Render Blueprint — despliegue gratuito del backend de autoinv.
+# Postgres se crea aparte en Neon (neon.tech) y su cadena se pega en DATABASE_URL.
+services:
+  - type: web
+    name: autoinv-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL
+        sync: false            # se pega la cadena de Neon en el panel de Render
+      - key: SECRET_KEY
+        generateValue: true    # Render genera una clave segura automáticamente
+      - key: ALLOWED_ORIGINS
+        value: https://autoinv.vercel.app
+      - key: REGISTRATION_ENABLED
+        value: "true"
+      - key: FILES_ROOT
+        value: ./data/files
+      - key: ANTHROPIC_API_KEY
+        value: ""
