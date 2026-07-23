@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { adminApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { useToast } from '../../components/Toast'
 
 export default function AdminPage() {
   const { user, updateUser } = useAuth()
+  const { toast } = useToast()
   const [catalog, setCatalog] = useState([])
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -33,10 +35,12 @@ export default function AdminPage() {
       const updated = await adminApi.setUserFeatures(u.id, u.features)
       setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)))
       setSavedId(u.id)
+      toast.success(`Funciones de ${updated.legal_name || updated.email} guardadas`)
       // Si me edito a mí mismo, refresco mi sesión (nav/permisos)
       if (u.id === user?.id) updateUser(updated)
     } catch (e) {
       setError(e.message || 'No se pudo guardar')
+      toast.error(e.message || 'No se pudo guardar')
     } finally {
       setSavingId(null)
     }

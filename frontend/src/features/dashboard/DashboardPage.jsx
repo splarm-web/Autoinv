@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { dashboardApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur0, eur2, fmtDate } from '../../lib/format'
+import Pagination from '../../components/Pagination'
 import './DashboardPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -273,7 +274,14 @@ function Chart({ view, setView, year, setYear, metric, setMetric, bars, loading 
   )
 }
 
+const MOV_PAGE_SIZE = 6
+
 function MovementsList({ items, loading }) {
+  const [page, setPage] = useState(1)
+  useEffect(() => { setPage(1) }, [items])
+  const pageCount = Math.ceil(items.length / MOV_PAGE_SIZE)
+  const pageItems = items.slice((page - 1) * MOV_PAGE_SIZE, page * MOV_PAGE_SIZE)
+
   if (loading) {
     return (
       <div className="mov-list">
@@ -304,7 +312,7 @@ function MovementsList({ items, loading }) {
   return (
     <div className="mov-list">
       <div className="mov-head">Últimos movimientos</div>
-      {items.map((item, i) => (
+      {pageItems.map((item, i) => (
         <Link
           key={`${item.tipo}-${item.id}-${i}`}
           to={item.tipo === 'ingreso' ? '/invoices' : '/expenses'}
@@ -322,6 +330,7 @@ function MovementsList({ items, loading }) {
           </span>
         </Link>
       ))}
+      <Pagination page={page} pageCount={pageCount} onPage={setPage} />
     </div>
   )
 }

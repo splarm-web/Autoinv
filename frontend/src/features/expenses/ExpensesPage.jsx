@@ -2,14 +2,19 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { expensesApi } from '../../lib/api'
 import { eur0, fmtDate } from '../../lib/format'
+import { useToast } from '../../components/Toast'
+import Pagination from '../../components/Pagination'
 
 const EMPTY_FILTERS = { from_date: '', to_date: '', category: '' }
+const PAGE_SIZE = 15
 
 export default function ExpensesPage() {
+  const { toast } = useToast()
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [categories, setCategories] = useState([])
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     expensesApi.categories().then(setCategories)
@@ -17,6 +22,7 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     setLoading(true)
+    setPage(1)
     const params = Object.fromEntries(
       Object.entries(filters).filter(([, v]) => v !== '')
     )
@@ -28,11 +34,18 @@ export default function ExpensesPage() {
   const hasFilters = Object.values(filters).some(Boolean)
 
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const pageCount = Math.ceil(expenses.length / PAGE_SIZE)
+  const pageItems = expenses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const remove = async (id) => {
     if (!confirm('¿Eliminar este gasto?')) return
-    await expensesApi.delete(id)
-    setExpenses((prev) => prev.filter((e) => e.id !== id))
+    try {
+      await expensesApi.delete(id)
+      setExpenses((prev) => prev.filter((e) => e.id !== id))
+      toast.success('Gasto eliminado')
+    } catch (e) {
+      toast.error(e.message || 'No se pudo eliminar')
+    }
   }
 
   return (
@@ -86,8 +99,8 @@ export default function ExpensesPage() {
       ) : (
         <>
           <div style={s.card}>
-            {expenses.map((exp, i) => (
-              <div key={exp.id} style={{ ...s.row, ...(i < expenses.length - 1 ? s.rowBorder : {}) }}>
+            {pageItems.map((exp, i) => (
+              <div key={exp.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                   <span style={{ ...s.dot, background: 'var(--coral)' }} />
                   <div>
@@ -107,6 +120,8 @@ export default function ExpensesPage() {
               </div>
             ))}
           </div>
+
+          <Pagination page={page} pageCount={pageCount} onPage={setPage} />
 
           <div style={s.summary}>
             <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>

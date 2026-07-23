@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur2 } from '../../lib/format'
+import { useToast } from '../../components/Toast'
 import TransportePreview from './TransportePreview'
 
 const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
@@ -42,6 +43,7 @@ function diaFromIso(iso) {
 
 export default function TransporteInvoicePage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
   const fileRef = useRef(null)
   const prefix = user?.transporte_invoice_prefix || 'A'
@@ -70,7 +72,6 @@ export default function TransporteInvoicePage() {
   const [attempted, setAttempted] = useState(false)   // ya intentó guardar/descargar
   const [showPreview, setShowPreview] = useState(false)
   const [error, setError] = useState('')
-  const [info, setInfo] = useState('')
 
   // Pre-rellenar emisor con datos fiscales del usuario logueado (Alfredo)
   useEffect(() => {
@@ -103,8 +104,8 @@ export default function TransporteInvoicePage() {
   }
 
   const saveNewClient = async () => {
-    if (!cliente.nombre.trim()) { setError('Pon al menos el nombre del cliente para guardarlo'); return }
-    setError(''); setSavingClient(true)
+    if (!cliente.nombre.trim()) { toast.error('Pon al menos el nombre del cliente para guardarlo'); return }
+    setSavingClient(true)
     try {
       const created = await clientsApi.create({
         nombre: cliente.nombre, cif: cliente.cif,
@@ -113,9 +114,9 @@ export default function TransporteInvoicePage() {
       const list = await clientsApi.list()
       setClients(list)
       setClientId(String(created.id))
-      setInfo(`✓ Cliente "${created.nombre}" guardado`)
+      toast.success(`Cliente "${created.nombre}" guardado`)
     } catch (err) {
-      setError(err.message || 'No se pudo guardar el cliente')
+      toast.error(err.message || 'No se pudo guardar el cliente')
     } finally {
       setSavingClient(false)
     }
@@ -124,7 +125,7 @@ export default function TransporteInvoicePage() {
   const handleUpload = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setError(''); setInfo(''); setUploading(true)
+    setError(''); setUploading(true)
     try {
       const data = await invoicesApi.parseTransporteExcel(file)
       const parsed = (data.viajes || []).map((v) => ({
@@ -145,9 +146,9 @@ export default function TransporteInvoicePage() {
         cisterna: !!data.cisterna,
         concepto: !!concepto,
       })
-      setInfo(`✓ ${parsed.length} viajes cargados desde el Excel`)
+      toast.success(`${parsed.length} viajes cargados desde el Excel`)
     } catch (err) {
-      setError(err.message || 'No se pudo leer el Excel')
+      toast.error(err.message || 'No se pudo leer el Excel')
     } finally {
       setUploading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -215,8 +216,9 @@ export default function TransporteInvoicePage() {
     setGenerating(true)
     try {
       await invoicesApi.transportePdf(buildPayload())
+      toast.success('PDF generado')
     } catch (err) {
-      setError(err.message || 'No se pudo generar el PDF')
+      toast.error(err.message || 'No se pudo generar el PDF')
     } finally {
       setGenerating(false)
     }
@@ -227,9 +229,10 @@ export default function TransporteInvoicePage() {
     setSaving(true)
     try {
       await invoicesApi.saveTransporte(buildPayload())
+      toast.success('Factura guardada')
       navigate('/invoices')
     } catch (err) {
-      setError(err.message || 'No se pudo guardar la factura')
+      toast.error(err.message || 'No se pudo guardar la factura')
     } finally {
       setSaving(false)
     }
@@ -269,7 +272,6 @@ export default function TransporteInvoicePage() {
       </p>
 
       {error && <div style={{ ...s.banner, color: 'var(--coral)', borderColor: 'rgba(240,135,106,0.3)' }}>{error}</div>}
-      {info && <div style={{ ...s.banner, color: 'var(--menta)', borderColor: 'rgba(69,212,155,0.3)' }}>{info}</div>}
       {missing.length > 0 && !error && (
         <div style={{ ...s.banner, color: '#E8B84B', borderColor: 'rgba(232,184,75,0.35)', background: 'rgba(232,184,75,0.06)' }}>
           ⚠ Campos obligatorios sin rellenar: {missing.join(' · ')}

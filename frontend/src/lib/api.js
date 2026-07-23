@@ -1,25 +1,49 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// --- Indicador de "cold start" del backend (Render duerme el servicio free) ---
+// Si alguna petición tarda > umbral y sigue en vuelo, avisamos por evento global.
+let _pending = 0
+let _wakeTimer = null
+const _emitWaking = (v) =>
+  window.dispatchEvent(new CustomEvent('api:waking', { detail: v }))
+
+function _wakeStart() {
+  _pending += 1
+  if (_pending === 1) _wakeTimer = setTimeout(() => _emitWaking(true), 4000)
+}
+function _wakeEnd() {
+  _pending = Math.max(0, _pending - 1)
+  if (_pending === 0) {
+    clearTimeout(_wakeTimer)
+    _emitWaking(false)
+  }
+}
+
 async function apiFetch(path, opts = {}) {
   const token = localStorage.getItem('autoinv_token')
   const isFormData = opts.body instanceof FormData
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...opts,
-    headers: {
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...opts.headers,
-    },
-  })
+  _wakeStart()
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      ...opts,
+      headers: {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...opts.headers,
+      },
+    })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Error de red' }))
-    throw new Error(err.detail || `Error ${res.status}`)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Error de red' }))
+      throw new Error(err.detail || `Error ${res.status}`)
+    }
+
+    if (res.status === 204) return null
+    return await res.json()
+  } finally {
+    _wakeEnd()
   }
-
-  if (res.status === 204) return null
-  return res.json()
 }
 
 // Auth

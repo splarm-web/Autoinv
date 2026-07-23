@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { authApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { useToast } from '../../components/Toast'
 
 export default function SettingsPage() {
   const { user, updateUser, hasFeature } = useAuth()
+  const { toast } = useToast()
   const [form, setForm] = useState({
     legal_name: user?.legal_name || '',
     nif: user?.nif || '',
@@ -30,6 +32,9 @@ export default function SettingsPage() {
       const updated = await authApi.updateMe(form)
       updateUser(updated)
       setSaved(true)
+      toast.success('Ajustes guardados')
+    } catch (e) {
+      toast.error(e.message || 'No se pudieron guardar los ajustes')
     } finally {
       setSaving(false)
     }

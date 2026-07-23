@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur2 } from '../../lib/format'
+import { useToast } from '../../components/Toast'
 import InvoicePreview from './InvoicePreview'
 
 const EMPTY_LINE = { description: '', quantity: 1, unit_price: '', vat_rate: 21 }
@@ -21,11 +22,13 @@ const EMPTY_FORM = {
 
 export default function NewInvoicePage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY_FORM)
   const [clients, setClients] = useState([])
   const [showPreview, setShowPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -94,27 +97,47 @@ export default function NewInvoicePage() {
     },
   }
 
+  const createInvoice = () => invoicesApi.create({
+    ...form,
+    client_id: form.client_id ?? null,
+    irpf_rate: parseFloat(form.irpf_rate),
+    lines: form.lines.map((l) => ({
+      ...l,
+      quantity: parseFloat(l.quantity),
+      unit_price: parseFloat(l.unit_price),
+      vat_rate: parseFloat(l.vat_rate),
+    })),
+  })
+
   const submit = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     setError('')
     setSaving(true)
     try {
-      await invoicesApi.create({
-        ...form,
-        client_id: form.client_id ?? null,
-        irpf_rate: parseFloat(form.irpf_rate),
-        lines: form.lines.map((l) => ({
-          ...l,
-          quantity: parseFloat(l.quantity),
-          unit_price: parseFloat(l.unit_price),
-          vat_rate: parseFloat(l.vat_rate),
-        })),
-      })
+      await createInvoice()
+      toast.success('Factura guardada')
       navigate('/invoices')
     } catch (err) {
       setError(err.message)
+      toast.error(err.message || 'No se pudo guardar')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const submitAndDownload = async () => {
+    setError('')
+    setDownloading(true)
+    try {
+      const created = await createInvoice()
+      await invoicesApi.downloadPdf(created.id, created.number)
+      toast.success('Factura guardada y PDF descargado')
+      navigate('/invoices')
+    } catch (err) {
+      setError(err.message)
+      toast.error(err.message || 'No se pudo guardar/descargar')
+    } finally {
+      setDownloading(false)
     }
   }
 
@@ -138,8 +161,11 @@ export default function NewInvoicePage() {
           <InvoicePreview {...previewData} />
           <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
             <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
-            <button type="button" onClick={submit} style={s.btnPrimary} disabled={saving}>
+            <button type="button" onClick={submit} style={s.btnPrimary} disabled={saving || downloading}>
               {saving ? 'Guardando…' : 'Guardar factura'}
+            </button>
+            <button type="button" onClick={submitAndDownload} style={s.btnSecondary} disabled={saving || downloading}>
+              {downloading ? 'Generando…' : '⬇ Guardar y descargar PDF'}
             </button>
           </div>
         </div>
@@ -238,8 +264,11 @@ export default function NewInvoicePage() {
             <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>
               👁 Vista previa
             </button>
-            <button type="submit" style={s.btnPrimary} disabled={saving}>
+            <button type="submit" style={s.btnPrimary} disabled={saving || downloading}>
               {saving ? 'Guardando…' : 'Guardar factura'}
+            </button>
+            <button type="button" onClick={submitAndDownload} style={s.btnSecondary} disabled={saving || downloading}>
+              {downloading ? 'Generando…' : '⬇ Guardar y descargar PDF'}
             </button>
             <button type="button" onClick={() => navigate('/invoices')} style={s.btnGhost}>
               Cancelar

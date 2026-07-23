@@ -95,7 +95,7 @@ def _fmt_day(d: date) -> str:
     return f"{d.day} {_MONTH_NAMES[d.month].lower()}"
 
 
-def _recent_movements(db: Session, uid: int, limit: int = 10) -> List[MovementItem]:
+def _recent_movements(db: Session, uid: int, limit: int = 24) -> List[MovementItem]:
     invoices = (
         db.query(Invoice).filter(Invoice.user_id == uid)
         .order_by(Invoice.date.desc()).limit(limit).all()

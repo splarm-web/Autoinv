@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { invoicesApi } from '../../lib/api'
 import { eur2, fmtDate } from '../../lib/format'
 import { useAuth } from '../../app/AuthContext'
+import { useToast } from '../../components/Toast'
+import Pagination from '../../components/Pagination'
+
+const PAGE_SIZE = 15
 
 // Tipos de factura disponibles, cada uno detrás de su feature.
 const INVOICE_TYPES = [
@@ -12,9 +16,11 @@ const INVOICE_TYPES = [
 
 export default function InvoicesPage() {
   const { hasFeature } = useAuth()
+  const { toast } = useToast()
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
+  const [page, setPage] = useState(1)
 
   // Tipos que este usuario puede crear según su rol
   const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
@@ -23,10 +29,18 @@ export default function InvoicesPage() {
     invoicesApi.list().then(setInvoices).finally(() => setLoading(false))
   }, [])
 
+  const pageCount = Math.ceil(invoices.length / PAGE_SIZE)
+  const pageItems = invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   const remove = async (id) => {
     if (!confirm('¿Eliminar esta factura?')) return
-    await invoicesApi.delete(id)
-    setInvoices((prev) => prev.filter((i) => i.id !== id))
+    try {
+      await invoicesApi.delete(id)
+      setInvoices((prev) => prev.filter((i) => i.id !== id))
+      toast.success('Factura eliminada')
+    } catch (e) {
+      toast.error(e.message || 'No se pudo eliminar')
+    }
   }
 
   const download = async (inv) => {
@@ -34,7 +48,7 @@ export default function InvoicesPage() {
     try {
       await invoicesApi.downloadPdf(inv.id, inv.number)
     } catch (e) {
-      alert(e.message || 'No se pudo descargar el PDF')
+      toast.error(e.message || 'No se pudo descargar el PDF')
     } finally {
       setDownloading(null)
     }
@@ -67,8 +81,8 @@ export default function InvoicesPage() {
         <EmptyState types={types} />
       ) : (
         <div style={s.card}>
-          {invoices.map((inv, i) => (
-            <div key={inv.id} style={{ ...s.row, ...(i < invoices.length - 1 ? s.rowBorder : {}) }}>
+          {pageItems.map((inv, i) => (
+            <div key={inv.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                 <span style={{ ...s.dot, background: 'var(--menta)' }} />
                 <div>
@@ -99,6 +113,10 @@ export default function InvoicesPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {!loading && invoices.length > 0 && (
+        <Pagination page={page} pageCount={pageCount} onPage={setPage} />
       )}
     </div>
   )
