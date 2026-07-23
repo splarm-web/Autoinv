@@ -13,12 +13,31 @@ const QUARTERS = [
   { q: 4, label: 'T4', sub: 'oct–dic' },
 ]
 
+// Qué exporta cada ámbito. La UI es la misma; cambian título y contenido.
+const SCOPES = {
+  facturas: {
+    title: 'Exportar facturas',
+    contenido: <>Incluye <strong>facturas/</strong> con los PDFs y <strong>resumen.csv</strong> de tus ingresos.</>,
+  },
+  gastos: {
+    title: 'Exportar gastos',
+    contenido: <>Incluye <strong>gastos/</strong> con los justificantes que subiste y <strong>resumen.csv</strong>.</>,
+  },
+  todo: {
+    title: 'Exportar ingresos y gastos',
+    contenido: <>Incluye <strong>facturas/</strong> con los PDFs, <strong>gastos/</strong> con los justificantes y <strong>resumen.csv</strong>.</>,
+  },
+}
+
 /**
  * Modal de exportación. Sustituye a la antigua página /export: exportar es una
- * acción puntual, no una sección, así que vive donde están las facturas.
+ * acción puntual, no una sección, así que vive donde están los datos.
  * Dos modos en pestañas: por trimestres (lo habitual) y por rango de fechas.
+ *
+ * `scope`: 'facturas' (desde Facturas) | 'gastos' (desde Gastos) | 'todo' (dashboard)
  */
-export default function ExportModal({ onClose }) {
+export default function ExportModal({ onClose, scope = 'todo' }) {
+  const cfg = SCOPES[scope] ?? SCOPES.todo
   const { toast } = useToast()
   const today = toISODate()
   const firstDay = `${CURRENT_YEAR}-01-01`
@@ -52,16 +71,16 @@ export default function ExportModal({ onClose }) {
       toast.error('Selecciona al menos un año y un trimestre')
       return
     }
-    run(() => exportApi.downloadQuarters(years, quarters), 'ZIP descargado')
+    run(() => exportApi.downloadQuarters(years, quarters, scope), 'ZIP descargado')
   }
 
-  const exportRange = () => run(() => exportApi.download(from, to), 'ZIP descargado')
+  const exportRange = () => run(() => exportApi.download(from, to, scope), 'ZIP descargado')
 
   return (
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-panel">
         <div className="modal-header">
-          <h2 className="modal-title">Exportar facturas</h2>
+          <h2 className="modal-title">{cfg.title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -153,8 +172,7 @@ export default function ExportModal({ onClose }) {
           )}
 
           <div style={{ ...s.hint, borderTop: '1px solid var(--border-soft)', paddingTop: 12 }}>
-            El ZIP incluye <strong>resumen.csv</strong>, <strong>gastos/</strong> con los
-            justificantes y <strong>facturas/</strong> con los PDFs.
+            {cfg.contenido}
           </div>
         </div>
       </div>

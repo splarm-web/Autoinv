@@ -191,13 +191,18 @@ async function downloadZip(url, fallbackName) {
   URL.revokeObjectURL(blobUrl)
 }
 
+// `scope`: 'facturas' | 'gastos' | 'todo'
 export const exportApi = {
-  download: (from, to) =>
-    downloadZip(`${API_URL}/api/export?from_date=${from}&to_date=${to}`, `autoinv_${from}_${to}.zip`),
-  downloadQuarters: (years, quarters) => {
-    const params = new URLSearchParams()
+  download: (from, to, scope = 'todo') => {
+    const params = new URLSearchParams({ from_date: from, to_date: to, scope })
+    const name = scope === 'todo' ? 'autoinv' : `autoinv_${scope}`
+    return downloadZip(`${API_URL}/api/export?${params.toString()}`, `${name}_${from}_${to}.zip`)
+  },
+  downloadQuarters: (years, quarters, scope = 'todo') => {
+    const params = new URLSearchParams({ scope })
     years.forEach((y) => params.append('years', y))
     quarters.forEach((q) => params.append('quarters', q))
-    return downloadZip(`${API_URL}/api/export?${params.toString()}`, 'autoinv_trimestres.zip')
+    const name = scope === 'todo' ? 'autoinv' : `autoinv_${scope}`
+    return downloadZip(`${API_URL}/api/export?${params.toString()}`, `${name}_trimestres.zip`)
   },
 }

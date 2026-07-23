@@ -4,6 +4,7 @@ import { dashboardApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur0, eur2, fmtDate } from '../../lib/format'
 import Pagination from '../../components/Pagination'
+import ExportModal from '../export/ExportModal'
 import './DashboardPage.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -26,6 +27,7 @@ export default function DashboardPage() {
   const [chartMetric, setChartMetric] = useState('total') // 'total' | 'neto'
   const [chartBars, setChartBars] = useState([])
   const [chartLoading, setChartLoading] = useState(true)
+  const [showExport, setShowExport] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -58,7 +60,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <QuickActions hasFeature={hasFeature} />
+      <QuickActions hasFeature={hasFeature} onExport={() => setShowExport(true)} />
 
       {/* KPIs */}
       <div className="kpi-grid">
@@ -95,21 +97,29 @@ export default function DashboardPage() {
       <div className="card" style={{ marginTop: 'var(--gap-cards)' }}>
         <MovementsList items={data?.movimientos ?? []} loading={loading} />
       </div>
+
+      {showExport && <ExportModal scope="todo" onClose={() => setShowExport(false)} />}
     </div>
   )
 }
 
-function QuickActions({ hasFeature }) {
+function QuickActions({ hasFeature, onExport }) {
   const actions = []
   if (hasFeature('facturas')) actions.push({ to: '/invoices/new', label: '+ Factura' })
   if (hasFeature('transporte')) actions.push({ to: '/invoices/transporte', label: '+ Factura de transporte' })
   if (hasFeature('gastos')) actions.push({ to: '/expenses/new', label: '+ Gasto' })
-  if (!actions.length) return null
+  const canExport = hasFeature('export')
+  if (!actions.length && !canExport) return null
   return (
     <div className="quick-actions">
       {actions.map((a) => (
         <Link key={a.to} to={a.to} className="quick-action">{a.label}</Link>
       ))}
+      {canExport && (
+        <button type="button" onClick={onExport} className="quick-action">
+          ⬇ Exportar ingresos y gastos
+        </button>
+      )}
     </div>
   )
 }

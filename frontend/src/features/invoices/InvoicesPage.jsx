@@ -126,7 +126,7 @@ export default function InvoicesPage() {
         <Pagination page={page} pageCount={pageCount} onPage={setPage} />
       )}
 
-      {showExport && <ExportModal onClose={() => setShowExport(false)} />}
+      {showExport && <ExportModal scope="facturas" onClose={() => setShowExport(false)} />}
     </div>
   )
 }

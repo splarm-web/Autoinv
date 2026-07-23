@@ -91,9 +91,11 @@
   padding: 9px 16px; border-radius: var(--r-sm);
   background: var(--surface); border: 1px solid var(--border);
   color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none;
+  /* font-family y cursor explícitos: la fila mezcla <a> y <button> */
+  font-family: var(--font-ui); cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
-.quick-action:hover { border-color: rgba(69,212,155,0.4); background: rgba(69,212,155,0.08); color: var(--menta); }
+.quick-action:hover { border-color: var(--menta); background: var(--menta-tint); color: var(--menta); }
 
 /* Resultado del periodo */
 .result-strip {

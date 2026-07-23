@@ -28,19 +28,32 @@ def _date_in_ranges(model, ranges: List[Range]):
     return or_(*[and_(model.date >= s, model.date <= e) for s, e in ranges])
 
 
-def build_export_zip(db: Session, user: User, ranges: List[Range]) -> io.BytesIO:
+def build_export_zip(
+    db: Session, user: User, ranges: List[Range], scope: str = "todo"
+) -> io.BytesIO:
+    """Arma el ZIP del periodo.
+
+    `scope` acota qué se incluye:
+      - "facturas": solo PDFs de facturas
+      - "gastos":   solo los justificantes originales subidos
+      - "todo":     ambos
+    El resumen.csv se filtra al mismo ámbito.
+    """
+    want_gastos = scope in ("gastos", "todo")
+    want_facturas = scope in ("facturas", "todo")
+
     expenses = (
         db.query(Expense)
         .filter(Expense.user_id == user.id, _date_in_ranges(Expense, ranges))
         .order_by(Expense.date)
         .all()
-    )
+    ) if want_gastos else []
     invoices = (
         db.query(Invoice)
         .filter(Invoice.user_id == user.id, _date_in_ranges(Invoice, ranges))
         .order_by(Invoice.date)
         .all()
-    )
+    ) if want_facturas else []
 
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -58,7 +71,9 @@ def build_export_zip(db: Session, user: User, ranges: List[Range]) -> io.BytesIO
                 "Ingreso", inv.date, f"Factura {inv.number}", inv.client_name,
                 inv.total, inv.vat_total, "",
             ])
-        zf.writestr("resumen.csv", csv_buf.getvalue())
+        # utf-8-sig (con BOM): sin él, Excel en Windows abre el CSV como ANSI
+        # y los acentos salen mal ("CategorÃ­a").
+        zf.writestr("resumen.csv", csv_buf.getvalue().encode("utf-8-sig"))
 
         # Adjuntos de gastos
         for exp in expenses:

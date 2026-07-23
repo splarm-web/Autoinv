@@ -3,13 +3,17 @@ import { Link } from 'react-router-dom'
 import { expensesApi } from '../../lib/api'
 import { eur0, fmtDate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import { useAuth } from '../../app/AuthContext'
 import Pagination from '../../components/Pagination'
+import ExportModal from '../export/ExportModal'
 
 const EMPTY_FILTERS = { from_date: '', to_date: '', category: '' }
 const PAGE_SIZE = 15
 
 export default function ExpensesPage() {
   const { toast } = useToast()
+  const { hasFeature } = useAuth()
+  const [showExport, setShowExport] = useState(false)
   const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
@@ -50,9 +54,14 @@ export default function ExpensesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 10, flexWrap: 'wrap' }}>
         <h1 style={s.title}>Gastos</h1>
-        <Link to="/expenses/new" style={s.btnPrimary}>+ Nuevo gasto</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {hasFeature('export') && (
+            <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
+          )}
+          <Link to="/expenses/new" style={s.btnPrimary}>+ Nuevo gasto</Link>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -134,6 +143,8 @@ export default function ExpensesPage() {
           </div>
         </>
       )}
+
+      {showExport && <ExportModal scope="gastos" onClose={() => setShowExport(false)} />}
     </div>
   )
 }
@@ -152,6 +163,7 @@ function EmptyState() {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none', flex: 'none' },
+  btnSecondaryBtn: { padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '0 20px' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
