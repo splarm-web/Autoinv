@@ -180,7 +180,7 @@ async function downloadZip(url, fallbackName) {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'No se pudo exportar' }))
-    throw new Error(err.detail || 'No se pudo exportar')
+    throw new Error(_detailToText(err.detail, res.status))
   }
   const blob = await res.blob()
   const blobUrl = URL.createObjectURL(blob)

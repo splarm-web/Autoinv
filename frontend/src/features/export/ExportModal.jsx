@@ -17,15 +17,15 @@ const QUARTERS = [
 const SCOPES = {
   facturas: {
     title: 'Exportar facturas',
-    contenido: <>Incluye <strong>facturas/</strong> con los PDFs y <strong>resumen.csv</strong> de tus ingresos.</>,
+    contenido: <>ZIP con los <strong>PDFs de tus facturas</strong> del periodo, en <strong>facturas/</strong>.</>,
   },
   gastos: {
     title: 'Exportar gastos',
-    contenido: <>Incluye <strong>gastos/</strong> con los justificantes que subiste y <strong>resumen.csv</strong>.</>,
+    contenido: <>ZIP con los <strong>justificantes</strong> que subiste, en <strong>gastos/</strong>. Los gastos sin fichero adjunto no se incluyen.</>,
   },
   todo: {
     title: 'Exportar ingresos y gastos',
-    contenido: <>Incluye <strong>facturas/</strong> con los PDFs, <strong>gastos/</strong> con los justificantes y <strong>resumen.csv</strong>.</>,
+    contenido: <>ZIP con los <strong>PDFs de facturas</strong> y los <strong>justificantes de gastos</strong> del periodo.</>,
   },
 }
 

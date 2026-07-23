@@ -18,6 +18,16 @@ router = APIRouter(
 )
 
 
+# Mensaje cuando no hay ningún documento que meter en el ZIP. Antes el
+# resumen.csv siempre estaba, así que el ZIP nunca salía vacío; ahora sí puede.
+_EMPTY_MSG = {
+    "facturas": "No hay facturas en el periodo seleccionado",
+    "gastos": "No hay justificantes de gastos en el periodo seleccionado "
+              "(solo se exportan los gastos que tengan un fichero adjunto)",
+    "todo": "No hay documentos en el periodo seleccionado",
+}
+
+
 def _quarter_range(year: int, q: int) -> Tuple[date, date]:
     first_month = (q - 1) * 3 + 1
     last_month = first_month + 2
@@ -64,7 +74,10 @@ def export(
             detail="Indica years+quarters o from_date+to_date",
         )
 
-    zip_buffer = build_export_zip(db, current_user, ranges, scope)
+    zip_buffer, count = build_export_zip(db, current_user, ranges, scope)
+    if count == 0:
+        raise HTTPException(status_code=404, detail=_EMPTY_MSG[scope])
+
     return StreamingResponse(
         zip_buffer,
         media_type="application/zip",
