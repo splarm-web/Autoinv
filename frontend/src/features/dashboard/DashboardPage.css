@@ -120,6 +120,9 @@
 }
 .decl-total > span:first-child { font-size: 13px; font-weight: 600; color: var(--text-soft); }
 .decl-total-value { font-family: var(--font-display); font-weight: 700; font-size: 20px; color: var(--coral); font-variant-numeric: tabular-nums; }
+.decl-note { margin-top: 12px; font-size: 12px; color: var(--text-soft); line-height: 1.45; }
+.decl-note strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.decl-note-sub { color: var(--text-muted); }
 
 /* Mini segmented (controles del gráfico) */
 .mini-seg { display: flex; gap: 2px; background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 3px; }

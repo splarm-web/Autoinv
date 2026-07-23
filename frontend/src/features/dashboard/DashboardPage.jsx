@@ -38,7 +38,7 @@ export default function DashboardPage() {
       .finally(() => setChartLoading(false))
   }, [chartView, chartYear])
 
-  const resultado = data ? data.ingreso_neto - data.gastos : 0
+  const resultado = data ? data.resultado : 0
 
   return (
     <div>
@@ -63,13 +63,13 @@ export default function DashboardPage() {
       <div className="kpi-grid">
         <KpiCard label="Ingresos" value={eur0(data?.ingresos)} color="white" loading={loading} hint="Total facturado (con impuestos)" />
         <KpiCard label="Gastos" value={eur0(data?.gastos)} color="coral" loading={loading} hint="Total pagado (con IVA)" />
-        <KpiCard label="Ingresos netos" value={eur0(data?.ingreso_neto)} color="menta" loading={loading} hint="Ingresos − IVA − IRPF" />
+        <KpiCard label="Ingresos netos" value={eur0(data?.ingreso_neto)} color="menta" loading={loading} hint="Cobrado − IVA (lo que te queda)" />
       </div>
 
       {/* Resultado del periodo */}
       {!loading && (
         <div className="result-strip">
-          <span>Resultado del periodo <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(ingresos netos − gastos)</span></span>
+          <span>Resultado del periodo <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(cobrado − gastos − IVA a liquidar)</span></span>
           <span className="result-value" style={{ color: resultado >= 0 ? 'var(--menta)' : 'var(--coral)' }}>
             {resultado >= 0 ? '+' : '−'}{eur0(Math.abs(resultado))}
           </span>
@@ -125,7 +125,11 @@ function KpiCard({ label, value, color, loading, hint }) {
 }
 
 function ProximaDeclaracion({ data, loading }) {
-  const total = data ? data.iva_liquidar + data.irpf_retenido : 0
+  // Lo que realmente pagas este trimestre es el IVA (modelo 303). El IRPF
+  // retenido NO se ingresa: ya lo han adelantado tus clientes a Hacienda y
+  // cuenta como pago a cuenta de tu declaración de la renta.
+  const aIngresar = data ? data.iva_liquidar : 0
+  const aCompensar = aIngresar < 0
   const dias = data ? Math.ceil((new Date(data.fecha_limite) - new Date()) / 86400000) : null
   return (
     <div className="card decl-card">
@@ -142,15 +146,21 @@ function ProximaDeclaracion({ data, loading }) {
                 {dias != null && dias >= 0 && <span className="decl-days"> · {dias} días</span>}
               </div>
             </div>
-            <span className="decl-badge">303 · 130</span>
+            <span className="decl-badge">303 · IVA</span>
           </div>
           <div className="decl-rows">
-            <div className="decl-row"><span>IVA a liquidar</span><span>{eur2(data.iva_liquidar)}</span></div>
-            <div className="decl-row"><span>IRPF retenido</span><span>{eur2(data.irpf_retenido)}</span></div>
+            <div className="decl-row"><span>IVA repercutido</span><span>{eur2(data.iva_repercutido)}</span></div>
+            <div className="decl-row"><span>IVA soportado</span><span>−{eur2(data.iva_soportado)}</span></div>
           </div>
           <div className="decl-total">
-            <span>Estimación a ingresar</span>
-            <span className="decl-total-value">{eur2(total)}</span>
+            <span>{aCompensar ? 'A compensar / devolver' : 'A ingresar (IVA)'}</span>
+            <span className="decl-total-value" style={aCompensar ? { color: 'var(--menta)' } : undefined}>
+              {eur2(Math.abs(aIngresar))}
+            </span>
+          </div>
+          <div className="decl-note">
+            IRPF ya adelantado por tus clientes: <strong>{eur2(data.irpf_retenido)}</strong>
+            <span className="decl-note-sub"> · se descuenta en tu declaración de la renta, no lo ingresas ahora</span>
           </div>
         </>
       )}

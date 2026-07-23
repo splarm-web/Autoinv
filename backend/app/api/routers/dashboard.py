@@ -79,11 +79,13 @@ def _kpis(db: Session, uid: int, start: date, end: date):
 
 
 def _chart_bar(db: Session, uid: int, start: date, end: date, label: str, quarter=None) -> ChartBar:
-    ingresos, gastos, iva_rep, _, irpf_ret = _kpis(db, uid, start, end)
+    ingresos, gastos, iva_rep, _, _ = _kpis(db, uid, start, end)
+    # Neto = lo que te queda tras apartar el IVA. El IRPF NO se resta: ya va
+    # descontado dentro de `total`, así que restarlo otra vez sería doble conteo.
     return ChartBar(
         label=label,
         ingreso=round(ingresos, 2),
-        ingreso_neto=round(ingresos - iva_rep - irpf_ret, 2),
+        ingreso_neto=round(ingresos - iva_rep, 2),
         gasto=round(gastos, 2),
         quarter=quarter,
     )
@@ -144,6 +146,7 @@ def dashboard(
         label = f"Año {today.year}"
 
     ingresos, gastos, iva_rep, iva_sop, irpf_ret = _kpis(db, uid, start, end)
+    iva_liquidar = round(iva_rep - iva_sop, 2)
 
     # Próxima declaración: trimestre natural en curso (independiente del periodo)
     cq = _quarter_of(today)
@@ -152,6 +155,8 @@ def dashboard(
     proxima = ProximaDeclaracion(
         trimestre=f"T{cq} {today.year}",
         fecha_limite=_quarter_deadline(today.year, cq),
+        iva_repercutido=round(q_iva_rep, 2),
+        iva_soportado=round(q_iva_sop, 2),
         iva_liquidar=round(q_iva_rep - q_iva_sop, 2),
         irpf_retenido=round(q_irpf, 2),
     )
@@ -159,11 +164,13 @@ def dashboard(
     return DashboardOut(
         ingresos=ingresos,
         gastos=gastos,
-        neto=round(ingresos - gastos, 2),
-        ingreso_neto=round(ingresos - iva_rep - irpf_ret, 2),
+        # Lo que te queda tras apartar el IVA (el IRPF ya va descontado en `total`).
+        ingreso_neto=round(ingresos - iva_rep, 2),
+        # Caja real del periodo: cobrado − gastos − IVA que pagas a Hacienda.
+        resultado=round(ingresos - gastos - iva_liquidar, 2),
         iva_rep=iva_rep,
         iva_sop=iva_sop,
-        iva_liquidar=round(iva_rep - iva_sop, 2),
+        iva_liquidar=iva_liquidar,
         irpf_ret=irpf_ret,
         proxima_declaracion=proxima,
         periodo=periodo,

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class ChartBar(BaseModel):
     label: str
     ingreso: float          # total facturado (con impuestos)
-    ingreso_neto: float     # ingreso − IVA − IRPF
+    ingreso_neto: float     # ingreso − IVA (lo que queda tras apartar el IVA)
     gasto: float
     quarter: Optional[int] = None   # 1-4, para agrupar visualmente (vista meses)
 
@@ -23,15 +23,17 @@ class MovementItem(BaseModel):
 class ProximaDeclaracion(BaseModel):
     trimestre: str          # "T2 2026"
     fecha_limite: date
-    iva_liquidar: float     # IVA repercutido − soportado del trimestre
-    irpf_retenido: float    # IRPF retenido en facturas del trimestre
+    iva_repercutido: float  # IVA cobrado en facturas del trimestre
+    iva_soportado: float    # IVA de gastos del trimestre
+    iva_liquidar: float     # repercutido − soportado = lo que ingresas (303)
+    irpf_retenido: float    # IRPF ya adelantado por clientes (informativo)
 
 
 class DashboardOut(BaseModel):
     ingresos: float
     gastos: float
-    neto: float                  # ingresos − gastos (resultado del periodo)
-    ingreso_neto: float          # ingresos − IVA − IRPF
+    resultado: float             # caja real: ingresos − gastos − IVA a liquidar
+    ingreso_neto: float          # ingresos − IVA (tras apartar el IVA)
     iva_rep: float
     iva_sop: float
     iva_liquidar: float
