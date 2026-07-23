@@ -1,5 +1,17 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+// Convierte el `detail` de un error (FastAPI) en texto legible. El 422 de
+// validación de Pydantic devuelve una lista de objetos {loc, msg, type}; sin
+// esto se mostraría como "[object Object],[object Object]".
+function _detailToText(detail, status) {
+  if (!detail) return `Error ${status}`
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail.map((d) => d?.msg || (typeof d === 'string' ? d : JSON.stringify(d))).join(' · ')
+  }
+  return detail.msg || `Error ${status}`
+}
+
 // --- Indicador de "cold start" del backend (Render duerme el servicio free) ---
 // Si alguna petición tarda > umbral y sigue en vuelo, avisamos por evento global.
 let _pending = 0
@@ -36,7 +48,7 @@ async function apiFetch(path, opts = {}) {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Error de red' }))
-      throw new Error(err.detail || `Error ${res.status}`)
+      throw new Error(_detailToText(err.detail, res.status))
     }
 
     if (res.status === 204) return null

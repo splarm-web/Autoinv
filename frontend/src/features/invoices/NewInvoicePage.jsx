@@ -29,6 +29,7 @@ export default function NewInvoicePage() {
   const [showPreview, setShowPreview] = useState(false)
   const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
+  const [attempted, setAttempted] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -79,6 +80,28 @@ export default function NewInvoicePage() {
   const irpf_total = subtotal * ((parseFloat(form.irpf_rate) || 0) / 100)
   const total = subtotal + vat_total - irpf_total
 
+  // Validación bloqueante (campos obligatorios) — mismo patrón que transporte
+  const lineasValidas = form.lines.filter((l) => (l.description || '').trim() && parseFloat(l.unit_price) > 0)
+  const invalid = {
+    'Cliente': !form.client_name.trim(),
+    'Fecha': !form.date,
+    'Vencimiento': !form.due_date,
+    'Al menos un concepto con importe': lineasValidas.length === 0,
+  }
+  const missing = Object.keys(invalid).filter((k) => invalid[k])
+  const errStyle = (bad) => (attempted && bad ? s.inputError : null)
+
+  const guard = () => {
+    if (missing.length > 0) {
+      setAttempted(true)
+      setError(`Faltan campos obligatorios: ${missing.join(' · ')}`)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return false
+    }
+    setError('')
+    return true
+  }
+
   const previewData = {
     issuer: { legal_name: user?.legal_name, nif: user?.nif, address: user?.address },
     client: { name: form.client_name, tax_id: form.client_tax_id, address: form.client_address },
@@ -111,14 +134,13 @@ export default function NewInvoicePage() {
 
   const submit = async (e) => {
     if (e) e.preventDefault()
-    setError('')
+    if (!guard()) return
     setSaving(true)
     try {
       await createInvoice()
       toast.success('Factura guardada')
       navigate('/invoices')
     } catch (err) {
-      setError(err.message)
       toast.error(err.message || 'No se pudo guardar')
     } finally {
       setSaving(false)
@@ -126,7 +148,7 @@ export default function NewInvoicePage() {
   }
 
   const submitAndDownload = async () => {
-    setError('')
+    if (!guard()) return
     setDownloading(true)
     try {
       const created = await createInvoice()
@@ -134,7 +156,6 @@ export default function NewInvoicePage() {
       toast.success('Factura guardada y PDF descargado')
       navigate('/invoices')
     } catch (err) {
-      setError(err.message)
       toast.error(err.message || 'No se pudo guardar/descargar')
     } finally {
       setDownloading(false)
@@ -154,7 +175,10 @@ export default function NewInvoicePage() {
         </button>
       </div>
 
-      {error && <div style={s.error}>{error}</div>}
+      {error && <div style={s.errorBanner}>{error}</div>}
+      {missing.length > 0 && !error && (
+        <div style={s.warnBanner}>⚠ Campos obligatorios sin rellenar: {missing.join(' · ')}</div>
+      )}
 
       {showPreview ? (
         <div>
@@ -192,7 +216,7 @@ export default function NewInvoicePage() {
                 </Field>
               )}
               <Field label="Nombre / Razón social">
-                <input name="client_name" value={form.client_name} onChange={handle} required placeholder="Tarima Studio S.L." style={s.input} />
+                <input name="client_name" value={form.client_name} onChange={handle} placeholder="Tarima Studio S.L." style={{ ...s.input, ...errStyle(invalid['Cliente']) }} />
               </Field>
               <Field label="NIF / CIF">
                 <input name="client_tax_id" value={form.client_tax_id} onChange={handle} placeholder="B87654321" style={s.input} />
@@ -207,10 +231,10 @@ export default function NewInvoicePage() {
               <div style={s.sectionTitle}>Datos de la factura</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <Field label="Fecha">
-                  <input name="date" type="date" value={form.date} onChange={handle} required style={s.input} />
+                  <input name="date" type="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
                 </Field>
                 <Field label="Vencimiento">
-                  <input name="due_date" type="date" value={form.due_date} onChange={handle} style={s.input} />
+                  <input name="due_date" type="date" value={form.due_date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Vencimiento']) }} />
                 </Field>
               </div>
               <Field label="Forma de pago">
@@ -235,9 +259,9 @@ export default function NewInvoicePage() {
             </div>
             {form.lines.map((line, i) => (
               <div key={i} style={s.lineRow}>
-                <input name="description" value={line.description} onChange={(e) => handleLine(i, e)} required placeholder="Descripción" style={s.input} />
+                <input name="description" value={line.description} onChange={(e) => handleLine(i, e)} placeholder="Descripción" style={s.input} />
                 <input name="quantity" type="number" min="0" step="any" value={line.quantity} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
-                <input name="unit_price" type="number" min="0" step="0.01" value={line.unit_price} onChange={(e) => handleLine(i, e)} required style={{ ...s.input, textAlign: 'right' }} />
+                <input name="unit_price" type="number" min="0" step="0.01" value={line.unit_price} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
                 <input name="vat_rate" type="number" min="0" max="100" step="0.1" value={line.vat_rate} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
                 <div style={{ textAlign: 'right', fontSize: 14, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
                   {eur2((line.quantity || 0) * (line.unit_price || 0))}
@@ -292,6 +316,9 @@ function Field({ label, children }) {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   error: { color: 'var(--coral)', fontSize: 13, marginBottom: 14 },
+  errorBanner: { fontSize: 13, marginBottom: 14, padding: '10px 14px', borderRadius: 'var(--r-sm)', border: '1px solid rgba(240,135,106,0.3)', background: 'var(--surface)', color: 'var(--coral)' },
+  warnBanner: { fontSize: 13, marginBottom: 14, padding: '10px 14px', borderRadius: 'var(--r-sm)', border: '1px solid rgba(232,184,75,0.35)', background: 'rgba(232,184,75,0.06)', color: '#E8B84B' },
+  inputError: { borderColor: 'var(--coral)', boxShadow: '0 0 0 1px var(--coral)' },
   card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '20px 22px', marginBottom: 14 },
   sectionTitle: { fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 },
   label: { display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 },
