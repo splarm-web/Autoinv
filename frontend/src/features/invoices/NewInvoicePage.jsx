@@ -325,11 +325,11 @@ const s = {
   input: { width: '100%', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '9px 12px', color: 'var(--text)', fontFamily: 'var(--font-ui)', fontSize: 14, outline: 'none', boxSizing: 'border-box' },
   linesHead: { display: 'grid', gridTemplateColumns: '1fr 60px 90px 70px 80px 28px', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 },
   lineRow: { display: 'grid', gridTemplateColumns: '1fr 60px 90px 70px 80px 28px', gap: 8, marginBottom: 8, alignItems: 'center' },
-  addLineBtn: { background: 'none', border: '1px dashed rgba(255,255,255,0.12)', borderRadius: 'var(--r-sm)', color: 'var(--text-muted)', padding: '8px 14px', cursor: 'pointer', fontSize: 13, marginTop: 4 },
+  addLineBtn: { background: 'none', border: '1px dashed var(--dashed)', borderRadius: 'var(--r-sm)', color: 'var(--text-muted)', padding: '8px 14px', cursor: 'pointer', fontSize: 13, marginTop: 4 },
   delBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: 2 },
   totalRow: { display: 'flex', justifyContent: 'space-between', padding: '5px 0' },
   btnPrimary: { padding: '10px 22px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  btnSecondary: { padding: '10px 22px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, cursor: 'pointer' },
+  btnSecondary: { padding: '10px 22px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, cursor: 'pointer' },
   btnActive: { padding: '10px 22px', background: 'rgba(69,212,155,0.14)', color: 'var(--menta)', border: '1px solid rgba(69,212,155,0.3)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   btnGhost: { padding: '10px 22px', background: 'transparent', color: 'var(--text-muted)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, cursor: 'pointer' },
 }

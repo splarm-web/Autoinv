@@ -13,6 +13,19 @@
     rel="stylesheet"
   />
   <title>autoinv</title>
+  <script>
+    // Aplica el tema antes del primer pintado para evitar el flash de tema
+    // equivocado. Si no hay preferencia guardada, sigue la del sistema.
+    (function () {
+      try {
+        var saved = localStorage.getItem('autoinv_theme')
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+        document.documentElement.dataset.theme = theme
+        var meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', theme === 'light' ? '#F4F6F8' : '#0E1014')
+      } catch (e) { document.documentElement.dataset.theme = 'dark' }
+    })()
+  </script>
 </head>
 <body>
   <div id="root"></div>

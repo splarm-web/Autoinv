@@ -168,7 +168,7 @@ function Field({ label, children }) {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: '0 0 20px', letterSpacing: '-0.01em' },
   dropZone: {
-    border: '2px dashed rgba(255,255,255,0.12)',
+    border: '2px dashed var(--dashed)',
     borderRadius: 'var(--r-card)',
     padding: '28px 20px',
     textAlign: 'center',

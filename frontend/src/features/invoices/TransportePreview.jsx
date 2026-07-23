@@ -107,7 +107,7 @@ export default function TransportePreview({ emisor, cliente, meta, viajes, total
 }
 
 const s = {
-  shell: { background: '#070809', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 20, padding: 40, display: 'flex', justifyContent: 'center' },
+  shell: { background: 'var(--preview-shell)', border: '1px solid var(--border)', borderRadius: 20, padding: 40, display: 'flex', justifyContent: 'center' },
   paper: { width: '100%', maxWidth: 720, background: '#fff', color: '#15171c', borderRadius: 6, boxShadow: '0 30px 70px -30px rgba(0,0,0,0.7)', padding: '48px 48px 40px', fontFamily: "'Hanken Grotesk', sans-serif" },
   header: { display: 'flex', justifyContent: 'space-between', gap: 24, marginBottom: 30 },
   emisorName: { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, color: '#15171c' },

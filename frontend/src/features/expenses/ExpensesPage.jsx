@@ -165,7 +165,6 @@ const s = {
   filterInput: {
     background: 'var(--ink)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
     color: 'var(--text)', fontSize: 13, padding: '6px 10px', outline: 'none',
-    colorScheme: 'dark',
   },
   clearBtn: {
     background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
+import { useTheme } from '../app/ThemeContext'
 import './AppShell.css'
 
 // `feature`: exige esa función. `anyFeature`: basta con tener una. Sin nada: siempre.
@@ -72,6 +73,7 @@ export default function AppShell() {
             <IconMenu />
           </button>
           <Logo />
+          <ThemeToggle className="shell-theme-mobile" />
         </div>
         <main className="shell-main">
           <Outlet />
@@ -119,13 +121,29 @@ function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature }) {
           <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.legal_name || user?.email?.split('@')[0]}
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Plan autónomo</div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Autónomo</div>
         </div>
+        <ThemeToggle className="shell-theme" />
         <button className="shell-logout" onClick={onLogout} title="Cerrar sesión">
           <IconLogout />
         </button>
       </div>
     </div>
+  )
+}
+
+function ThemeToggle({ className }) {
+  const { theme, toggleTheme } = useTheme()
+  const isLight = theme === 'light'
+  return (
+    <button
+      className={className}
+      onClick={toggleTheme}
+      title={isLight ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro'}
+      aria-label={isLight ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro'}
+    >
+      {isLight ? <IconMoon /> : <IconSun />}
+    </button>
   )
 }
 
@@ -206,6 +224,21 @@ function IconLogout() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path d="M5 1H2a1 1 0 00-1 1v10a1 1 0 001 1h3M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function IconSun() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="7.5" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7.5 .8v1.7M7.5 12.5v1.7M.8 7.5h1.7M12.5 7.5h1.7M2.75 2.75l1.2 1.2M11.05 11.05l1.2 1.2M2.75 12.25l1.2-1.2M11.05 3.95l1.2-1.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function IconMoon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M13 9.2A5.8 5.8 0 015.8 2a5.9 5.9 0 103.9 10.9c1.5-.5 2.7-1.8 3.3-3.7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   )
 }

@@ -4,6 +4,11 @@
    ========================================================= */
 
 :root {
+  /* Tema por defecto: oscuro. El claro vive en [data-theme="light"] (abajo).
+     `color-scheme` hace que los controles nativos (date pickers, scrollbars)
+     sigan al tema sin tener que forzarlos en cada input. */
+  color-scheme: dark;
+
   /* Colores — App (dark) */
   --ink:         #0E1014;
   --surface:     #16181E;
@@ -17,6 +22,15 @@
   --menta:       #45D49B;
   --coral:       #F0876A;
   --cielo:       #6FA8FF;
+
+  /* Superficies derivadas (antes hardcodeadas en estilos inline) */
+  --btn-soft:      rgba(255, 255, 255, 0.06);  /* botones secundarios */
+  --hover:         rgba(255, 255, 255, 0.04);  /* hover de nav/filas */
+  --dashed:        rgba(255, 255, 255, 0.12);  /* bordes punteados */
+  --scroll-thumb:  rgba(255, 255, 255, 0.10);
+  --overlay:       rgba(0, 0, 0, 0.60);        /* fondo del menú móvil */
+  --menta-tint:    rgba(69, 212, 155, 0.12);   /* nav activo, chips */
+  --preview-shell: #070809;                    /* marco de la vista previa */
 
   /* Colores — Factura (light) */
   --paper:       #FFFFFF;
@@ -49,6 +63,36 @@
 }
 
 /* =========================================================
+   Tema claro
+   Los acentos se oscurecen: el menta/coral/cielo del tema
+   oscuro no tienen contraste suficiente sobre blanco.
+   ========================================================= */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --ink:         #F4F6F8;   /* fondo de la app */
+  --surface:     #FFFFFF;   /* cards */
+  --surface-2:   #FFFFFF;   /* sidebar / barras */
+  --surface-3:   #EFF1F4;   /* inputs */
+  --border:      rgba(15, 18, 25, 0.12);
+  --border-soft: rgba(15, 18, 25, 0.08);
+  --text:        #15171C;
+  --text-muted:  #6B7280;
+  --text-soft:   #3D444F;
+  --menta:       #0F9B6B;
+  --coral:       #C0563A;
+  --cielo:       #2563EB;
+
+  --btn-soft:      rgba(15, 18, 25, 0.05);
+  --hover:         rgba(15, 18, 25, 0.05);
+  --dashed:        rgba(15, 18, 25, 0.18);
+  --scroll-thumb:  rgba(15, 18, 25, 0.18);
+  --overlay:       rgba(15, 18, 25, 0.45);
+  --menta-tint:    rgba(15, 155, 107, 0.12);
+  --preview-shell: #E7EAEE;
+}
+
+/* =========================================================
    Reset & base
    ========================================================= */
 *, *::before, *::after { box-sizing: border-box; }
@@ -65,6 +109,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 ::selection {
@@ -77,7 +122,7 @@ body {
 /* Scrollbar sutil */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 99px; }
 
 /* Animación de entrada de toasts */
 @keyframes toastIn {

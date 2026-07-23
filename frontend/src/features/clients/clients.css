@@ -143,7 +143,7 @@
 }
 
 .client-action-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--btn-soft);
   color: var(--text);
 }
 
@@ -227,7 +227,7 @@
 }
 
 .btn-ghost:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--dashed);
   color: var(--text);
 }
 
@@ -252,7 +252,7 @@
 
 .modal-panel {
   background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg);
   width: 100%;
   max-width: 480px;

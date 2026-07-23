@@ -150,7 +150,7 @@ function EmptyState({ types }) {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
-  btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
+  btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   ctaRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   ctaPrimary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
   ctaSecondary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },

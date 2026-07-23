@@ -45,10 +45,10 @@
 }
 .nav-item:hover {
   color: var(--text-soft);
-  background: rgba(255,255,255,0.04);
+  background: var(--hover);
 }
 .nav-item.active {
-  background: rgba(69,212,155,0.12);
+  background: var(--menta-tint);
   color: var(--menta);
   font-weight: 600;
 }
@@ -56,8 +56,8 @@
 .shell-user {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 8px;
+  gap: 8px;
+  padding: 10px 6px;
   border-top: 1px solid var(--border-soft);
   margin-top: auto;
 }
@@ -76,8 +76,8 @@
   flex-shrink: 0;
 }
 
-.shell-logout {
-  margin-left: auto;
+.shell-logout,
+.shell-theme {
   background: none;
   border: none;
   color: var(--text-muted);
@@ -88,7 +88,23 @@
   align-items: center;
   transition: color 0.15s;
 }
-.shell-logout:hover { color: var(--text); }
+.shell-theme { margin-left: auto; }
+.shell-logout:hover,
+.shell-theme:hover { color: var(--text); }
+
+/* Toggle de tema en la barra móvil (a la derecha del logo) */
+.shell-theme-mobile {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+}
+.shell-theme-mobile:hover { color: var(--text); }
 
 /* ── Content ── */
 .shell-content {
@@ -155,7 +171,7 @@
 .shell-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: var(--overlay);
   z-index: 50;
   display: flex;
 }

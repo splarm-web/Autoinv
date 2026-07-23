@@ -142,8 +142,8 @@ const s = {
   chipRow: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   chip: { background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: 'var(--r-sm)', padding: '8px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   chipActive: { background: 'rgba(69,212,155,0.14)', border: '1px solid rgba(69,212,155,0.4)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '8px 14px', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
-  input: { width: '100%', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '10px 14px', color: 'var(--text)', fontFamily: 'var(--font-ui)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' },
+  input: { width: '100%', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '10px 14px', color: 'var(--text)', fontFamily: 'var(--font-ui)', fontSize: 14, outline: 'none', boxSizing: 'border-box' },
   btn: { display: 'block', width: '100%', marginTop: 20, padding: '12px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  btnSecondary: { display: 'block', width: '100%', marginTop: 18, padding: '12px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
+  btnSecondary: { display: 'block', width: '100%', marginTop: 18, padding: '12px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   hint: { fontSize: 12, color: 'var(--text-muted)', marginTop: 14, lineHeight: 1.6 },
 }

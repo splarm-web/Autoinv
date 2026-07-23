@@ -135,8 +135,8 @@ function TotalRow({ label, value, valueStyle, last }) {
 
 const s = {
   shell: {
-    background: '#070809',
-    border: '1px solid rgba(255,255,255,0.06)',
+    background: 'var(--preview-shell)',
+    border: '1px solid var(--border)',
     borderRadius: 20,
     padding: 40,
     display: 'flex',
