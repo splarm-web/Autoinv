@@ -32,6 +32,7 @@ def create_tables():
 # SQLite y PostgreSQL). Se ejecuta en cada arranque tras create_tables().
 _COLUMN_MIGRATIONS = [
     ("users", "features", "VARCHAR DEFAULT 'gastos,facturas,clientes,export'"),
+    ("users", "transporte_invoice_prefix", "VARCHAR DEFAULT 'A'"),
     ("invoices", "client_id", "INTEGER"),
     ("invoices", "kind", "VARCHAR DEFAULT 'standard'"),
     ("invoices", "extra_json", "VARCHAR DEFAULT '{}'"),

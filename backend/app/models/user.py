@@ -30,6 +30,8 @@ class User(Base):
     default_vat = Column(Float, default=21.0)
     irpf_rate = Column(Float, default=15.0)
     invoice_number_format = Column(String, default="YYYY-NNN")
+    # Prefijo del nº de factura de transporte (Alfredo): p.ej. "A" → "A2" en febrero
+    transporte_invoice_prefix = Column(String, default="A")
 
     # Funcionalidades activadas por usuario (CSV: "gastos,facturas,transporte,…")
     features = Column(String, default=DEFAULT_FEATURES, nullable=False)

@@ -26,6 +26,7 @@ class UserOut(BaseModel):
     default_vat: float
     irpf_rate: float
     invoice_number_format: str
+    transporte_invoice_prefix: str = "A"
     features: List[str] = []
     created_at: datetime
 
@@ -44,6 +45,7 @@ class UserUpdate(BaseModel):
     default_vat: Optional[float] = None
     irpf_rate: Optional[float] = None
     invoice_number_format: Optional[str] = None
+    transporte_invoice_prefix: Optional[str] = None
 
 
 class FeaturesUpdate(BaseModel):

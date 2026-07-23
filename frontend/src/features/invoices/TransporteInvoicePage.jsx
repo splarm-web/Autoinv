@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import TransportePreview from './TransportePreview'
 
 const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
@@ -13,9 +14,10 @@ const eur = (v) => `${(v || 0).toLocaleString('es-ES', { minimumFractionDigits: 
 
 function conceptoFromIso(iso) {
   if (!iso) return ''
-  const d = new Date(iso)
-  if (isNaN(d)) return ''
-  return `${MESES[d.getMonth()]} ${d.getFullYear()}`
+  const [y, m] = iso.split('-')
+  const mes = parseInt(m, 10)
+  if (!mes || !y) return ''
+  return `${MESES[mes - 1]} ${y}`
 }
 
 function toDdmmyyyy(iso) {
@@ -25,10 +27,23 @@ function toDdmmyyyy(iso) {
   return `${d}/${m}/${y}`
 }
 
+// Nº de factura = prefijo + mes de la fecha de emisión (21/02 → A2)
+function numeroFromFecha(iso, prefix) {
+  const mes = iso ? parseInt(iso.split('-')[1], 10) : NaN
+  return isNaN(mes) ? prefix : `${prefix}${mes}`
+}
+
+function diaFromIso(iso) {
+  if (!iso) return ''
+  const d = iso.split('-')[2]
+  return d ? String(parseInt(d, 10)) : ''
+}
+
 export default function TransporteInvoicePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const fileRef = useRef(null)
+  const prefix = user?.transporte_invoice_prefix || 'A'
 
   const [emisor, setEmisor] = useState({ nombre: '', nif: '', direccion: '' })
   const [cliente, setCliente] = useState({ ...EMPTY_CLIENTE })
@@ -37,7 +52,7 @@ export default function TransporteInvoicePage() {
   const [savingClient, setSavingClient] = useState(false)
 
   const [meta, setMeta] = useState({
-    numero_factura: 'A-1',
+    numero_factura: `${prefix}${new Date().getMonth() + 1}`,
     fecha: new Date().toISOString().split('T')[0],
     concepto_mes: '',
     cabeza: '',
@@ -45,9 +60,14 @@ export default function TransporteInvoicePage() {
   })
   const [viajes, setViajes] = useState([{ ...EMPTY_VIAJE }])
 
+  // Campos autorrellenados por el import de Excel (para el helper azul)
+  const [autofilled, setAutofilled] = useState({})
+
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [attempted, setAttempted] = useState(false)   // ya intentó guardar/descargar
+  const [showPreview, setShowPreview] = useState(false)
   const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
@@ -65,6 +85,13 @@ export default function TransporteInvoicePage() {
   useEffect(() => {
     clientsApi.list().then(setClients).catch(() => {})
   }, [])
+
+  // Recalcular el nº de factura al cambiar la fecha de emisión o el prefijo
+  useEffect(() => {
+    setMeta((m) => ({ ...m, numero_factura: numeroFromFecha(m.fecha, prefix) }))
+  }, [meta.fecha, prefix])
+
+  const clearAutofilled = (key) => setAutofilled((a) => (a[key] ? { ...a, [key]: false } : a))
 
   const selectClient = (e) => {
     const id = e.target.value
@@ -104,12 +131,19 @@ export default function TransporteInvoicePage() {
         kilos: v.kilos ?? '', precio: v.precio ?? '',
       }))
       setViajes(parsed.length ? parsed : [{ ...EMPTY_VIAJE }])
+      const concepto = conceptoFromIso(parsed[0]?.fecha)
       setMeta((m) => ({
         ...m,
         cabeza: data.cabeza || m.cabeza,
         cisterna: data.cisterna || m.cisterna,
-        concepto_mes: conceptoFromIso(parsed[0]?.fecha) || m.concepto_mes,
+        concepto_mes: concepto || m.concepto_mes,
       }))
+      setAutofilled({
+        viajes: parsed.length > 0,
+        cabeza: !!data.cabeza,
+        cisterna: !!data.cisterna,
+        concepto: !!concepto,
+      })
       setInfo(`✓ ${parsed.length} viajes cargados desde el Excel`)
     } catch (err) {
       setError(err.message || 'No se pudo leer el Excel')
@@ -121,6 +155,7 @@ export default function TransporteInvoicePage() {
 
   const handleViaje = (i, field, value) => {
     setViajes((vs) => vs.map((v, idx) => (idx === i ? { ...v, [field]: value } : v)))
+    clearAutofilled('viajes')
   }
   const addViaje = () => setViajes((vs) => [...vs, { ...EMPTY_VIAJE }])
   const removeViaje = (i) => setViajes((vs) => vs.filter((_, idx) => idx !== i))
@@ -132,19 +167,34 @@ export default function TransporteInvoicePage() {
   const iva = base * 0.21
   const total = base - irpf + iva
 
-  // Avisos de campos vacíos (no bloquean, solo informan)
-  const warnings = []
-  if (!emisor.nombre.trim()) warnings.push('Nombre del emisor')
-  if (!emisor.nif.trim()) warnings.push('NIF del emisor')
-  if (!emisor.direccion.trim()) warnings.push('Dirección del emisor')
-  if (!cliente.nombre.trim()) warnings.push('Nombre del cliente')
-  if (!cliente.cif.trim()) warnings.push('CIF/DNI del cliente')
-  if (!cliente.direccion.trim()) warnings.push('Dirección del cliente')
-  if (!meta.numero_factura.trim()) warnings.push('Nº de factura')
-  if (!meta.fecha) warnings.push('Fecha')
-  if (!meta.concepto_mes.trim()) warnings.push('Concepto (mes)')
   const viajesValidos = viajes.filter((v) => v.viaje || v.kilos || v.precio)
-  if (viajesValidos.length === 0) warnings.push('Al menos un viaje')
+
+  // Validación bloqueante (campos obligatorios)
+  const invalid = {
+    'Nombre del emisor': !emisor.nombre.trim(),
+    'NIF del emisor': !emisor.nif.trim(),
+    'Dirección del emisor': !emisor.direccion.trim(),
+    'Nombre del cliente': !cliente.nombre.trim(),
+    'CIF/DNI del cliente': !cliente.cif.trim(),
+    'Dirección del cliente': !cliente.direccion.trim(),
+    'Nº de factura': !meta.numero_factura.trim(),
+    'Fecha': !meta.fecha,
+    'Concepto (mes)': !meta.concepto_mes.trim(),
+    'Al menos un viaje': viajesValidos.length === 0,
+  }
+  const missing = Object.keys(invalid).filter((k) => invalid[k])
+  const errStyle = (isBad) => (attempted && isBad ? s.inputError : null)
+
+  const guard = () => {
+    if (missing.length > 0) {
+      setAttempted(true)
+      setError(`Faltan campos obligatorios: ${missing.join(' · ')}`)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return false
+    }
+    setError('')
+    return true
+  }
 
   const buildPayload = () => ({
     emisor,
@@ -160,7 +210,8 @@ export default function TransporteInvoicePage() {
   })
 
   const generate = async () => {
-    setError(''); setGenerating(true)
+    if (!guard()) return
+    setGenerating(true)
     try {
       await invoicesApi.transportePdf(buildPayload())
     } catch (err) {
@@ -171,7 +222,8 @@ export default function TransporteInvoicePage() {
   }
 
   const save = async () => {
-    setError(''); setSaving(true)
+    if (!guard()) return
+    setSaving(true)
     try {
       await invoicesApi.saveTransporte(buildPayload())
       navigate('/invoices')
@@ -182,21 +234,62 @@ export default function TransporteInvoicePage() {
     }
   }
 
+  // Datos para la vista previa
+  const previewData = {
+    emisor,
+    cliente,
+    meta: {
+      numero_factura: meta.numero_factura,
+      fecha: toDdmmyyyy(meta.fecha),
+      concepto_mes: meta.concepto_mes,
+      cabeza: meta.cabeza,
+    },
+    viajes: viajesValidos.map((v) => ({
+      dia: diaFromIso(v.fecha), viaje: v.viaje,
+      kilos: num(v.kilos), precio: num(v.precio), total: lineTotal(v),
+    })),
+    totals: { base, irpf, iva, total },
+  }
+
   return (
     <div>
-      <h1 style={s.title}>Factura de transporte</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8, flexWrap: 'wrap' }}>
+        <h1 style={s.title}>Factura transporte (Alfredo)</h1>
+        <button
+          type="button"
+          onClick={() => setShowPreview((v) => !v)}
+          style={showPreview ? s.btnActive : s.btnSecondary}
+        >
+          {showPreview ? 'Ver formulario' : '👁 Vista previa'}
+        </button>
+      </div>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, marginBottom: 20 }}>
         Sube el Excel para autorellenar los viajes, edítalos si hace falta y genera el PDF.
       </p>
 
       {error && <div style={{ ...s.banner, color: 'var(--coral)', borderColor: 'rgba(240,135,106,0.3)' }}>{error}</div>}
       {info && <div style={{ ...s.banner, color: 'var(--menta)', borderColor: 'rgba(69,212,155,0.3)' }}>{info}</div>}
-      {warnings.length > 0 && (
+      {missing.length > 0 && !error && (
         <div style={{ ...s.banner, color: '#E8B84B', borderColor: 'rgba(232,184,75,0.35)', background: 'rgba(232,184,75,0.06)' }}>
-          ⚠ Campos sin rellenar (puedes generar igualmente): {warnings.join(' · ')}
+          ⚠ Campos obligatorios sin rellenar: {missing.join(' · ')}
         </div>
       )}
 
+      {showPreview ? (
+        <div>
+          <TransportePreview {...previewData} />
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
+            <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
+            <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
+              {saving ? 'Guardando…' : 'Guardar factura'}
+            </button>
+            <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
+              {generating ? 'Generando…' : '⬇ Descargar PDF'}
+            </button>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Subida de Excel */}
       <div style={{ ...s.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
@@ -215,10 +308,10 @@ export default function TransporteInvoicePage() {
         {/* Emisor */}
         <div style={s.card}>
           <div style={s.sectionTitle}>Emisor</div>
-          <Field label="Nombre"><input value={emisor.nombre} onChange={(e) => setEmisor({ ...emisor, nombre: e.target.value })} style={s.input} placeholder="TRANSPORTES…" /></Field>
-          <Field label="NIF"><input value={emisor.nif} onChange={(e) => setEmisor({ ...emisor, nif: e.target.value })} style={s.input} /></Field>
+          <Field label="Nombre"><input value={emisor.nombre} onChange={(e) => setEmisor({ ...emisor, nombre: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nombre del emisor']) }} placeholder="TRANSPORTES…" /></Field>
+          <Field label="NIF"><input value={emisor.nif} onChange={(e) => setEmisor({ ...emisor, nif: e.target.value })} style={{ ...s.input, ...errStyle(invalid['NIF del emisor']) }} /></Field>
           <Field label="Dirección" hint="Una línea por renglón (dirección, ciudad, teléfono…)">
-            <textarea value={emisor.direccion} onChange={(e) => setEmisor({ ...emisor, direccion: e.target.value })} rows={3} style={{ ...s.input, resize: 'vertical' }} placeholder={'C/ Apostol Santiago 16 1º\n46740 Carcaixent (VALENCIA)\nTlf. 607411838'} />
+            <textarea value={emisor.direccion} onChange={(e) => setEmisor({ ...emisor, direccion: e.target.value })} rows={3} style={{ ...s.input, resize: 'vertical', ...errStyle(invalid['Dirección del emisor']) }} placeholder={'C/ Apostol Santiago 16 1º\n46740 Carcaixent (VALENCIA)\nTlf. 607411838'} />
           </Field>
           <div style={s.hintBox}>Estos datos salen de tu perfil fiscal (Ajustes).</div>
         </div>
@@ -241,10 +334,10 @@ export default function TransporteInvoicePage() {
               ))}
             </select>
           </Field>
-          <Field label="Nombre"><input value={cliente.nombre} onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })} style={s.input} /></Field>
-          <Field label="CIF / DNI"><input value={cliente.cif} onChange={(e) => setCliente({ ...cliente, cif: e.target.value })} style={s.input} /></Field>
+          <Field label="Nombre"><input value={cliente.nombre} onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nombre del cliente']) }} /></Field>
+          <Field label="CIF / DNI"><input value={cliente.cif} onChange={(e) => setCliente({ ...cliente, cif: e.target.value })} style={{ ...s.input, ...errStyle(invalid['CIF/DNI del cliente']) }} /></Field>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Field label="Dirección"><input value={cliente.direccion} onChange={(e) => setCliente({ ...cliente, direccion: e.target.value })} style={s.input} /></Field>
+            <Field label="Dirección"><input value={cliente.direccion} onChange={(e) => setCliente({ ...cliente, direccion: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Dirección del cliente']) }} /></Field>
             <Field label="Ciudad"><input value={cliente.ciudad} onChange={(e) => setCliente({ ...cliente, ciudad: e.target.value })} style={s.input} /></Field>
           </div>
         </div>
@@ -254,17 +347,28 @@ export default function TransporteInvoicePage() {
       <div style={s.card}>
         <div style={s.sectionTitle}>Datos de la factura</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <Field label="Nº factura"><input value={meta.numero_factura} onChange={(e) => setMeta({ ...meta, numero_factura: e.target.value })} style={s.input} /></Field>
-          <Field label="Fecha"><input type="date" value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={s.input} /></Field>
-          <Field label="Concepto (mes año)"><input value={meta.concepto_mes} onChange={(e) => setMeta({ ...meta, concepto_mes: e.target.value })} placeholder="SEPTIEMBRE 2025" style={s.input} /></Field>
-          <Field label="Cabeza tractora"><input value={meta.cabeza} onChange={(e) => setMeta({ ...meta, cabeza: e.target.value })} style={s.input} /></Field>
-          <Field label="Cisterna"><input value={meta.cisterna} onChange={(e) => setMeta({ ...meta, cisterna: e.target.value })} style={s.input} /></Field>
+          <Field label="Nº factura" hint="Se genera con el prefijo (Ajustes) + mes de la fecha">
+            <input value={meta.numero_factura} onChange={(e) => setMeta({ ...meta, numero_factura: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nº de factura']) }} />
+          </Field>
+          <Field label="Fecha"><input type="date" value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} /></Field>
+          <Field label="Concepto (mes año)" info={autofilled.concepto && meta.concepto_mes ? 'Leído del Excel' : ''}>
+            <input value={meta.concepto_mes} onChange={(e) => { setMeta({ ...meta, concepto_mes: e.target.value }); clearAutofilled('concepto') }} placeholder="SEPTIEMBRE 2025" style={{ ...s.input, ...errStyle(invalid['Concepto (mes)']) }} />
+          </Field>
+          <Field label="Cabeza tractora" info={autofilled.cabeza && meta.cabeza ? 'Leído del Excel' : ''}>
+            <input value={meta.cabeza} onChange={(e) => { setMeta({ ...meta, cabeza: e.target.value }); clearAutofilled('cabeza') }} style={s.input} />
+          </Field>
+          <Field label="Cisterna" info={autofilled.cisterna && meta.cisterna ? 'Leído del Excel' : ''}>
+            <input value={meta.cisterna} onChange={(e) => { setMeta({ ...meta, cisterna: e.target.value }); clearAutofilled('cisterna') }} style={s.input} />
+          </Field>
         </div>
       </div>
 
       {/* Tabla de viajes */}
       <div style={s.card}>
-        <div style={s.sectionTitle}>Viajes realizados</div>
+        <div style={{ ...s.sectionTitle, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span>Viajes realizados</span>
+          {autofilled.viajes && <span style={s.infoBadge}>Leído del Excel</span>}
+        </div>
         <div style={s.linesHead}>
           <div>Fecha</div>
           <div>Viaje</div>
@@ -307,18 +411,22 @@ export default function TransporteInvoicePage() {
         <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
           {generating ? 'Generando…' : '⬇ Descargar PDF'}
         </button>
+        <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>👁 Vista previa</button>
         <button type="button" onClick={() => navigate('/invoices')} style={s.btnGhost}>Cancelar</button>
       </div>
+      </>
+      )}
     </div>
   )
 }
 
-function Field({ label, hint, children }) {
+function Field({ label, hint, info, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label style={s.label}>{label}</label>
       {children}
-      {hint && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5 }}>{hint}</div>}
+      {info && <div style={{ fontSize: 11, color: 'var(--cielo)', marginTop: 5, display: 'flex', alignItems: 'center', gap: 5 }}>ⓘ {info}</div>}
+      {hint && !info && <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 5 }}>{hint}</div>}
     </div>
   )
 }
@@ -330,7 +438,9 @@ const s = {
   sectionTitle: { fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 },
   label: { display: 'block', fontSize: 12, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 },
   input: { width: '100%', background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '9px 12px', color: 'var(--text)', fontFamily: 'var(--font-ui)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' },
+  inputError: { borderColor: 'var(--coral)', boxShadow: '0 0 0 1px var(--coral)' },
   hintBox: { fontSize: 11, color: 'var(--text-muted)', marginTop: 2 },
+  infoBadge: { fontSize: 10, fontWeight: 600, letterSpacing: '0.03em', color: 'var(--cielo)', background: 'rgba(111,168,255,0.12)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 999, padding: '2px 8px', textTransform: 'none' },
   saveClientBtn: { background: 'rgba(69,212,155,0.12)', border: '1px solid rgba(69,212,155,0.3)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '4px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', letterSpacing: 0, textTransform: 'none' },
   linesHead: { display: 'grid', gridTemplateColumns: '150px 1fr 90px 80px 90px 28px', gap: 8, fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 },
   lineRow: { display: 'grid', gridTemplateColumns: '150px 1fr 90px 80px 90px 28px', gap: 8, marginBottom: 8, alignItems: 'center' },
@@ -339,5 +449,6 @@ const s = {
   totalRow: { display: 'flex', justifyContent: 'space-between', padding: '5px 0' },
   btnPrimary: { padding: '10px 22px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   btnSecondary: { padding: '10px 22px', background: 'rgba(255,255,255,0.06)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, cursor: 'pointer', display: 'inline-block' },
+  btnActive: { padding: '10px 22px', background: 'rgba(69,212,155,0.14)', color: 'var(--menta)', border: '1px solid rgba(69,212,155,0.3)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   btnGhost: { padding: '10px 22px', background: 'transparent', color: 'var(--text-muted)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, cursor: 'pointer' },
 }

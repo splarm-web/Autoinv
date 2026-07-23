@@ -7,7 +7,7 @@ import { useAuth } from '../../app/AuthContext'
 // Tipos de factura disponibles, cada uno detrás de su feature.
 const INVOICE_TYPES = [
   { key: 'facturas',   label: 'Nueva factura',         to: '/invoices/new' },
-  { key: 'transporte', label: 'Factura de transporte', to: '/invoices/transporte' },
+  { key: 'transporte', label: 'Factura transporte (Alfredo)', to: '/invoices/transporte' },
 ]
 
 export default function InvoicesPage() {

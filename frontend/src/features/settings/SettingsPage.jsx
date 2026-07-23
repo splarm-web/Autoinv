@@ -3,7 +3,7 @@ import { authApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, hasFeature } = useAuth()
   const [form, setForm] = useState({
     legal_name: user?.legal_name || '',
     nif: user?.nif || '',
@@ -11,7 +11,9 @@ export default function SettingsPage() {
     default_vat: user?.default_vat ?? 21,
     irpf_rate: user?.irpf_rate ?? 15,
     invoice_number_format: user?.invoice_number_format || 'YYYY-NNN',
+    transporte_invoice_prefix: user?.transporte_invoice_prefix || 'A',
   })
+  const isTransporte = hasFeature('transporte')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -68,16 +70,32 @@ export default function SettingsPage() {
 
         <div style={s.section}>
           <div style={s.sectionTitle}>Facturación</div>
-          <Field label="Formato numeración" hint="YYYY = año, NNN = secuencia (ej: 2026-001)">
-            <input name="invoice_number_format" value={form.invoice_number_format} onChange={handle} placeholder="YYYY-NNN" style={s.input} />
-          </Field>
-          <div style={s.preview}>
-            Vista previa: <strong style={{ color: 'var(--menta)' }}>
-              {form.invoice_number_format
-                .replace('YYYY', new Date().getFullYear())
-                .replace('NNN', '001')}
-            </strong>
-          </div>
+
+          {hasFeature('facturas') && (
+            <>
+              <Field label="Formato numeración" hint="YYYY = año, NNN = secuencia (ej: 2026-001)">
+                <input name="invoice_number_format" value={form.invoice_number_format} onChange={handle} placeholder="YYYY-NNN" style={s.input} />
+              </Field>
+              <div style={s.preview}>
+                Vista previa: <strong style={{ color: 'var(--menta)' }}>
+                  {form.invoice_number_format
+                    .replace('YYYY', new Date().getFullYear())
+                    .replace('NNN', '001')}
+                </strong>
+              </div>
+            </>
+          )}
+
+          {isTransporte && (
+            <Field label="Prefijo nº factura (transporte)" hint="Se combina con el mes de la fecha de emisión (ej: 21/02 → A2)">
+              <input name="transporte_invoice_prefix" value={form.transporte_invoice_prefix} onChange={handle} placeholder="A" maxLength={4} style={{ ...s.input, maxWidth: 120 }} />
+              <div style={{ ...s.preview, marginTop: 8 }}>
+                Vista previa: <strong style={{ color: 'var(--menta)' }}>
+                  {(form.transporte_invoice_prefix || 'A') + (new Date().getMonth() + 1)}
+                </strong>
+              </div>
+            </Field>
+          )}
         </div>
 
         <button type="submit" style={s.btn} disabled={saving}>
