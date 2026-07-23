@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
-import { eur2 } from '../../lib/format'
+import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import TransportePreview from './TransportePreview'
 
@@ -56,7 +56,7 @@ export default function TransporteInvoicePage() {
 
   const [meta, setMeta] = useState({
     numero_factura: `${prefix}${new Date().getMonth() + 1}`,
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: toISODate(),
     concepto_mes: '',
     cabeza: '',
     cisterna: '',

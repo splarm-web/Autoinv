@@ -5,6 +5,7 @@ import { eur2, fmtDate } from '../../lib/format'
 import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
 import Pagination from '../../components/Pagination'
+import ExportModal from '../export/ExportModal'
 
 const PAGE_SIZE = 15
 
@@ -21,6 +22,7 @@ export default function InvoicesPage() {
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
   const [page, setPage] = useState(1)
+  const [showExport, setShowExport] = useState(false)
 
   // Tipos que este usuario puede crear según su rol
   const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
@@ -58,10 +60,15 @@ export default function InvoicesPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10, flexWrap: 'wrap' }}>
         <h1 style={s.title}>Facturas</h1>
-        {/* Un solo tipo: botón arriba a la derecha */}
-        {types.length === 1 && (
-          <Link to={types[0].to} style={s.btnPrimary}>+ {types[0].label}</Link>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {hasFeature('export') && (
+            <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
+          )}
+          {/* Un solo tipo: botón arriba a la derecha */}
+          {types.length === 1 && (
+            <Link to={types[0].to} style={s.btnPrimary}>+ {types[0].label}</Link>
+          )}
+        </div>
       </div>
 
       {/* Varios tipos: CTAs prominentes (no arriba a la derecha) */}
@@ -118,6 +125,8 @@ export default function InvoicesPage() {
       {!loading && invoices.length > 0 && (
         <Pagination page={page} pageCount={pageCount} onPage={setPage} />
       )}
+
+      {showExport && <ExportModal onClose={() => setShowExport(false)} />}
     </div>
   )
 }
@@ -151,6 +160,7 @@ const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
   btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
+  btnSecondaryBtn: { padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   ctaRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
   ctaPrimary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
   ctaSecondary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },

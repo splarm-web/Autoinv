@@ -1,0 +1,117 @@
+/* =========================================================
+   Modal — estilos compartidos (clientes, exportar, …)
+   ========================================================= */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+  animation: fade-in 0.15s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slide-up 0.18s ease;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  transition: color 0.12s;
+}
+
+.modal-close:hover { color: var(--text); }
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px 24px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+/* ── Tabs dentro del modal ── */
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 18px 24px 0;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 3px;
+}
+
+.modal-tab {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.modal-tab:hover { color: var(--text-soft); }
+
+.modal-tab.active {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ── Mobile: el modal sube desde abajo ── */
+@media (max-width: 600px) {
+  .modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal-panel { border-radius: var(--r-lg) var(--r-lg) 0 0; max-height: 92vh; }
+  .modal-tabs { margin: 16px 20px 0; }
+}

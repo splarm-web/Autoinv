@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../../lib/api'
+import '../../styles/modal.css'
 import './clients.css'
 
 export default function ClientsPage() {

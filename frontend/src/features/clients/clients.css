@@ -231,82 +231,6 @@
   color: var(--text);
 }
 
-/* ── Modal ── */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 24px;
-  animation: fade-in 0.15s ease;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.modal-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  width: 100%;
-  max-width: 480px;
-  max-height: 90vh;
-  overflow-y: auto;
-  animation: slide-up 0.18s ease;
-}
-
-@keyframes slide-up {
-  from { transform: translateY(12px); opacity: 0; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 24px 0;
-}
-
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 600;
-  margin: 0;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px 8px;
-  border-radius: var(--r-sm);
-  transition: color 0.12s;
-}
-
-.modal-close:hover { color: var(--text); }
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px 24px 24px;
-}
-
-.modal-footer {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 8px;
-}
-
 /* ── Form elements ── */
 .form-row {
   display: grid;
@@ -410,9 +334,6 @@
 
 /* ── Mobile ── */
 @media (max-width: 600px) {
-  .modal-backdrop { padding: 0; align-items: flex-end; }
-  .modal-panel { border-radius: var(--r-lg) var(--r-lg) 0 0; max-height: 92vh; }
-
   .form-row { grid-template-columns: 1fr; }
 
   .client-card { flex-wrap: wrap; gap: 12px; }

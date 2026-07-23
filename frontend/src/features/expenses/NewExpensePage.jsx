@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { expensesApi } from '../../lib/api'
+import { toISODate } from '../../lib/format'
 
 const EMPTY = {
-  date: new Date().toISOString().split('T')[0],
+  date: toISODate(),
   amount: '',
   vat_rate: 21,
   vat_amount: '',

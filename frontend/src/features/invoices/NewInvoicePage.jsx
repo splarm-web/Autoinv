@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
-import { eur2 } from '../../lib/format'
+import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import InvoicePreview from './InvoicePreview'
 
 const EMPTY_LINE = { description: '', quantity: 1, unit_price: '', vat_rate: 21 }
 
 const EMPTY_FORM = {
-  date: new Date().toISOString().split('T')[0],
+  date: toISODate(),
   due_date: '',
   client_id: null,
   client_name: '',

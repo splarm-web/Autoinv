@@ -10,7 +10,6 @@ const NAV = [
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
-  { to: '/export',    label: 'Exportar', Icon: IconExportar, feature: 'export' },
   { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
@@ -19,7 +18,6 @@ const BOTTOM_NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
-  { to: '/export',    label: 'Exportar', Icon: IconExportar, feature: 'export' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
@@ -182,14 +180,6 @@ function IconFacturas() {
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <rect x="2" y="1" width="11" height="13" rx="2" stroke="currentColor" strokeWidth="1.4" />
       <path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  )
-}
-function IconExportar() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-      <path d="M7.5 1v9M4 7l3.5 3.5L11 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M2 11v2a1 1 0 001 1h9a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   )
 }
