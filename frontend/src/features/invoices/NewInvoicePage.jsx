@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { eur2 } from '../../lib/format'
 import InvoicePreview from './InvoicePreview'
 
 const EMPTY_LINE = { description: '', quantity: 1, unit_price: '', vat_rate: 21 }
@@ -213,7 +214,7 @@ export default function NewInvoicePage() {
                 <input name="unit_price" type="number" min="0" step="0.01" value={line.unit_price} onChange={(e) => handleLine(i, e)} required style={{ ...s.input, textAlign: 'right' }} />
                 <input name="vat_rate" type="number" min="0" max="100" step="0.1" value={line.vat_rate} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
                 <div style={{ textAlign: 'right', fontSize: 14, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
-                  {((line.quantity || 0) * (line.unit_price || 0)).toFixed(2)} €
+                  {eur2((line.quantity || 0) * (line.unit_price || 0))}
                 </div>
                 <button type="button" onClick={() => removeLine(i)} style={s.delBtn} title="Eliminar línea">✕</button>
               </div>
@@ -223,11 +224,11 @@ export default function NewInvoicePage() {
             {/* Totales inline */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
               <div style={{ width: 260, fontSize: 13 }}>
-                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>Base imponible</span><span>{subtotal.toFixed(2)} €</span></div>
-                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>IVA</span><span>{vat_total.toFixed(2)} €</span></div>
-                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>IRPF ({form.irpf_rate}%)</span><span style={{ color: 'var(--coral)' }}>−{irpf_total.toFixed(2)} €</span></div>
+                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>Base imponible</span><span>{eur2(subtotal)}</span></div>
+                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>IVA</span><span>{eur2(vat_total)}</span></div>
+                <div style={s.totalRow}><span style={{ color: 'var(--text-muted)' }}>IRPF ({form.irpf_rate}%)</span><span style={{ color: 'var(--coral)' }}>−{eur2(irpf_total)}</span></div>
                 <div style={{ ...s.totalRow, fontWeight: 700, fontSize: 16, color: 'var(--menta)', borderTop: '1px solid var(--border)', marginTop: 8, paddingTop: 10 }}>
-                  <span>Total</span><span>{total.toFixed(2)} €</span>
+                  <span>Total</span><span>{eur2(total)}</span>
                 </div>
               </div>
             </div>

@@ -3,6 +3,9 @@ const _fmt = (decimals) => (n) => {
   return n.toLocaleString('es-ES', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
+    // 'always': fuerza el punto de miles también en 4 cifras (es-ES no lo pone
+    // por defecto por debajo de 10.000). Así 1.234,50 en vez de 1234,50.
+    useGrouping: 'always',
   })
 }
 

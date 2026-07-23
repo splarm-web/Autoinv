@@ -13,8 +13,10 @@
  *   totals  { base, irpf, iva, total }
  */
 
-const eur = (v) => `${(v || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
-const miles = (v) => `${Math.round(v || 0).toLocaleString('es-ES')}`
+import { eur2, fmt0 } from '../../lib/format'
+
+const eur = (v) => eur2(v || 0)
+const miles = (v) => fmt0(Math.round(v || 0))
 
 export default function TransportePreview({ emisor, cliente, meta, viajes, totals }) {
   return (

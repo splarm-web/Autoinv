@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { eur2 } from '../../lib/format'
 import TransportePreview from './TransportePreview'
 
 const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
@@ -10,7 +11,7 @@ const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
 const EMPTY_VIAJE = { fecha: '', viaje: '', kilos: '', precio: '' }
 const EMPTY_CLIENTE = { nombre: '', cif: '', direccion: '', ciudad: '' }
 
-const eur = (v) => `${(v || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+const eur = (v) => eur2(v || 0)
 
 function conceptoFromIso(iso) {
   if (!iso) return ''
