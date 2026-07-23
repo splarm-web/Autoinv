@@ -40,6 +40,13 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+    # Bootstrap: si aún no hay ningún admin, el primero que inicia sesión lo es.
+    # Cubre el caso de usuarios registrados antes de existir el sistema de admin.
+    no_admin_yet = db.query(User).filter(User.features.contains("admin")).first() is None
+    if no_admin_yet:
+        user.features = _BOOTSTRAP_ADMIN_FEATURES
+        db.commit()
+        db.refresh(user)
     return {"access_token": create_access_token(str(user.id)), "user": user}
 
 
