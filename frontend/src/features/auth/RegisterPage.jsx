@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { Logo } from '../../components/AppShell'
+import PasswordInput from '../../components/PasswordInput'
 import './auth.css'
 
 export default function RegisterPage() {
@@ -69,10 +70,9 @@ export default function RegisterPage() {
           </div>
           <div className="field">
             <label htmlFor="password">Contraseña</label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               autoComplete="new-password"
               required
               value={form.password}

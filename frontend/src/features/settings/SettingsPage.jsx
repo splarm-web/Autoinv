@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { authApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
+import PasswordInput from '../../components/PasswordInput'
+
+const EMPTY_PW = { current_password: '', new_password: '', confirm: '' }
 
 export default function SettingsPage() {
   const { user, updateUser, hasFeature } = useAuth()
@@ -18,6 +21,35 @@ export default function SettingsPage() {
   const isTransporte = hasFeature('transporte')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  const [pw, setPw] = useState(EMPTY_PW)
+  const [pwSaving, setPwSaving] = useState(false)
+  const handlePw = (e) => setPw({ ...pw, [e.target.name]: e.target.value })
+
+  const submitPassword = async (e) => {
+    e.preventDefault()
+    if (pw.new_password.length < 6) {
+      toast.error('La nueva contraseña debe tener al menos 6 caracteres')
+      return
+    }
+    if (pw.new_password !== pw.confirm) {
+      toast.error('Las contraseñas nuevas no coinciden')
+      return
+    }
+    setPwSaving(true)
+    try {
+      await authApi.changePassword({
+        current_password: pw.current_password,
+        new_password: pw.new_password,
+      })
+      setPw(EMPTY_PW)
+      toast.success('Contraseña actualizada')
+    } catch (err) {
+      toast.error(err.message || 'No se pudo cambiar la contraseña')
+    } finally {
+      setPwSaving(false)
+    }
+  }
 
   const handle = (e) => {
     const { name, value, type } = e.target
@@ -106,6 +138,27 @@ export default function SettingsPage() {
         <button type="submit" style={s.btn} disabled={saving}>
           {saving ? 'Guardando…' : saved ? '✓ Guardado' : 'Guardar cambios'}
         </button>
+      </form>
+
+      {/* Cambiar contraseña — formulario aparte para no mezclarlo con lo fiscal */}
+      <form onSubmit={submitPassword} style={{ marginTop: 14 }}>
+        <div style={s.section}>
+          <div style={s.sectionTitle}>Contraseña</div>
+          <Field label="Contraseña actual">
+            <PasswordInput name="current_password" autoComplete="current-password" value={pw.current_password} onChange={handlePw} required style={s.input} />
+          </Field>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <Field label="Nueva contraseña" hint="Mínimo 6 caracteres">
+              <PasswordInput name="new_password" autoComplete="new-password" value={pw.new_password} onChange={handlePw} required style={s.input} />
+            </Field>
+            <Field label="Repite la nueva">
+              <PasswordInput name="confirm" autoComplete="new-password" value={pw.confirm} onChange={handlePw} required style={s.input} />
+            </Field>
+          </div>
+          <button type="submit" style={s.btn} disabled={pwSaving}>
+            {pwSaving ? 'Cambiando…' : 'Cambiar contraseña'}
+          </button>
+        </div>
       </form>
     </div>
   )

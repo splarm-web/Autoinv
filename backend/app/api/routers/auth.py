@@ -6,7 +6,16 @@ from ...core.config import settings
 from ...core.database import get_db
 from ...core.security import create_access_token, hash_password, verify_password
 from ...models.user import DEFAULT_FEATURES, User
-from ...schemas.user import TokenOut, UserCreate, UserLogin, UserOut, UserUpdate
+from ...schemas.user import (
+    PasswordChange,
+    TokenOut,
+    UserCreate,
+    UserLogin,
+    UserOut,
+    UserUpdate,
+)
+
+MIN_PASSWORD = 6
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -66,3 +75,21 @@ def update_me(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+
+@router.post("/change-password", status_code=204)
+def change_password(
+    data: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Cambia la contraseña del propio usuario (exige la actual)."""
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="La contraseña actual no es correcta")
+    if len(data.new_password) < MIN_PASSWORD:
+        raise HTTPException(
+            status_code=400,
+            detail=f"La nueva contraseña debe tener al menos {MIN_PASSWORD} caracteres",
+        )
+    current_user.password_hash = hash_password(data.new_password)
+    db.commit()

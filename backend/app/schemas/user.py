@@ -52,6 +52,15 @@ class FeaturesUpdate(BaseModel):
     features: List[str]
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class PasswordReset(BaseModel):
+    new_password: str
+
+
 class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"

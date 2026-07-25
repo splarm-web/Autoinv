@@ -67,6 +67,8 @@ export const authApi = {
   me: () => apiFetch('/api/auth/me'),
   updateMe: (data) =>
     apiFetch('/api/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
+  changePassword: (data) =>
+    apiFetch('/api/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
 }
 
 // Dashboard
@@ -172,6 +174,8 @@ export const adminApi = {
   listUsers: () => apiFetch('/api/admin/users'),
   setUserFeatures: (id, features) =>
     apiFetch(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ features }) }),
+  resetPassword: (id, new_password) =>
+    apiFetch(`/api/admin/users/${id}/password`, { method: 'PATCH', body: JSON.stringify({ new_password }) }),
 }
 
 // Export
