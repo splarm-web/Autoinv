@@ -64,9 +64,11 @@ export default function InvoicesPage() {
           {hasFeature('export') && (
             <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
           )}
-          {/* Un solo tipo: botón arriba a la derecha */}
+          {/* Un solo tipo: botón arriba a la derecha (FAB en móvil) */}
           {types.length === 1 && (
-            <Link to={types[0].to} style={s.btnPrimary}>+ {types[0].label}</Link>
+            <Link to={types[0].to} className="fab-add" style={s.btnPrimary}>
+              <span className="fab-icon">+</span><span className="fab-label"> {types[0].label}</span>
+            </Link>
           )}
         </div>
       </div>
@@ -90,10 +92,10 @@ export default function InvoicesPage() {
         <div style={s.card}>
           {pageItems.map((inv, i) => (
             <div key={inv.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
                 <span style={{ ...s.dot, background: 'var(--menta)' }} />
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span>Factura {inv.number} · {inv.client_name}</span>
                     {inv.kind === 'transporte' && <span style={s.badge}>Transporte</span>}
                   </div>
@@ -103,8 +105,8 @@ export default function InvoicesPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums' }}>
                   +{eur2(inv.total)}
                 </span>
                 <button

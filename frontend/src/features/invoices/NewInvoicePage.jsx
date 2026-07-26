@@ -183,7 +183,7 @@ export default function NewInvoicePage() {
       {showPreview ? (
         <div>
           <InvoicePreview {...previewData} />
-          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
             <button type="button" onClick={submit} style={s.btnPrimary} disabled={saving || downloading}>
               {saving ? 'Guardando…' : 'Guardar factura'}
@@ -195,7 +195,7 @@ export default function NewInvoicePage() {
         </div>
       ) : (
         <form onSubmit={submit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="form-grid-2" style={{ marginBottom: 14 }}>
             {/* Datos cliente */}
             <div style={s.card}>
               <div style={s.sectionTitle}>Cliente</div>
@@ -229,7 +229,7 @@ export default function NewInvoicePage() {
             {/* Datos factura */}
             <div style={s.card}>
               <div style={s.sectionTitle}>Datos de la factura</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="form-grid-2" style={{ gap: 12 }}>
                 <Field label="Fecha">
                   <input name="date" type="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
                 </Field>
@@ -249,26 +249,30 @@ export default function NewInvoicePage() {
           {/* Líneas */}
           <div style={s.card}>
             <div style={s.sectionTitle}>Conceptos</div>
-            <div style={s.linesHead}>
-              <div>Descripción</div>
-              <div style={{ textAlign: 'right' }}>Cant.</div>
-              <div style={{ textAlign: 'right' }}>Precio (€)</div>
-              <div style={{ textAlign: 'right' }}>IVA (%)</div>
-              <div style={{ textAlign: 'right' }}>Total</div>
-              <div />
-            </div>
-            {form.lines.map((line, i) => (
-              <div key={i} style={s.lineRow}>
-                <input name="description" value={line.description} onChange={(e) => handleLine(i, e)} placeholder="Descripción" style={s.input} />
-                <input name="quantity" type="number" min="0" step="any" value={line.quantity} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
-                <input name="unit_price" type="number" min="0" step="0.01" value={line.unit_price} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
-                <input name="vat_rate" type="number" min="0" max="100" step="0.1" value={line.vat_rate} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
-                <div style={{ textAlign: 'right', fontSize: 14, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
-                  {eur2((line.quantity || 0) * (line.unit_price || 0))}
+            <div className="table-scroll">
+              <div className="table-scroll-inner">
+                <div style={s.linesHead}>
+                  <div>Descripción</div>
+                  <div style={{ textAlign: 'right' }}>Cant.</div>
+                  <div style={{ textAlign: 'right' }}>Precio (€)</div>
+                  <div style={{ textAlign: 'right' }}>IVA (%)</div>
+                  <div style={{ textAlign: 'right' }}>Total</div>
+                  <div />
                 </div>
-                <button type="button" onClick={() => removeLine(i)} style={s.delBtn} title="Eliminar línea">✕</button>
+                {form.lines.map((line, i) => (
+                  <div key={i} style={s.lineRow}>
+                    <input name="description" value={line.description} onChange={(e) => handleLine(i, e)} placeholder="Descripción" style={s.input} />
+                    <input name="quantity" type="number" min="0" step="any" value={line.quantity} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
+                    <input name="unit_price" type="number" min="0" step="0.01" value={line.unit_price} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
+                    <input name="vat_rate" type="number" min="0" max="100" step="0.1" value={line.vat_rate} onChange={(e) => handleLine(i, e)} style={{ ...s.input, textAlign: 'right' }} />
+                    <div style={{ textAlign: 'right', fontSize: 14, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
+                      {eur2((line.quantity || 0) * (line.unit_price || 0))}
+                    </div>
+                    <button type="button" onClick={() => removeLine(i)} style={s.delBtn} title="Eliminar línea">✕</button>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
             <button type="button" onClick={addLine} style={s.addLineBtn}>+ Añadir línea</button>
 
             {/* Totales inline */}
@@ -284,7 +288,7 @@ export default function NewInvoicePage() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>
               👁 Vista previa
             </button>

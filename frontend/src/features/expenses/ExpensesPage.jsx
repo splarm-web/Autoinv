@@ -60,7 +60,9 @@ export default function ExpensesPage() {
           {hasFeature('export') && (
             <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
           )}
-          <Link to="/expenses/new" style={s.btnPrimary}>+ Nuevo gasto</Link>
+          <Link to="/expenses/new" className="fab-add" style={s.btnPrimary}>
+            <span className="fab-icon">+</span><span className="fab-label"> Nuevo gasto</span>
+          </Link>
         </div>
       </div>
 
@@ -110,9 +112,9 @@ export default function ExpensesPage() {
           <div style={s.card}>
             {pageItems.map((exp, i) => (
               <div key={exp.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
                   <span style={{ ...s.dot, background: 'var(--coral)' }} />
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500 }}>{exp.concept || exp.supplier || 'Gasto'}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 1 }}>
                       {fmtDate(exp.date)} · {exp.category || 'Sin categoría'}
@@ -120,8 +122,8 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                  <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
                     −{eur0(exp.amount)}
                   </span>
                   <button onClick={() => remove(exp.id)} style={s.delBtn} title="Eliminar">✕</button>
@@ -137,7 +139,7 @@ export default function ExpensesPage() {
               {expenses.length} {expenses.length === 1 ? 'gasto' : 'gastos'}
               {hasFilters ? ' en el período' : ''}
             </span>
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
+            <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
               −{eur0(total)}
             </span>
           </div>

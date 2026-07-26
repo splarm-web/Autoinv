@@ -72,8 +72,8 @@ export default function DashboardPage() {
       {/* Resultado del periodo */}
       {!loading && (
         <div className="result-strip">
-          <span>Resultado del periodo <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(cobrado − gastos − IVA a liquidar)</span></span>
-          <span className="result-value" style={{ color: resultado >= 0 ? 'var(--menta)' : 'var(--coral)' }}>
+          <span>Resultado del periodo <span className="result-note" style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(cobrado − gastos − IVA a liquidar)</span></span>
+          <span className="result-value amount-nowrap" style={{ color: resultado >= 0 ? 'var(--menta)' : 'var(--coral)' }}>
             {resultado >= 0 ? '+' : '−'}{eur0(Math.abs(resultado))}
           </span>
         </div>

@@ -179,6 +179,8 @@
   font-weight: 500;
   font-size: 15px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .iva-liquidar {
   display: flex;
@@ -266,6 +268,7 @@
   font-size: 15px;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 .mov-amount.menta { color: var(--menta); }
 .mov-amount.coral { color: var(--coral); }
@@ -292,4 +295,8 @@
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; }
   .kpi-grid > :last-child { grid-column: 1 / -1; }
+  /* La explicación entre paréntesis no cabe junto al importe: se oculta y
+     el importe pasa debajo, en vez de partirse a mitad de palabra. */
+  .result-strip { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .result-note { display: block; margin-top: 2px; }
 }

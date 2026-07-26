@@ -116,7 +116,7 @@ export default function NewExpensePage() {
       <form onSubmit={submit} style={s.card}>
         <div style={s.sectionTitle}>Detalles del gasto</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="form-grid-2">
           <Field label="Fecha">
             <input name="date" type="date" value={form.date} onChange={handle} required style={s.input} />
           </Field>
@@ -144,7 +144,7 @@ export default function NewExpensePage() {
           </select>
         </Field>
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
           <button type="submit" style={s.btnPrimary} disabled={saving || extracting}>
             {saving ? 'Guardando…' : 'Guardar gasto'}
           </button>

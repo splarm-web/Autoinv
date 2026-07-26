@@ -307,7 +307,7 @@ export default function TransporteInvoicePage() {
         </label>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+      <div className="form-grid-2" style={{ marginBottom: 14 }}>
         {/* Emisor */}
         <div style={s.card}>
           <div style={s.sectionTitle}>Emisor</div>
@@ -339,7 +339,7 @@ export default function TransporteInvoicePage() {
           </Field>
           <Field label="Nombre"><input value={cliente.nombre} onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nombre del cliente']) }} /></Field>
           <Field label="CIF / DNI"><input value={cliente.cif} onChange={(e) => setCliente({ ...cliente, cif: e.target.value })} style={{ ...s.input, ...errStyle(invalid['CIF/DNI del cliente']) }} /></Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-grid-2" style={{ gap: 12 }}>
             <Field label="Dirección"><input value={cliente.direccion} onChange={(e) => setCliente({ ...cliente, direccion: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Dirección del cliente']) }} /></Field>
             <Field label="Ciudad"><input value={cliente.ciudad} onChange={(e) => setCliente({ ...cliente, ciudad: e.target.value })} style={s.input} /></Field>
           </div>
@@ -349,7 +349,7 @@ export default function TransporteInvoicePage() {
       {/* Datos factura */}
       <div style={s.card}>
         <div style={s.sectionTitle}>Datos de la factura</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+        <div className="form-grid-3">
           <Field label="Nº factura" hint="Se genera con el prefijo (Ajustes) + mes de la fecha">
             <input value={meta.numero_factura} onChange={(e) => setMeta({ ...meta, numero_factura: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nº de factura']) }} />
           </Field>
@@ -372,26 +372,30 @@ export default function TransporteInvoicePage() {
           <span>Viajes realizados</span>
           {autofilled.viajes && <span style={s.infoBadge}>Leído del Excel</span>}
         </div>
-        <div style={s.linesHead}>
-          <div>Fecha</div>
-          <div>Viaje</div>
-          <div style={{ textAlign: 'right' }}>Kilos</div>
-          <div style={{ textAlign: 'right' }}>Precio</div>
-          <div style={{ textAlign: 'right' }}>Total</div>
-          <div />
-        </div>
-        {viajes.map((v, i) => (
-          <div key={i} style={s.lineRow}>
-            <input type="date" value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
-            <input value={v.viaje} onChange={(e) => handleViaje(i, 'viaje', e.target.value)} placeholder="Origen - Destino" style={s.input} />
-            <input type="number" min="0" step="any" value={v.kilos} onChange={(e) => handleViaje(i, 'kilos', e.target.value)} placeholder="kg" style={{ ...s.input, textAlign: 'right' }} />
-            <input type="number" min="0" step="any" value={v.precio} onChange={(e) => handleViaje(i, 'precio', e.target.value)} placeholder="€/t" style={{ ...s.input, textAlign: 'right' }} />
-            <div style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
-              {eur(lineTotal(v))}
+        <div className="table-scroll">
+          <div className="table-scroll-inner">
+            <div style={s.linesHead}>
+              <div>Fecha</div>
+              <div>Viaje</div>
+              <div style={{ textAlign: 'right' }}>Kilos</div>
+              <div style={{ textAlign: 'right' }}>Precio</div>
+              <div style={{ textAlign: 'right' }}>Total</div>
+              <div />
             </div>
-            <button type="button" onClick={() => removeViaje(i)} style={s.delBtn} title="Eliminar fila">✕</button>
+            {viajes.map((v, i) => (
+              <div key={i} style={s.lineRow}>
+                <input type="date" value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
+                <input value={v.viaje} onChange={(e) => handleViaje(i, 'viaje', e.target.value)} placeholder="Origen - Destino" style={s.input} />
+                <input type="number" min="0" step="any" value={v.kilos} onChange={(e) => handleViaje(i, 'kilos', e.target.value)} placeholder="kg" style={{ ...s.input, textAlign: 'right' }} />
+                <input type="number" min="0" step="any" value={v.precio} onChange={(e) => handleViaje(i, 'precio', e.target.value)} placeholder="€/t" style={{ ...s.input, textAlign: 'right' }} />
+                <div style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
+                  {eur(lineTotal(v))}
+                </div>
+                <button type="button" onClick={() => removeViaje(i)} style={s.delBtn} title="Eliminar fila">✕</button>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
         <button type="button" onClick={addViaje} style={s.addLineBtn}>+ Añadir viaje</button>
 
         {/* Totales */}

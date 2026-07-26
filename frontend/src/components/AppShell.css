@@ -153,6 +153,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
   flex-shrink: 0;
@@ -191,6 +192,8 @@
   background: var(--surface-2);
   border-top: 1px solid var(--border);
   z-index: 40;
+  /* iPhone: deja hueco para la barra de gestos (home indicator) */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .bottom-nav-item {
   flex: 1;
@@ -213,5 +216,5 @@
   .shell-sidebar       { display: none; }
   .shell-mobile-bar    { display: flex; }
   .shell-bottom-nav    { display: flex; }
-  .shell-main          { padding-bottom: 72px; }
+  .shell-main          { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 }

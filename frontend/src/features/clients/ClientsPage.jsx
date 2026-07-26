@@ -49,8 +49,8 @@ export default function ClientsPage() {
     <div className="clients-root">
       <div className="clients-header">
         <h1 className="clients-title">Clientes</h1>
-        <button className="btn-primary" onClick={() => setModal('new')}>
-          + Añadir cliente
+        <button className="btn-primary fab-add" onClick={() => setModal('new')}>
+          <span className="fab-icon">+</span><span className="fab-label"> Añadir cliente</span>
         </button>
       </div>
 

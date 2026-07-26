@@ -20,7 +20,7 @@ const miles = (v) => fmt0(Math.round(v || 0))
 
 export default function TransportePreview({ emisor, cliente, meta, viajes, totals }) {
   return (
-    <div style={s.shell}>
+    <div className="prev-scroll" style={s.shell}>
       <div style={s.paper}>
         {/* Cabecera: emisor (izq) + FACTURA Nº / FECHA (der) */}
         <div style={s.header}>
@@ -107,7 +107,8 @@ export default function TransportePreview({ emisor, cliente, meta, viajes, total
 }
 
 const s = {
-  shell: { background: 'var(--preview-shell)', border: '1px solid var(--border)', borderRadius: 20, padding: 40, display: 'flex', justifyContent: 'center' },
+  // justifyContent vive en la clase .prev-scroll (ver responsive.css)
+  shell: { background: 'var(--preview-shell)', border: '1px solid var(--border)', borderRadius: 20, padding: 40, display: 'flex' },
   paper: { width: '100%', maxWidth: 720, background: '#fff', color: '#15171c', borderRadius: 6, boxShadow: '0 30px 70px -30px rgba(0,0,0,0.7)', padding: '48px 48px 40px', fontFamily: "'Hanken Grotesk', sans-serif" },
   header: { display: 'flex', justifyContent: 'space-between', gap: 24, marginBottom: 30 },
   emisorName: { fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 15, color: '#15171c' },

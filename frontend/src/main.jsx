@@ -6,6 +6,7 @@ import { ThemeProvider } from './app/ThemeContext'
 import { ToastProvider } from './components/Toast'
 import AppRouter from './app/router'
 import './styles/tokens.css'
+import './styles/responsive.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

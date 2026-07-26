@@ -19,7 +19,7 @@ export default function InvoicePreview({ issuer, client, invoice, lines, totals 
   const initials = (issuer?.legal_name || 'A').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 
   return (
-    <div style={s.shell}>
+    <div className="prev-scroll" style={s.shell}>
       <div style={s.paper}>
         {/* Cabecera */}
         <div style={s.header}>
@@ -134,13 +134,15 @@ function TotalRow({ label, value, valueStyle, last }) {
 }
 
 const s = {
+  // justifyContent NO va aquí: vive en la clase .prev-scroll (CSS) porque en
+  // móvil necesita cambiar a flex-start (ver responsive.css — centrar un
+  // contenedor con overflow-x:auto deja la mitad izquierda inalcanzable).
   shell: {
     background: 'var(--preview-shell)',
     border: '1px solid var(--border)',
     borderRadius: 20,
     padding: 40,
     display: 'flex',
-    justifyContent: 'center',
   },
   paper: {
     width: '100%',
