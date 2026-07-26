@@ -330,12 +330,14 @@ export default function TransporteInvoicePage() {
             )}
           </div>
           <Field label="Cliente guardado">
-            <select value={clientId} onChange={selectClient} style={{ ...s.input, appearance: 'auto' }}>
-              <option value="">— Nuevo / introducir manualmente —</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}{c.is_default ? ' ★' : ''}</option>
-              ))}
-            </select>
+            <div className="select-wrap">
+              <select value={clientId} onChange={selectClient} style={s.input}>
+                <option value="">— Nuevo / introducir manualmente —</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>{c.nombre}{c.is_default ? ' ★' : ''}</option>
+                ))}
+              </select>
+            </div>
           </Field>
           <Field label="Nombre"><input value={cliente.nombre} onChange={(e) => setCliente({ ...cliente, nombre: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nombre del cliente']) }} /></Field>
           <Field label="CIF / DNI"><input value={cliente.cif} onChange={(e) => setCliente({ ...cliente, cif: e.target.value })} style={{ ...s.input, ...errStyle(invalid['CIF/DNI del cliente']) }} /></Field>

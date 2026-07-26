@@ -82,16 +82,18 @@ export default function ExpensesPage() {
           style={s.filterInput}
           title="Hasta"
         />
-        <select
-          value={filters.category}
-          onChange={(e) => setFilter('category', e.target.value)}
-          style={{ ...s.filterInput, color: filters.category ? 'var(--text)' : 'var(--text-muted)' }}
-        >
-          <option value="">Todas las categorías</option>
-          {categories.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
+        <div className="select-wrap" style={{ flex: '1 1 160px' }}>
+          <select
+            value={filters.category}
+            onChange={(e) => setFilter('category', e.target.value)}
+            style={{ ...s.filterInput, width: '100%', color: filters.category ? 'var(--text)' : 'var(--text-muted)' }}
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
         {hasFilters && (
           <button onClick={clearFilters} style={s.clearBtn}>Limpiar</button>
         )}

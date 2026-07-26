@@ -220,7 +220,7 @@ function Chart({ view, setView, year, setYear, metric, setMetric, bars, loading 
     <div className="card">
       <div className="chart-header">
         <span className="chart-title">Ingresos vs. gastos</span>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="chart-controls">
           <div className="mini-seg">
             <button className={metric === 'total' ? 'active' : ''} onClick={() => setMetric('total')}>Totales</button>
             <button className={metric === 'neto' ? 'active' : ''} onClick={() => setMetric('neto')}>Netos</button>

@@ -201,18 +201,20 @@ export default function NewInvoicePage() {
               <div style={s.sectionTitle}>Cliente</div>
               {clients.length > 0 && (
                 <Field label="Seleccionar cliente">
-                  <select
-                    value={form.client_id ?? ''}
-                    onChange={handleClientSelect}
-                    style={{ ...s.input, appearance: 'auto' }}
-                  >
-                    <option value="">— Introducir manualmente —</option>
-                    {clients.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre}{c.is_default ? ' ★' : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="select-wrap">
+                    <select
+                      value={form.client_id ?? ''}
+                      onChange={handleClientSelect}
+                      style={s.input}
+                    >
+                      <option value="">— Introducir manualmente —</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nombre}{c.is_default ? ' ★' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </Field>
               )}
               <Field label="Nombre / Razón social">

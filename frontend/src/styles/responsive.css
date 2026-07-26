@@ -87,6 +87,123 @@
   .fab-add .fab-icon { font-size: 24px; line-height: 1; font-weight: 400; }
 }
 
+/* ── Chevron de los <select> ──
+   El desplegable nativo pega su flecha justo al borde derecho del input,
+   sin el respiro que sí tienen el resto de campos. Se desactiva la flecha
+   nativa y se dibuja una propia (vía mask, hereda el color de --text-muted
+   en cualquier tema) con margen consistente con el resto de la UI.
+   Uso: envolver el <select> en <div className="select-wrap">. */
+.select-wrap { position: relative; }
+.select-wrap > select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 34px !important;
+}
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 10px;
+  height: 6px;
+  transform: translateY(-50%);
+  background-color: var(--text-muted);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* ── FAB con speed-dial (varios tipos de factura) ──
+   En escritorio no se usa (las CTAs de .cta-row ya tienen sitio de sobra).
+   En móvil sustituye a esas CTAs: un único círculo que, al pulsarlo,
+   despliega una opción por tipo de factura hacia arriba, y una capa
+   invisible a pantalla completa para poder cerrar tocando fuera. */
+.fab-dial { display: none; }
+.cta-row { display: flex; }
+
+@media (max-width: 680px) {
+  .cta-row { display: none !important; }
+
+  .fab-dial {
+    display: block;
+    position: fixed;
+    right: 18px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    z-index: 46;
+  }
+  .fab-dial-backdrop { position: fixed; inset: 0; z-index: -1; }
+
+  .fab-dial-trigger {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--menta);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.55);
+    transition: transform 0.15s ease;
+  }
+  .fab-dial.open .fab-dial-trigger { transform: rotate(90deg); }
+  .fab-dial-trigger-icon { font-size: 24px; line-height: 1; }
+
+  .fab-dial-options {
+    position: absolute;
+    right: 0;
+    bottom: 68px;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .fab-dial.open .fab-dial-options { pointer-events: auto; }
+
+  .fab-dial-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+  }
+  .fab-dial.open .fab-dial-option {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  .fab-dial-option-label {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    white-space: nowrap;
+    box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.45);
+  }
+  .fab-dial-option-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--menta);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 18px -8px rgba(0, 0, 0, 0.45);
+  }
+}
+
 /* ── Filas con importe a la derecha (listados, resúmenes) ──
    El importe nunca debe partirse en dos líneas ("−60\n€"); el texto
    descriptivo de la izquierda es el que puede ceder espacio y envolver. */

@@ -23,6 +23,7 @@ export default function InvoicesPage() {
   const [downloading, setDownloading] = useState(null)
   const [page, setPage] = useState(1)
   const [showExport, setShowExport] = useState(false)
+  const [dialOpen, setDialOpen] = useState(false)
 
   // Tipos que este usuario puede crear según su rol
   const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
@@ -73,9 +74,11 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      {/* Varios tipos: CTAs prominentes (no arriba a la derecha) */}
+      {/* Varios tipos, escritorio: CTAs prominentes en el flujo de la página.
+          En móvil se ocultan (ver .cta-row en responsive.css) y aparece en
+          su lugar el FAB con speed-dial de más abajo. */}
       {types.length >= 2 && (
-        <div style={s.ctaRow}>
+        <div className="cta-row" style={s.ctaRow}>
           {types.map((t, i) => (
             <Link key={t.key} to={t.to} style={i === 0 ? s.ctaPrimary : s.ctaSecondary}>
               + {t.label}
@@ -129,6 +132,31 @@ export default function InvoicesPage() {
       )}
 
       {showExport && <ExportModal scope="facturas" onClose={() => setShowExport(false)} />}
+
+      {/* Varios tipos, móvil: FAB único que despliega los tipos al pulsar
+          (evita tener 2 botones grandes permanentes compitiendo con el
+          contenido de la página; en escritorio ya se ven en .cta-row). */}
+      {types.length >= 2 && (
+        <div className={'fab-dial' + (dialOpen ? ' open' : '')}>
+          {dialOpen && <div className="fab-dial-backdrop" onClick={() => setDialOpen(false)} />}
+          <div className="fab-dial-options">
+            {types.map((t) => (
+              <Link key={t.key} to={t.to} className="fab-dial-option" onClick={() => setDialOpen(false)}>
+                <span className="fab-dial-option-label">{t.label}</span>
+                <span className="fab-dial-option-icon">+</span>
+              </Link>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="fab-dial-trigger"
+            onClick={() => setDialOpen((v) => !v)}
+            aria-label={dialOpen ? 'Cerrar opciones' : 'Nueva factura'}
+          >
+            <span className="fab-dial-trigger-icon">{dialOpen ? '×' : '+'}</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

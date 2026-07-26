@@ -138,10 +138,12 @@ export default function NewExpensePage() {
           <input name="concept" value={form.concept} onChange={handle} placeholder="Descripción del gasto" style={s.input} />
         </Field>
         <Field label="Categoría">
-          <select name="category" value={form.category} onChange={handle} style={s.input}>
-            <option value="">Sin categoría</option>
-            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <div className="select-wrap">
+            <select name="category" value={form.category} onChange={handle} style={s.input}>
+              <option value="">Sin categoría</option>
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
         </Field>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>

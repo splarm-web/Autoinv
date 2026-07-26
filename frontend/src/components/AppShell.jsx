@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useTheme } from '../app/ThemeContext'
 import './AppShell.css'
@@ -27,9 +27,16 @@ function navAllowed(item, hasFeature) {
   return true
 }
 
+// Título de la barra móvil según la sección activa (p.ej. /invoices/new → "Facturas").
+function sectionTitle(pathname) {
+  const match = [...NAV].sort((a, b) => b.to.length - a.to.length).find((n) => pathname.startsWith(n.to))
+  return match?.label || 'autoinv'
+}
+
 export default function AppShell() {
   const { user, logout, hasFeature } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const bottomNav = BOTTOM_NAV.filter((item) => navAllowed(item, hasFeature))
 
@@ -67,11 +74,13 @@ export default function AppShell() {
       {/* Content */}
       <div className="shell-content">
         <div className="shell-mobile-bar">
-          <button className="shell-burger" onClick={() => setMobileOpen(true)}>
+          <button className="shell-burger" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
             <IconMenu />
           </button>
-          <Logo />
-          <ThemeToggle className="shell-theme-mobile" />
+          <span className="shell-page-title">{sectionTitle(location.pathname)}</span>
+          <button className="shell-avatar-btn" onClick={() => setMobileOpen(true)} aria-label="Cuenta">
+            {initials}
+          </button>
         </div>
         <main className="shell-main">
           <Outlet />

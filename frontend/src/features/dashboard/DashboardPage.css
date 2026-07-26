@@ -291,6 +291,41 @@
   .mid-grid  { grid-template-columns: 1fr; }
   .kpi-value { font-size: 20px; }
   .dash-header { flex-direction: column; align-items: flex-start; }
+
+  /* Segmented control (Mes/Trimestre/Año): pasa a ocupar todo el ancho —
+     en un móvil no tiene sentido dejar media pantalla vacía junto a un
+     control que además es la acción más usada de la página. */
+  .segmented { width: 100%; }
+  .seg-btn { flex: 1; text-align: center; }
+
+  /* Cabecera del gráfico: el título deja de compartir fila con los toggles
+     (antes "Ingresos vs. gastos" quedaba apretado al lado de dos grupos de
+     tabs). Título arriba, controles debajo ocupando el ancho completo. */
+  .chart-header { flex-direction: column; align-items: stretch; gap: 10px; }
+  .chart-controls { display: flex; gap: 8px; }
+  .mini-seg { flex: 1; }
+  .mini-seg button { flex: 1; text-align: center; }
+
+  /* Gráfico de barras: en vez de encajar los 4 trimestres (12 meses) a la
+     fuerza —lo que los recortaba contra el borde de la card—, cada
+     trimestre pasa a ocupar la pantalla entera y se desliza como un carrusel
+     con scroll-snap. Menos barras a la vez, más grandes y legibles; la
+     etiqueta T1–T4 ya existente hace de indicador de página. */
+  .chart-groups {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+  .chart-groups::-webkit-scrollbar { display: none; }
+  .chart-group {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    border-right: none !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
 }
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr 1fr; }

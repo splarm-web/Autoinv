@@ -92,19 +92,35 @@
 .shell-logout:hover,
 .shell-theme:hover { color: var(--text); }
 
-/* Toggle de tema en la barra móvil (a la derecha del logo) */
-.shell-theme-mobile {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: var(--text-muted);
+/* Título de sección (sustituye al logo repetido en cada pantalla — dentro
+   de la app importa más "dónde estoy" que la marca, ya vista en el login). */
+.shell-page-title {
+  flex: 1;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Avatar de cuenta en la barra móvil: abre el mismo menú que el hamburger,
+   pero como entrada reconocible de "cuenta" (antes este hueco lo ocupaba un
+   icono de tema duplicado — el tema ya vive dentro de ese mismo menú). */
+.shell-avatar-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 99px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.shell-theme-mobile:hover { color: var(--text); }
 
 /* ── Content ── */
 .shell-content {
