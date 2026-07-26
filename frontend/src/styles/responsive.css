@@ -204,27 +204,38 @@
   }
 }
 
-/* ── Icono de los <input type="date"> ──
-   El indicador nativo no es fiable entre navegadores: en iOS Safari no se
-   dibuja ningún icono (el campo no se reconoce como selector de fecha), y en
-   Chrome sale pegado al borde sin el margen que sí tiene el chevron de los
-   <select>. Se dibuja un icono propio (mismo criterio que .select-wrap) y se
-   deja el indicador nativo de Chrome invisible pero encima, para que el tap
-   siga abriendo el selector nativo del sistema.
-   Uso: envolver el <input type="date"> en <div className="date-wrap">. */
+/* ── <DateInput> (components/DateInput.jsx) ──
+   Ocultar solo el icono nativo es frágil: Safari no usa ese icono, dibuja
+   sus propios controles (flechas de paso día/mes/año) que no se pueden
+   apagar por CSS y acaban solapando con cualquier icono propio. Por eso el
+   <input> real vive invisible pero interactivo encima de un texto+icono
+   propios: ningún navegador puede ya dibujar nada suyo por encima. */
 .date-wrap { position: relative; }
-.date-wrap > input[type='date'] {
-  padding-right: 34px !important;
-}
-.date-wrap > input[type='date']::-webkit-calendar-picker-indicator {
+.date-native {
   position: absolute;
-  right: 0;
-  top: 0;
-  width: 34px;
+  inset: 0;
+  width: 100%;
   height: 100%;
   opacity: 0;
   cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
 }
+.date-display {
+  display: flex;
+  align-items: center;
+  /* !important: cada página pasa su propio `style` (con su propio `padding`
+     shorthand) como prop; al ser inline, gana a esta regla salvo que se
+     fuerce — si no, el texto invade el hueco del icono (mismo motivo por el
+     que .select-wrap ya lo necesitaba). */
+  padding-right: 34px !important;
+  pointer-events: none; /* el toque siempre lo recibe el .date-native de encima */
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.date-placeholder { color: var(--text-muted); }
 .date-wrap::after {
   content: '';
   position: absolute;

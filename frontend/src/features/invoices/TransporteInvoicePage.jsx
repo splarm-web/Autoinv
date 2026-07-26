@@ -4,6 +4,7 @@ import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import DateInput from '../../components/DateInput'
 import TransportePreview from './TransportePreview'
 
 const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
@@ -356,9 +357,7 @@ export default function TransporteInvoicePage() {
             <input value={meta.numero_factura} onChange={(e) => setMeta({ ...meta, numero_factura: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nº de factura']) }} />
           </Field>
           <Field label="Fecha">
-            <div className="date-wrap">
-              <input type="date" value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
-            </div>
+            <DateInput value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
           </Field>
           <Field label="Concepto (mes año)" info={autofilled.concepto && meta.concepto_mes ? 'Leído del Excel' : ''}>
             <input value={meta.concepto_mes} onChange={(e) => { setMeta({ ...meta, concepto_mes: e.target.value }); clearAutofilled('concepto') }} placeholder="SEPTIEMBRE 2025" style={{ ...s.input, ...errStyle(invalid['Concepto (mes)']) }} />
@@ -390,9 +389,7 @@ export default function TransporteInvoicePage() {
             </div>
             {viajes.map((v, i) => (
               <div key={i} style={s.lineRow}>
-                <div className="date-wrap">
-                  <input type="date" value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
-                </div>
+                <DateInput value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
                 <input value={v.viaje} onChange={(e) => handleViaje(i, 'viaje', e.target.value)} placeholder="Origen - Destino" style={s.input} />
                 <input type="number" min="0" step="any" value={v.kilos} onChange={(e) => handleViaje(i, 'kilos', e.target.value)} placeholder="kg" style={{ ...s.input, textAlign: 'right' }} />
                 <input type="number" min="0" step="any" value={v.precio} onChange={(e) => handleViaje(i, 'precio', e.target.value)} placeholder="€/t" style={{ ...s.input, textAlign: 'right' }} />

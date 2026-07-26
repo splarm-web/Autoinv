@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { expensesApi } from '../../lib/api'
 import { toISODate } from '../../lib/format'
+import DateInput from '../../components/DateInput'
 
 const EMPTY = {
   date: toISODate(),
@@ -118,9 +119,7 @@ export default function NewExpensePage() {
 
         <div className="form-grid-2">
           <Field label="Fecha">
-            <div className="date-wrap">
-              <input name="date" type="date" value={form.date} onChange={handle} required style={s.input} />
-            </div>
+            <DateInput name="date" value={form.date} onChange={handle} required style={s.input} />
           </Field>
           <Field label="Importe total (€)">
             <input name="amount" type="number" step="0.01" min="0" value={form.amount} onChange={handle} required placeholder="0,00" style={s.input} />

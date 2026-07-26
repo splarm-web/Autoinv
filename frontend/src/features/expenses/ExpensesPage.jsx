@@ -5,6 +5,7 @@ import { eur0, fmtDate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../app/AuthContext'
 import Pagination from '../../components/Pagination'
+import DateInput from '../../components/DateInput'
 import ExportModal from '../export/ExportModal'
 
 const EMPTY_FILTERS = { from_date: '', to_date: '', category: '' }
@@ -68,24 +69,18 @@ export default function ExpensesPage() {
 
       {/* Filtros */}
       <div style={s.filterBar}>
-        <div className="date-wrap">
-          <input
-            type="date"
-            value={filters.from_date}
-            onChange={(e) => setFilter('from_date', e.target.value)}
-            style={s.filterInput}
-            title="Desde"
-          />
-        </div>
-        <div className="date-wrap">
-          <input
-            type="date"
-            value={filters.to_date}
-            onChange={(e) => setFilter('to_date', e.target.value)}
-            style={s.filterInput}
-            title="Hasta"
-          />
-        </div>
+        <DateInput
+          value={filters.from_date}
+          onChange={(e) => setFilter('from_date', e.target.value)}
+          style={s.filterInput}
+          title="Desde"
+        />
+        <DateInput
+          value={filters.to_date}
+          onChange={(e) => setFilter('to_date', e.target.value)}
+          style={s.filterInput}
+          title="Hasta"
+        />
         <div className="select-wrap" style={{ flex: '1 1 160px' }}>
           <select
             value={filters.category}

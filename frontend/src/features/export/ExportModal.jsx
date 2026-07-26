@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { exportApi } from '../../lib/api'
 import { toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import DateInput from '../../components/DateInput'
 import '../../styles/modal.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -150,15 +151,11 @@ export default function ExportModal({ onClose, scope = 'todo' }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={s.label}>Desde</label>
-                  <div className="date-wrap">
-                    <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={s.input} />
-                  </div>
+                  <DateInput value={from} onChange={(e) => setFrom(e.target.value)} style={s.input} />
                 </div>
                 <div>
                   <label style={s.label}>Hasta</label>
-                  <div className="date-wrap">
-                    <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={s.input} />
-                  </div>
+                  <DateInput value={to} onChange={(e) => setTo(e.target.value)} style={s.input} />
                 </div>
               </div>
 

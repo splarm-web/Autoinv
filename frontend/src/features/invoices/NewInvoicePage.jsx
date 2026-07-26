@@ -4,6 +4,7 @@ import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import DateInput from '../../components/DateInput'
 import InvoicePreview from './InvoicePreview'
 
 const EMPTY_LINE = { description: '', quantity: 1, unit_price: '', vat_rate: 21 }
@@ -233,14 +234,10 @@ export default function NewInvoicePage() {
               <div style={s.sectionTitle}>Datos de la factura</div>
               <div className="form-grid-2" style={{ gap: 12 }}>
                 <Field label="Fecha">
-                  <div className="date-wrap">
-                    <input name="date" type="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
-                  </div>
+                  <DateInput name="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
                 </Field>
                 <Field label="Vencimiento">
-                  <div className="date-wrap">
-                    <input name="due_date" type="date" value={form.due_date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Vencimiento']) }} />
-                  </div>
+                  <DateInput name="due_date" value={form.due_date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Vencimiento']) }} />
                 </Field>
               </div>
               <Field label="Forma de pago">
