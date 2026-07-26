@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useTheme } from '../app/ThemeContext'
+import '../styles/modal.css'
 import './AppShell.css'
 
 // `feature`: exige esa función. `anyFeature`: basta con tener una. Sin nada: siempre.
@@ -11,13 +12,6 @@ const NAV = [
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
   { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
-  { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
-]
-
-const BOTTOM_NAV = [
-  { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
-  { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
-  { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
 ]
 
@@ -37,8 +31,12 @@ export default function AppShell() {
   const { user, logout, hasFeature } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const bottomNav = BOTTOM_NAV.filter((item) => navAllowed(item, hasFeature))
+  const [accountOpen, setAccountOpen] = useState(false)
+
+  // Bottom bar móvil = navegación primaria completa salvo Admin, que va al
+  // panel de cuenta (es cosa de un único usuario, no merece hueco fijo para
+  // todos). Nada que mantener sincronizado: se deriva directamente de NAV.
+  const bottomNav = NAV.filter((item) => item.to !== '/admin' && navAllowed(item, hasFeature))
 
   const initials = (user?.legal_name || user?.email || 'U')
     .split(' ')
@@ -56,29 +54,11 @@ export default function AppShell() {
         <SidebarContent initials={initials} user={user} onLogout={handleLogout} hasFeature={hasFeature} />
       </aside>
 
-      {/* Mobile overlay sidebar */}
-      {mobileOpen && (
-        <div className="shell-overlay" onClick={() => setMobileOpen(false)}>
-          <aside className="shell-sidebar-mobile" onClick={(e) => e.stopPropagation()}>
-            <SidebarContent
-              initials={initials}
-              user={user}
-              onLogout={handleLogout}
-              hasFeature={hasFeature}
-              onNavClick={() => setMobileOpen(false)}
-            />
-          </aside>
-        </div>
-      )}
-
       {/* Content */}
       <div className="shell-content">
         <div className="shell-mobile-bar">
-          <button className="shell-burger" onClick={() => setMobileOpen(true)} aria-label="Abrir menú">
-            <IconMenu />
-          </button>
           <span className="shell-page-title">{sectionTitle(location.pathname)}</span>
-          <button className="shell-avatar-btn" onClick={() => setMobileOpen(true)} aria-label="Cuenta">
+          <button className="shell-avatar-btn" onClick={() => setAccountOpen(true)} aria-label="Cuenta">
             {initials}
           </button>
         </div>
@@ -87,7 +67,7 @@ export default function AppShell() {
         </main>
       </div>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav: navegación primaria completa */}
       <nav className="shell-bottom-nav">
         {bottomNav.map(({ to, label, Icon }) => (
           <NavLink key={to} to={to} className={({ isActive }) =>
@@ -98,6 +78,62 @@ export default function AppShell() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Panel de cuenta (móvil): lo que no cabe en la bottom bar — Admin
+          (si aplica), tema y cerrar sesión. Único destino del avatar. */}
+      {accountOpen && (
+        <AccountSheet
+          user={user}
+          initials={initials}
+          hasFeature={hasFeature}
+          navigate={navigate}
+          onClose={() => setAccountOpen(false)}
+          onLogout={handleLogout}
+        />
+      )}
+    </div>
+  )
+}
+
+function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout }) {
+  const { theme, toggleTheme } = useTheme()
+  const isLight = theme === 'light'
+
+  const go = (to) => { onClose(); navigate(to) }
+
+  return (
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-panel">
+        <div className="modal-header">
+          <h2 className="modal-title">Cuenta</h2>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="account-sheet-body">
+          <div className="account-sheet-user">
+            <div className="shell-avatar">{initials}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="account-sheet-name">{user?.legal_name || user?.email?.split('@')[0]}</div>
+              <div className="account-sheet-plan">Autónomo</div>
+            </div>
+          </div>
+
+          {hasFeature('admin') && (
+            <button className="account-sheet-row" onClick={() => go('/admin')}>
+              <IconAdmin /> Administración
+            </button>
+          )}
+
+          <button className="account-sheet-row" onClick={toggleTheme}>
+            {isLight ? <IconMoon /> : <IconSun />}
+            {isLight ? 'Tema oscuro' : 'Tema claro'}
+          </button>
+
+          <button className="account-sheet-row account-sheet-row--danger" onClick={onLogout}>
+            <IconLogout /> Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -212,10 +248,13 @@ function IconAdmin() {
   )
 }
 function IconAjustes() {
+  // Tuerca hexagonal, no radios: el diseño anterior (círculo + 8 radios) era
+  // visualmente casi idéntico al icono del sol (tema), y se confundían en
+  // el mismo sidebar.
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-      <circle cx="7.5" cy="7.5" r="2" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3.11 3.11l1.06 1.06M10.83 10.83l1.06 1.06M3.11 11.89l1.06-1.06M10.83 4.17l1.06-1.06" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M7.5 1L13 4.2v6.6L7.5 14 2 10.8V4.2L7.5 1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="7.5" cy="7.5" r="2.1" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   )
 }
@@ -238,13 +277,6 @@ function IconMoon() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
       <path d="M13 9.2A5.8 5.8 0 015.8 2a5.9 5.9 0 103.9 10.9c1.5-.5 2.7-1.8 3.3-3.7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function IconMenu() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   )
 }

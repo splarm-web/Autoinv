@@ -99,12 +99,11 @@
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 16px;
-  text-align: center;
 }
 
-/* Avatar de cuenta en la barra móvil: abre el mismo menú que el hamburger,
-   pero como entrada reconocible de "cuenta" (antes este hueco lo ocupaba un
-   icono de tema duplicado — el tema ya vive dentro de ese mismo menú). */
+/* Avatar de cuenta en la barra móvil: único destino, abre el panel de
+   cuenta (Admin si aplica + tema + cerrar sesión). La navegación primaria
+   ya vive entera en la bottom bar, así que no hace falta un segundo menú. */
 .shell-avatar-btn {
   width: 32px;
   height: 32px;
@@ -167,6 +166,7 @@
 .shell-mobile-bar {
   display: none;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
   padding-top: calc(14px + env(safe-area-inset-top, 0px));
@@ -174,29 +174,48 @@
   background: var(--surface-2);
   flex-shrink: 0;
 }
-.shell-burger {
+
+/* ── Panel de cuenta (móvil, tras el avatar) ── */
+.account-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 20px 20px;
+}
+.account-sheet-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.account-sheet-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-sheet-plan { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.account-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
   background: none;
   border: none;
   color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 4px;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
+  text-align: left;
 }
-
-/* ── Mobile overlay ── */
-.shell-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  z-index: 50;
-  display: flex;
-}
-.shell-sidebar-mobile {
-  width: var(--sidebar-w);
-  background: var(--surface-2);
-  height: 100%;
-}
+.account-sheet-row:hover { background: var(--hover); }
+.account-sheet-row--danger { color: var(--coral); }
 
 /* ── Bottom nav (mobile) ── */
 .shell-bottom-nav {
