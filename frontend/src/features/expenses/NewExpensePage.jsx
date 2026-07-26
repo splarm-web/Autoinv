@@ -118,7 +118,9 @@ export default function NewExpensePage() {
 
         <div className="form-grid-2">
           <Field label="Fecha">
-            <input name="date" type="date" value={form.date} onChange={handle} required style={s.input} />
+            <div className="date-wrap">
+              <input name="date" type="date" value={form.date} onChange={handle} required style={s.input} />
+            </div>
           </Field>
           <Field label="Importe total (€)">
             <input name="amount" type="number" step="0.01" min="0" value={form.amount} onChange={handle} required placeholder="0,00" style={s.input} />

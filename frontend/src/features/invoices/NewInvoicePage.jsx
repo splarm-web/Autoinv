@@ -233,10 +233,14 @@ export default function NewInvoicePage() {
               <div style={s.sectionTitle}>Datos de la factura</div>
               <div className="form-grid-2" style={{ gap: 12 }}>
                 <Field label="Fecha">
-                  <input name="date" type="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
+                  <div className="date-wrap">
+                    <input name="date" type="date" value={form.date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
+                  </div>
                 </Field>
                 <Field label="Vencimiento">
-                  <input name="due_date" type="date" value={form.due_date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Vencimiento']) }} />
+                  <div className="date-wrap">
+                    <input name="due_date" type="date" value={form.due_date} onChange={handle} style={{ ...s.input, ...errStyle(invalid['Vencimiento']) }} />
+                  </div>
                 </Field>
               </div>
               <Field label="Forma de pago">

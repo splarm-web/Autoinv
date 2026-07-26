@@ -204,6 +204,41 @@
   }
 }
 
+/* ── Icono de los <input type="date"> ──
+   El indicador nativo no es fiable entre navegadores: en iOS Safari no se
+   dibuja ningún icono (el campo no se reconoce como selector de fecha), y en
+   Chrome sale pegado al borde sin el margen que sí tiene el chevron de los
+   <select>. Se dibuja un icono propio (mismo criterio que .select-wrap) y se
+   deja el indicador nativo de Chrome invisible pero encima, para que el tap
+   siga abriendo el selector nativo del sistema.
+   Uso: envolver el <input type="date"> en <div className="date-wrap">. */
+.date-wrap { position: relative; }
+.date-wrap > input[type='date'] {
+  padding-right: 34px !important;
+}
+.date-wrap > input[type='date']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 34px;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.date-wrap::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  background-color: var(--text-muted);
+  pointer-events: none;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='3.3' width='12' height='10.7' rx='1.4' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M2 6.6h12M5.3 1.3v3M10.7 1.3v3' stroke='black' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='3.3' width='12' height='10.7' rx='1.4' fill='none' stroke='black' stroke-width='1.3'/%3E%3Cpath d='M2 6.6h12M5.3 1.3v3M10.7 1.3v3' stroke='black' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
 /* ── Filas con importe a la derecha (listados, resúmenes) ──
    El importe nunca debe partirse en dos líneas ("−60\n€"); el texto
    descriptivo de la izquierda es el que puede ceder espacio y envolver. */

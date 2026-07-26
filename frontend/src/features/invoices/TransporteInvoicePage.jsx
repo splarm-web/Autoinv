@@ -355,7 +355,11 @@ export default function TransporteInvoicePage() {
           <Field label="Nº factura" hint="Se genera con el prefijo (Ajustes) + mes de la fecha">
             <input value={meta.numero_factura} onChange={(e) => setMeta({ ...meta, numero_factura: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Nº de factura']) }} />
           </Field>
-          <Field label="Fecha"><input type="date" value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} /></Field>
+          <Field label="Fecha">
+            <div className="date-wrap">
+              <input type="date" value={meta.fecha} onChange={(e) => setMeta({ ...meta, fecha: e.target.value })} style={{ ...s.input, ...errStyle(invalid['Fecha']) }} />
+            </div>
+          </Field>
           <Field label="Concepto (mes año)" info={autofilled.concepto && meta.concepto_mes ? 'Leído del Excel' : ''}>
             <input value={meta.concepto_mes} onChange={(e) => { setMeta({ ...meta, concepto_mes: e.target.value }); clearAutofilled('concepto') }} placeholder="SEPTIEMBRE 2025" style={{ ...s.input, ...errStyle(invalid['Concepto (mes)']) }} />
           </Field>
@@ -386,7 +390,9 @@ export default function TransporteInvoicePage() {
             </div>
             {viajes.map((v, i) => (
               <div key={i} style={s.lineRow}>
-                <input type="date" value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
+                <div className="date-wrap">
+                  <input type="date" value={v.fecha} onChange={(e) => handleViaje(i, 'fecha', e.target.value)} style={s.input} />
+                </div>
                 <input value={v.viaje} onChange={(e) => handleViaje(i, 'viaje', e.target.value)} placeholder="Origen - Destino" style={s.input} />
                 <input type="number" min="0" step="any" value={v.kilos} onChange={(e) => handleViaje(i, 'kilos', e.target.value)} placeholder="kg" style={{ ...s.input, textAlign: 'right' }} />
                 <input type="number" min="0" step="any" value={v.precio} onChange={(e) => handleViaje(i, 'precio', e.target.value)} placeholder="€/t" style={{ ...s.input, textAlign: 'right' }} />

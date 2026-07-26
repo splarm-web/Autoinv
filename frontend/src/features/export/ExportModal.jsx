@@ -150,11 +150,15 @@ export default function ExportModal({ onClose, scope = 'todo' }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>
                   <label style={s.label}>Desde</label>
-                  <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={s.input} />
+                  <div className="date-wrap">
+                    <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={s.input} />
+                  </div>
                 </div>
                 <div>
                   <label style={s.label}>Hasta</label>
-                  <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={s.input} />
+                  <div className="date-wrap">
+                    <input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={s.input} />
+                  </div>
                 </div>
               </div>
 

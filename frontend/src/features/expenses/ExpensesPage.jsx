@@ -68,20 +68,24 @@ export default function ExpensesPage() {
 
       {/* Filtros */}
       <div style={s.filterBar}>
-        <input
-          type="date"
-          value={filters.from_date}
-          onChange={(e) => setFilter('from_date', e.target.value)}
-          style={s.filterInput}
-          title="Desde"
-        />
-        <input
-          type="date"
-          value={filters.to_date}
-          onChange={(e) => setFilter('to_date', e.target.value)}
-          style={s.filterInput}
-          title="Hasta"
-        />
+        <div className="date-wrap">
+          <input
+            type="date"
+            value={filters.from_date}
+            onChange={(e) => setFilter('from_date', e.target.value)}
+            style={s.filterInput}
+            title="Desde"
+          />
+        </div>
+        <div className="date-wrap">
+          <input
+            type="date"
+            value={filters.to_date}
+            onChange={(e) => setFilter('to_date', e.target.value)}
+            style={s.filterInput}
+            title="Hasta"
+          />
+        </div>
         <div className="select-wrap" style={{ flex: '1 1 160px' }}>
           <select
             value={filters.category}
