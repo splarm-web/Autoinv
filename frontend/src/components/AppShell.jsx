@@ -7,14 +7,20 @@ import { IconX } from './Icons'
 import '../styles/modal.css'
 import './AppShell.css'
 
+// Menú principal: las áreas de trabajo del día a día.
 // `feature`: exige esa función. `anyFeature`: basta con tener una. Sin nada: siempre.
 const NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
-  { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
-  { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
+]
+
+// Lo que es "tu cuenta" y no un área de trabajo: se configura una vez y se
+// visita casi nunca, así que vive detrás del avatar y no ocupa sitio fijo.
+const CUENTA_NAV = [
+  { to: '/settings', label: 'Perfil fiscal', Icon: IconAjustes },
+  { to: '/admin',    label: 'Administración', Icon: IconAdmin, feature: 'admin' },
 ]
 
 function navAllowed(item, hasFeature) {
@@ -25,7 +31,8 @@ function navAllowed(item, hasFeature) {
 
 // Título de la barra móvil según la sección activa (p.ej. /invoices/new → "Facturas").
 function sectionTitle(pathname) {
-  const match = [...NAV].sort((a, b) => b.to.length - a.to.length).find((n) => pathname.startsWith(n.to))
+  const todas = [...NAV, ...CUENTA_NAV, { to: '/automation', label: 'Automatización' }]
+  const match = todas.sort((a, b) => b.to.length - a.to.length).find((n) => pathname.startsWith(n.to))
   return match?.label || 'autoinv'
 }
 
@@ -66,10 +73,8 @@ export default function AppShell() {
   const [accountOpen, setAccountOpen] = useState(false)
   const pendingCount = usePendingCount(hasFeature('automatizacion'))
 
-  // Bottom bar móvil = navegación primaria completa salvo Admin, que va al
-  // panel de cuenta (es cosa de un único usuario, no merece hueco fijo para
-  // todos). Nada que mantener sincronizado: se deriva directamente de NAV.
-  const bottomNav = NAV.filter((item) => item.to !== '/admin' && navAllowed(item, hasFeature))
+  // Menú inferior = NAV tal cual: lo de la cuenta vive tras el avatar
+  const bottomNav = NAV.filter((item) => navAllowed(item, hasFeature))
 
   const initials = (user?.legal_name || user?.email || 'U')
     .split(' ')
@@ -84,7 +89,7 @@ export default function AppShell() {
     <div className="shell-root">
       {/* Desktop sidebar */}
       <aside className="shell-sidebar">
-        <SidebarContent initials={initials} user={user} onLogout={handleLogout} hasFeature={hasFeature} pendingCount={pendingCount} />
+        <SidebarContent initials={initials} user={user} hasFeature={hasFeature} pendingCount={pendingCount} onAbrirCuenta={() => setAccountOpen(true)} />
       </aside>
 
       {/* Content */}
@@ -156,11 +161,11 @@ function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout 
             </div>
           </div>
 
-          {hasFeature('admin') && (
-            <button className="account-sheet-row" onClick={() => go('/admin')}>
-              <IconAdmin /> Administración
+          {CUENTA_NAV.filter((item) => navAllowed(item, hasFeature)).map(({ to, label, Icon }) => (
+            <button key={to} className="account-sheet-row" onClick={() => go(to)}>
+              <Icon /> {label}
             </button>
-          )}
+          ))}
 
           <button className="account-sheet-row" onClick={toggleTheme}>
             {isLight ? <IconMoon /> : <IconSun />}
@@ -176,7 +181,7 @@ function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout 
   )
 }
 
-function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature, pendingCount = 0 }) {
+function SidebarContent({ initials, user, onNavClick, hasFeature, pendingCount = 0, onAbrirCuenta }) {
   const items = NAV.filter((item) => navAllowed(item, hasFeature))
   return (
     <div className="shell-sidebar-inner">
@@ -199,37 +204,24 @@ function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature, pend
           </NavLink>
         ))}
       </nav>
-      <div className="shell-user">
+      {/* Un único destino para todo lo de la cuenta, igual que el avatar en
+          móvil: perfil fiscal, administración, tema y cerrar sesión. Antes el
+          tema y la salida colgaban sueltos aquí y no estaban en ningún sitio
+          en móvil. */}
+      <button className="shell-user shell-user-btn" onClick={onAbrirCuenta} title="Tu cuenta">
         <div className="shell-avatar">{initials}</div>
-        <div style={{ lineHeight: 1.3, minWidth: 0 }}>
+        <div style={{ lineHeight: 1.3, minWidth: 0, textAlign: 'left' }}>
           <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.legal_name || user?.email?.split('@')[0]}
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Autónomo</div>
         </div>
-        <ThemeToggle className="shell-theme" />
-        <button className="shell-logout" onClick={onLogout} title="Cerrar sesión">
-          <IconLogout />
-        </button>
-      </div>
+        <span className="shell-user-chevron" aria-hidden="true">›</span>
+      </button>
     </div>
   )
 }
 
-function ThemeToggle({ className }) {
-  const { theme, toggleTheme } = useTheme()
-  const isLight = theme === 'light'
-  return (
-    <button
-      className={className}
-      onClick={toggleTheme}
-      title={isLight ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro'}
-      aria-label={isLight ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro'}
-    >
-      {isLight ? <IconMoon /> : <IconSun />}
-    </button>
-  )
-}
 
 export function Logo() {
   return (

@@ -64,7 +64,7 @@ export default function SettingsPage() {
       const updated = await authApi.updateMe(form)
       updateUser(updated)
       setSaved(true)
-      toast.success('Ajustes guardados')
+      toast.success('Perfil fiscal guardado')
     } catch (e) {
       toast.error(e.message || 'No se pudieron guardar los ajustes')
     } finally {
@@ -74,7 +74,7 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <h1 style={s.title}>Ajustes fiscales</h1>
+      <h1 style={s.title}>Perfil fiscal</h1>
       <p style={s.subtitle}>Estos datos aparecen en tus facturas y se usan para calcular el IVA e IRPF.</p>
 
       <form onSubmit={submit}>
