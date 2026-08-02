@@ -29,6 +29,8 @@ export default function AutomationConfig({ status, onCambio }) {
   const [probandoFiltros, setProbandoFiltros] = useState(false)
   const [muestras, setMuestras] = useState(null)
   const [push, setPush] = useState('pendiente')
+  const [chequeos, setChequeos] = useState(null)
+  const [diagnosticando, setDiagnosticando] = useState(false)
 
   useEffect(() => {
     automationApi.getConfig().then((c) => {
@@ -135,6 +137,19 @@ export default function AutomationConfig({ status, onCambio }) {
   // maestro de arriba, que sí). Sin avisarlo, es facilísimo activar "Enviarla
   // al aprobarla", irse, y que no haya surtido efecto.
   const hayCambios = JSON.stringify(form) !== JSON.stringify(guardado)
+
+  const diagnosticar = async () => {
+    setDiagnosticando(true)
+    try {
+      const r = await automationApi.diagnostico()
+      setChequeos(r.chequeos)
+      if (r.todo_ok) toast.success('Todo correcto')
+    } catch (e) {
+      toast.error(e.message || 'No se pudo ejecutar el diagnóstico')
+    } finally {
+      setDiagnosticando(false)
+    }
+  }
 
   const clienteElegido = clientes.find((c) => String(c.id) === String(form.client_id))
   const prefijo = user?.transporte_invoice_prefix || 'A'
@@ -339,6 +354,33 @@ export default function AutomationConfig({ status, onCambio }) {
         )}
       </Seccion>
 
+      {/* Diagnóstico: la automatización encadena muchas piezas y, cuando algo
+          no llega, sin esto no hay forma de saber cuál falló. */}
+      <Seccion
+        titulo="Diagnóstico"
+        desc="Comprueba de una pasada todos los pasos: la conexión con el correo, el cliente, el envío y las notificaciones."
+      >
+        <button onClick={diagnosticar} disabled={diagnosticando} style={s.btnSecondary}>
+          {diagnosticando ? 'Comprobando…' : '🩺 Comprobar todo'}
+        </button>
+        {chequeos && (
+          <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
+            {chequeos.map((c) => (
+              <div key={c.clave} style={s.chequeo}>
+                <span style={s.icono[c.estado]}>
+                  {c.estado === 'ok' ? '✓' : c.estado === 'aviso' ? '!' : '✕'}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{c.titulo}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{c.detalle}</div>
+                  {c.ayuda && <div style={s.ayuda}>→ {c.ayuda}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Seccion>
+
       <div className={'autom-guardar' + (hayCambios ? ' pendiente' : '')}>
         {hayCambios && (
           <span style={s.avisoCambios}>⬤ Cambios sin guardar</span>
@@ -461,6 +503,13 @@ const s = {
   avisoPush: { fontSize: 12, color: 'var(--cielo)', background: 'rgba(111,168,255,0.08)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 'var(--r-sm)', padding: '10px 12px', marginTop: 10, lineHeight: 1.6 },
   filaPush: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10, flexWrap: 'wrap' },
   btnMini: { padding: '5px 12px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
+  chequeo: { display: 'flex', gap: 10, alignItems: 'flex-start' },
+  ayuda: { fontSize: 12, color: 'var(--cielo)', marginTop: 4, lineHeight: 1.5 },
+  icono: {
+    ok: { flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: 'rgba(69,212,155,0.15)', color: 'var(--menta)', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    aviso: { flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: 'rgba(232,184,75,0.15)', color: '#E8B84B', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    error: { flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: 'rgba(240,135,106,0.15)', color: 'var(--coral)', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  },
   avisoCambios: { fontSize: 12, fontWeight: 600, color: '#E8B84B' },
   btnPrimaryOff: { padding: '11px 24px', background: 'var(--surface-3)', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'default' },
   btnPrimary: { padding: '11px 24px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },

@@ -156,6 +156,23 @@ class AutomationStatusOut(BaseModel):
     vapid_public_key: Optional[str] = None
 
 
+# ── Diagnóstico ──
+
+
+class ChequeoOut(BaseModel):
+    """Un eslabón de la cadena, con qué hacer si está roto."""
+    clave: str
+    titulo: str
+    estado: str          # "ok" | "aviso" | "error"
+    detalle: str
+    ayuda: Optional[str] = None
+
+
+class DiagnosticoOut(BaseModel):
+    chequeos: List[ChequeoOut]
+    todo_ok: bool
+
+
 # ── Push ──
 
 

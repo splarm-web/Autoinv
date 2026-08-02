@@ -191,6 +191,8 @@ export const automationApi = {
   testFilters: (data) =>
     apiFetch('/api/automation/test-filters', { method: 'POST', body: JSON.stringify(data), slow: true }),
   status: () => apiFetch('/api/automation/status'),
+  // Lento a propósito: comprueba la conexión IMAP de verdad
+  diagnostico: () => apiFetch('/api/automation/diagnostico', { slow: true }),
   pollNow: () => apiFetch('/api/automation/poll-now', { method: 'POST', slow: true }),
 
   listPending: () => apiFetch('/api/automation/pending'),

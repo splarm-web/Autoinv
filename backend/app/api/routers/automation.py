@@ -17,6 +17,7 @@ from ...api.deps import require_feature
 from ...core.config import settings
 from ...core.database import get_db
 from ...core.fechas import ahora, como_utc
+from ...models.client import Client
 from ...models.email_automation import EmailAutomation, PendingInvoice, PushSubscription
 from ...models.user import User
 from ...schemas.automation import (
@@ -26,6 +27,8 @@ from ...schemas.automation import (
     AutomationTestIn,
     AutomationTestResult,
     AutomationToggle,
+    ChequeoOut,
+    DiagnosticoOut,
     FilterPreviewIn,
     FilterPreviewItem,
     PendingInvoiceDetail,
@@ -33,7 +36,8 @@ from ...schemas.automation import (
     PushSubscriptionIn,
 )
 from ...services import (
-    automation_approve, email_crypto, email_reader, email_worker, push_sender,
+    automation_approve, email_crypto, email_reader, email_sender, email_worker,
+    push_sender,
 )
 
 logger = logging.getLogger(__name__)
@@ -471,6 +475,112 @@ def get_status(
         poll_stale=parada,
         push_available=disponible,
         vapid_public_key=settings.vapid_public_key if disponible else None,
+    )
+
+
+@router.get("/diagnostico", response_model=DiagnosticoOut)
+def diagnostico(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_feature("automatizacion")),
+):
+    """Comprueba de una pasada cada eslabón de la cadena.
+
+    La automatización encadena bastantes piezas (correo, filtros, cliente,
+    envío, notificaciones) y cuando algo no llega no hay forma de saber cuál
+    falló. Esto lo dice, y además qué hacer en cada caso.
+    """
+    config = _get_config(db, current_user.id)
+    chequeos: List[ChequeoOut] = []
+
+    def add(clave, titulo, estado, detalle, ayuda=None):
+        chequeos.append(ChequeoOut(clave=clave, titulo=titulo, estado=estado,
+                                   detalle=detalle, ayuda=ayuda))
+
+    # 1 · Configuración básica
+    if not config:
+        add("config", "Configuración", "error", "Todavía no has configurado nada.",
+            "Rellena la pestaña Configuración y guarda.")
+        return DiagnosticoOut(chequeos=chequeos, todo_ok=False)
+
+    add("activa", "Automatización", "ok" if config.enabled else "aviso",
+        "Activada, revisando el correo." if config.enabled else "Desactivada: no se revisa el correo.",
+        None if config.enabled else "Actívala con el interruptor de arriba.")
+
+    # 2 · Conexión con el buzón
+    if not config.imap_email or not config.imap_app_password_enc:
+        add("imap", "Conexión con el correo", "error", "Faltan el correo o la contraseña.",
+            "Complétalos en Conexión. Ojo: es una contraseña de aplicación de Google, no la de Gmail.")
+    else:
+        try:
+            r = email_reader.test_imap_connection(
+                config.imap_email, email_crypto.decrypt_password(config.imap_app_password_enc))
+            add("imap", "Conexión con el correo", "ok" if r["ok"] else "error",
+                r["message"],
+                None if r["ok"] else "Regenera la contraseña de aplicación en Google y vuelve a pegarla.")
+        except Exception as e:
+            add("imap", "Conexión con el correo", "error", str(e),
+                "Vuelve a introducir la contraseña de aplicación.")
+
+    # 3 · Última revisión
+    if not config.enabled:
+        add("revision", "Última revisión", "aviso", "La automatización está desactivada.")
+    elif not config.last_poll_at:
+        add("revision", "Última revisión", "aviso", "Aún no se ha revisado el buzón ninguna vez.",
+            "Pulsa «Revisar ahora» para forzarla.")
+    else:
+        minutos = int((ahora() - como_utc(config.last_poll_at)).total_seconds() // 60)
+        parada = minutos > settings.poll_stale_minutes
+        add("revision", "Última revisión", "aviso" if parada else "ok",
+            f"Hace {minutos} minutos.",
+            "Comprueba que el disparador externo (cron) sigue activo." if parada else None)
+
+    # 4 · Cliente al que se factura
+    cliente = None
+    if config.client_id:
+        cliente = db.query(Client).filter(Client.id == config.client_id).first()
+    if not cliente:
+        add("cliente", "Cliente", "error", "No hay ningún cliente elegido.",
+            "Elígelo en «Datos de la factura»; sin él las facturas no se pueden aprobar.")
+    else:
+        faltan = [n for n, v in (("CIF", cliente.cif), ("dirección", cliente.direccion)) if not v]
+        add("cliente", "Cliente", "aviso" if faltan else "ok",
+            f"{cliente.nombre}" + (f" — le falta {' y '.join(faltan)}" if faltan else ""),
+            "Complétalo en Clientes o las facturas llegarán marcadas como «Requiere revisión»." if faltan else None)
+
+    # 5 · Envío de la factura
+    if not config.send_on_approve:
+        add("envio", "Envío al aprobar", "aviso", "Desactivado: aprobar solo guarda la factura.",
+            "Actívalo si quieres que se mande al cliente automáticamente.")
+    else:
+        destino = automation_approve.destinatario(db, config)
+        via = "por HTTPS (Brevo)" if email_sender.transporte_en_uso() == "brevo" else "por SMTP directo"
+        if not destino:
+            add("envio", "Envío al aprobar", "error", f"Activado {via}, pero sin destinatario.",
+                "Pon un destinatario, o añade el email en la ficha del cliente.")
+        else:
+            add("envio", "Envío al aprobar", "ok", f"Activado {via} → {destino}.")
+
+    # 6 · Notificaciones
+    if not config.notify_push:
+        add("push", "Notificaciones", "aviso", "Desactivadas en la configuración.",
+            "Actívalas y guarda si quieres recibir avisos.")
+    elif not push_sender.push_disponible():
+        add("push", "Notificaciones", "error",
+            "El servidor no tiene claves de notificación configuradas.",
+            "Faltan las variables VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY y VAPID_SUBJECT en el servidor.")
+    else:
+        dispositivos = db.query(PushSubscription).filter(
+            PushSubscription.user_id == current_user.id).count()
+        if dispositivos == 0:
+            add("push", "Notificaciones", "error", "Ningún dispositivo registrado.",
+                "Pulsa «Activar aquí» desde el móvil. En iPhone hay que añadir antes la app a la pantalla de inicio.")
+        else:
+            add("push", "Notificaciones", "ok",
+                f"{dispositivos} dispositivo(s) registrado(s).")
+
+    return DiagnosticoOut(
+        chequeos=chequeos,
+        todo_ok=all(c.estado == "ok" for c in chequeos),
     )
 
 
