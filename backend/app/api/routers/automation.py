@@ -189,8 +189,9 @@ def save_config(
     config.poll_interval_minutes = max(1, min(60, data.poll_interval_minutes))
 
     # La contraseña solo se toca si mandan una nueva
-    if data.imap_app_password:
-        config.imap_app_password_enc = email_crypto.encrypt_password(data.imap_app_password)
+    nueva = email_crypto.normalize_app_password(data.imap_app_password)
+    if nueva:
+        config.imap_app_password_enc = email_crypto.encrypt_password(nueva)
 
     db.commit()
     db.refresh(config)
@@ -208,7 +209,9 @@ def test_connection(
     correo = data.imap_email or (config.imap_email if config else None)
     if not correo:
         raise HTTPException(status_code=400, detail="Falta el email")
-    password = data.imap_app_password or _password_de(config)
+    # Mismo trato que al guardarla: sin esto, probar la conexión con la
+    # contraseña recién pegada (con espacios) fallaría aunque sea correcta
+    password = email_crypto.normalize_app_password(data.imap_app_password) or _password_de(config)
     return AutomationTestResult(**email_reader.test_imap_connection(correo, password))
 
 

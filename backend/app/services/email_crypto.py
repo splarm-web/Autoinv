@@ -25,6 +25,17 @@ def _get_fernet() -> Fernet:
     return _fernet
 
 
+def normalize_app_password(raw: str) -> str:
+    """Quita los espacios de una contraseña de aplicación de Google.
+
+    Google la muestra en cuatro grupos de cuatro ("abcd efgh ijkl mnop") y al
+    copiarla se pegan los espacios. La contraseña real son las 16 letras
+    seguidas: dejarlos provoca un fallo de autenticación genérico, imposible
+    de diagnosticar desde la pantalla de configuración.
+    """
+    return "".join((raw or "").split())
+
+
 def encrypt_password(plain: str) -> str:
     """Cifra una contraseña en texto plano → string base64 almacenable."""
     return _get_fernet().encrypt(plain.encode()).decode()
