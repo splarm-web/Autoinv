@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { dashboardApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { IconDownload, IconPlus } from '../../components/Icons'
 import { eur0, eur2, fmtDate } from '../../lib/format'
 import Pagination from '../../components/Pagination'
 import ExportModal from '../export/ExportModal'
@@ -105,19 +106,19 @@ export default function DashboardPage() {
 
 function QuickActions({ hasFeature, onExport }) {
   const actions = []
-  if (hasFeature('facturas')) actions.push({ to: '/invoices/new', label: '+ Factura' })
-  if (hasFeature('transporte')) actions.push({ to: '/invoices/transporte', label: '+ Factura de transporte' })
-  if (hasFeature('gastos')) actions.push({ to: '/expenses/new', label: '+ Gasto' })
+  if (hasFeature('facturas')) actions.push({ to: '/invoices/new', label: 'Factura', Icon: IconPlus })
+  if (hasFeature('transporte')) actions.push({ to: '/invoices/transporte', label: 'Factura de transporte', Icon: IconPlus })
+  if (hasFeature('gastos')) actions.push({ to: '/expenses/new', label: 'Gasto', Icon: IconPlus })
   const canExport = hasFeature('export')
   if (!actions.length && !canExport) return null
   return (
     <div className="quick-actions">
       {actions.map((a) => (
-        <Link key={a.to} to={a.to} className="quick-action">{a.label}</Link>
+        <Link key={a.to} to={a.to} className="btn btn-neutral btn-sm quick-action"><a.Icon /> {a.label}</Link>
       ))}
       {canExport && (
-        <button type="button" onClick={onExport} className="quick-action">
-          ⬇ Exportar ingresos y gastos
+        <button type="button" onClick={onExport} className="btn btn-neutral btn-sm quick-action">
+          <IconDownload /> Exportar ingresos y gastos
         </button>
       )}
     </div>

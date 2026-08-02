@@ -56,6 +56,9 @@
   --gap-cards:   14px;
   --gap-section: 18px;
   --pad-card:    20px;
+  /* Margen del contenido. En móvil 28px se comían el ancho útil: con 390px
+     de pantalla dejaban 334 para el contenido, y las tarjetas quedaban
+     estrechas y con el texto partido. */
   --pad-content: 28px;
 
   /* Layout */
@@ -128,4 +131,13 @@ body {
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Menos margen lateral cuanto menos ancho hay: el contenido lo agradece más
+   que el aire. */
+@media (max-width: 680px) {
+  :root { --pad-content: 16px; }
+}
+@media (max-width: 380px) {
+  :root { --pad-content: 12px; }
 }

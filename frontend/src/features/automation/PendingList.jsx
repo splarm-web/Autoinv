@@ -71,8 +71,11 @@ function PendingCard({ p, onAbrir }) {
         <div style={s.cardSub}>
           {p.num_viajes} viaje{p.num_viajes === 1 ? '' : 's'} · {p.attachment_name || 'Excel'}
         </div>
+        {/* El remitente se recorta, la hora no: truncar la línea entera dejaba
+            "gestor.administracion@… · hac…" y se perdía justo el dato útil. */}
         <div style={s.cardMeta}>
-          {p.email_from || 'correo'} · {formatoRelativo(p.created_at)}
+          <span style={s.cardMetaEmail}>{p.email_from || 'correo'}</span>
+          <span style={s.cardMetaFija}>· {formatoRelativo(p.created_at)}</span>
         </div>
         {conAvisos && (
           <div style={s.avisos}>{p.warnings.join(' · ')}</div>
@@ -275,7 +278,9 @@ const s = {
   numero: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 16 },
   badgeWarn: { fontSize: 10, fontWeight: 600, color: 'var(--coral)', background: 'rgba(240,135,106,0.12)', border: '1px solid rgba(240,135,106,0.3)', borderRadius: 999, padding: '2px 8px' },
   cardSub: { fontSize: 13, color: 'var(--text)' },
-  cardMeta: { fontSize: 11, color: 'var(--text-muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  cardMeta: { fontSize: 11, color: 'var(--text-muted)', marginTop: 3, display: 'flex', gap: 4, minWidth: 0 },
+  cardMetaEmail: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 },
+  cardMetaFija: { flexShrink: 0, whiteSpace: 'nowrap' },
   avisos: { fontSize: 11, color: 'var(--coral)', marginTop: 6 },
   importe: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   verDetalle: { fontSize: 11, color: 'var(--text-muted)', marginTop: 4 },

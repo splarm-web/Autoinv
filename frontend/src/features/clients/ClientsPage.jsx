@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../../lib/api'
 import ConfirmDialog from '../../components/ConfirmDialog'
-import { IconPlus, IconX } from '../../components/Icons'
+import { IconEdit, IconPlus, IconTrash, IconX } from '../../components/Icons'
 import '../../styles/modal.css'
 import './clients.css'
 
@@ -124,23 +124,25 @@ function ClientCard({ client, onEdit, onSetDefault, onDelete }) {
           )}
         </div>
       </div>
+      {/* Mismos botones que las filas de Facturas: iconos cuadrados del sistema
+          común, con el destructivo en rojo. Antes eran otro estilo distinto. */}
       <div className="client-card-actions">
         {!client.is_default && (
           <button
-            className="client-action-btn"
+            className="btn btn-icon btn-sm btn-neutral"
             onClick={onSetDefault}
-            title="Marcar como principal"
+            title="Marcar como principal" aria-label="Marcar como principal"
           >
             <IconStar />
           </button>
         )}
-        <button className="client-action-btn" onClick={onEdit} title="Editar">
+        <button className="btn btn-icon btn-sm btn-neutral" onClick={onEdit} title="Editar cliente" aria-label="Editar cliente">
           <IconEdit />
         </button>
         <button
-          className="client-action-btn client-action-btn--danger"
+          className="btn btn-icon btn-sm btn-danger"
           onClick={onDelete}
-          title="Eliminar"
+          title="Eliminar cliente" aria-label="Eliminar cliente"
         >
           <IconTrash />
         </button>
@@ -329,21 +331,7 @@ function IconStar() {
   )
 }
 
-function IconEdit() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 14 14" fill="none">
-      <path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
-function IconTrash() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 14 14" fill="none">
-      <path d="M2 3.5h10M5.5 3.5V2h3v1.5M4 3.5l.7 8h4.6l.7-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
 
 function IconBuilding() {
   return (
