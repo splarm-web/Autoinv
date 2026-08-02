@@ -92,6 +92,10 @@ def compose(parsed: dict, user, client, config, fecha_recepcion: date | None = N
             "direccion": (client.direccion or "") if client else "",
             "ciudad": (client.ciudad or "") if client else "",
         },
+        # De qué ficha salió el cliente. Lo necesita la pantalla de edición
+        # para preseleccionarlo y para poder corregir la ficha si falta algo
+        # (si no, el mismo dato faltaría otra vez el mes que viene).
+        "client_id": client.id if client else None,
         "numero_factura": numero_factura(prefix, fecha),
         "fecha_factura": fecha.strftime("%d/%m/%Y"),
         "fecha_iso": fecha.isoformat(),

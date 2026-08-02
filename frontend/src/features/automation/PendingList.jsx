@@ -153,7 +153,9 @@ function PendingDetail({ id, config, onClose, onCambio }) {
   const editar = () => {
     if (!detalle?.invoice_data) return
     navigate('/invoices/transporte', {
-      state: { prefill: detalle.invoice_data, pendingId: id },
+      // Los avisos viajan con los datos: llegar al formulario sin saber qué
+      // había que corregir obliga a volver atrás a mirarlo.
+      state: { prefill: detalle.invoice_data, pendingId: id, warnings: avisos },
     })
   }
 

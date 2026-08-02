@@ -64,6 +64,9 @@ export default function TransporteInvoicePage() {
   // Viene de "Editar" en una factura pendiente de la automatización
   const prefill = location.state?.prefill || null
   const pendingId = location.state?.pendingId || null
+  // Configuración de la automatización, para saber si al guardar hay que
+  // enviar el correo (y así este camino haga lo mismo que "Aprobar")
+  const [automConfig, setAutomConfig] = useState(null)
 
   const [emisor, setEmisor] = useState({ nombre: '', nif: '', direccion: '' })
   const [cliente, setCliente] = useState({ ...EMPTY_CLIENTE })
@@ -131,7 +134,17 @@ export default function TransporteInvoicePage() {
     }))
     setViajes(vs.length ? vs : [{ ...EMPTY_VIAJE }])
     setAutofilled({ viajes: true, cabeza: !!prefill.cabeza, cisterna: !!prefill.cisterna, concepto: !!prefill.concepto_mes })
+    // Preseleccionar la ficha de cliente de la que salieron los datos
+    if (prefill.client_id) setClientId(String(prefill.client_id))
   }, [prefill])
+
+  // Al venir de una pendiente hay que saber si el envío está activado: si no,
+  // este camino guardaría sin enviar mientras que "Aprobar" sí enviaría, y la
+  // misma factura acabaría en un sitio u otro según por dónde se pase.
+  useEffect(() => {
+    if (!pendingId) return
+    automationApi.getConfig().then(setAutomConfig).catch(() => {})
+  }, [pendingId])
 
   useEffect(() => {
     clientsApi.list().then(setClients).catch(() => {})
@@ -278,19 +291,62 @@ export default function TransporteInvoicePage() {
     }
   }
 
+  /** Si se corrigió un dato del cliente, ofrecer arreglarlo también en su ficha.
+   *  Sin esto, el mismo campo volvería a faltar en la factura del mes siguiente. */
+  const proponerActualizarCliente = async () => {
+    if (!clientId) return
+    const ficha = clients.find((x) => x.id === parseInt(clientId))
+    if (!ficha) return
+    const cambios = {}
+    for (const campo of ['nombre', 'cif', 'direccion', 'ciudad']) {
+      const nuevo = (cliente[campo] || '').trim()
+      if (nuevo && nuevo !== (ficha[campo] || '')) cambios[campo] = nuevo
+    }
+    if (!Object.keys(cambios).length) return
+    const ok = window.confirm(
+      `Has cambiado datos del cliente "${ficha.nombre}".\n\n` +
+      '¿Guardarlos también en su ficha? Si no, la próxima factura volverá a venir con los datos antiguos.',
+    )
+    if (!ok) return
+    try {
+      await clientsApi.update(ficha.id, cambios)
+      toast.success('Ficha del cliente actualizada')
+    } catch {
+      toast.error('La factura se guardó, pero no se pudo actualizar la ficha del cliente')
+    }
+  }
+
   const save = async () => {
     if (!guard()) return
     setSaving(true)
     try {
       const creada = await invoicesApi.saveTransporte(buildPayload())
-      // Si veníamos de una pendiente de la automatización, se cierra: si no,
-      // seguiría en la bandeja pidiendo validación de algo ya facturado.
-      if (pendingId) {
-        await automationApi.resolve(pendingId, creada?.id).catch(() => {})
-        window.dispatchEvent(new Event('automation:changed'))
+
+      if (!pendingId) {
+        toast.success('Factura guardada')
+        navigate('/invoices')
+        return
       }
-      toast.success('Factura guardada')
-      navigate(pendingId ? '/automation' : '/invoices')
+
+      // Venimos de una pendiente: hay que cerrarla (si no, seguiría en la
+      // bandeja pidiendo validar algo ya facturado) y, si el envío está
+      // activado, mandarla — igual que haría el botón "Aprobar".
+      await automationApi.resolve(pendingId, creada?.id).catch(() => {})
+      window.dispatchEvent(new Event('automation:changed'))
+
+      if (automConfig?.send_on_approve) {
+        try {
+          const enviada = await invoicesApi.send(creada.id, null)
+          toast.success(`Factura ${creada.number} aprobada y enviada a ${enviada.sent_to}`)
+        } catch (e) {
+          toast.error(`Factura ${creada.number} aprobada, pero el envío falló: ${e.message}`)
+        }
+      } else {
+        toast.success(`Factura ${creada.number} aprobada y guardada (sin enviar)`)
+      }
+
+      await proponerActualizarCliente()
+      navigate('/automation')
     } catch (err) {
       toast.error(err.message || 'No se pudo guardar la factura')
     } finally {
@@ -329,9 +385,22 @@ export default function TransporteInvoicePage() {
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, marginBottom: 20 }}>
         {pendingId
-          ? 'Estás revisando una factura llegada por correo. Al guardarla se quitará de la bandeja de pendientes.'
+          ? 'Estás revisando una factura llegada por correo.'
           : 'Sube el Excel para autorellenar los viajes, edítalos si hace falta y genera el PDF.'}
       </p>
+
+      {/* Qué pasará al terminar. Lo que falta por corregir NO se repite aquí:
+          de eso ya se encarga el aviso amarillo de debajo, que se actualiza
+          solo; este banner es estático y seguiría pidiendo corregir algo ya
+          corregido. */}
+      {pendingId && (
+        <div style={{ ...s.banner, color: 'var(--cielo)', borderColor: 'rgba(111,168,255,0.28)', background: 'rgba(111,168,255,0.06)' }}>
+          Al pulsar <strong>Aprobar y guardar</strong> la factura se registrará y saldrá de la bandeja
+          {automConfig?.send_on_approve
+            ? <>, y <strong>se enviará por email</strong>{automConfig.destinatario_efectivo ? ` a ${automConfig.destinatario_efectivo}` : ''}.</>
+            : <>. No se enviará ningún correo.</>}
+        </div>
+      )}
 
       {error && <div style={{ ...s.banner, color: 'var(--coral)', borderColor: 'rgba(240,135,106,0.3)' }}>{error}</div>}
       {missing.length > 0 && !error && (
@@ -346,7 +415,7 @@ export default function TransporteInvoicePage() {
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
             <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
-              {saving ? 'Guardando…' : 'Guardar factura'}
+              {saving ? 'Guardando…' : pendingId ? '✓ Aprobar y guardar' : 'Guardar factura'}
             </button>
             <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
               {generating ? 'Generando…' : '⬇ Descargar PDF'}
@@ -479,13 +548,13 @@ export default function TransporteInvoicePage() {
 
       <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
         <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
-          {saving ? 'Guardando…' : 'Guardar factura'}
+          {saving ? 'Guardando…' : pendingId ? '✓ Aprobar y guardar' : 'Guardar factura'}
         </button>
         <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
           {generating ? 'Generando…' : '⬇ Descargar PDF'}
         </button>
         <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>👁 Vista previa</button>
-        <button type="button" onClick={() => navigate('/invoices')} style={s.btnGhost}>Cancelar</button>
+        <button type="button" onClick={() => navigate(pendingId ? '/automation' : '/invoices')} style={s.btnGhost}>Cancelar</button>
       </div>
       </>
       )}
