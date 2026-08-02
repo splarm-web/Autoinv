@@ -15,6 +15,14 @@ class Settings(BaseSettings):
     registration_enabled: bool = True
     allowed_origins: str = "*"
 
+    # Envío de facturas por email.
+    # Con `brevo_api_key` se manda por HTTPS a la API de Brevo; sin ella, por
+    # SMTP directo. Hace falta porque el plan gratuito de Render bloquea el
+    # tráfico saliente a los puertos SMTP (25, 465 y 587) desde 2025-09-26:
+    # por SMTP el envío falla con "Network is unreachable" y no hay arreglo
+    # posible en el código. El 443 de HTTPS nunca está bloqueado.
+    brevo_api_key: str = ""
+
     # Web Push (VAPID). Sin claves, las notificaciones quedan desactivadas
     # silenciosamente: el resto de la automatización sigue funcionando.
     vapid_public_key: str = ""

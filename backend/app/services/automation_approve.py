@@ -206,6 +206,9 @@ def enviar(db: Session, invoice: Invoice, config: EmailAutomation,
             subject_template=config.reply_subject or "Factura {numero}",
             body_template=config.reply_body or "Adjunto la factura {numero}.",
             pdf_path=pdf_path,
+            # El nombre del emisor aparece como remitente ("ALFREDO
+            # TRANSPORTES SL <…>") en vez de solo la dirección de correo
+            sender_name=payload.get("emisor", {}).get("nombre") or None,
             invoice_vars={
                 "numero": payload.get("numero_factura", "") or invoice.number,
                 "fecha": payload.get("fecha_factura", "") or invoice.date.strftime("%d/%m/%Y"),

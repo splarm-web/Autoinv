@@ -135,6 +135,25 @@ un fallo se reintenta en vez de perderse), `email_worker` (APScheduler cada min)
 `email_sender` (SMTP), `push_sender` + `email_crypto` (Fernet derivado de
 `SECRET_KEY`). Frontend en `features/automation/`.
 
+**⚠️ Envío de email — Render bloquea SMTP.** Desde el 26/09/2025 los servicios
+web del plan **gratuito** de Render tienen cortado el tráfico saliente a los
+puertos SMTP (25, 465, 587): cualquier intento falla con
+`[Errno 101] Network is unreachable` y **no hay arreglo posible en el código**.
+Por eso `services/email_sender.py` tiene dos transportes y elige solo:
+- con `BREVO_API_KEY` → manda por HTTPS a `api.brevo.com` (el 443 nunca se bloquea)
+- sin ella → SMTP directo (vale en local o en un host que no bloquee)
+
+Requisito de Brevo: el remitente (`imap_email`) debe estar **verificado** en su
+panel de Remitentes. Ojo con la entregabilidad: mandar desde una dirección
+@gmail.com a través de un tercero rompe la alineación DMARC y puede acabar en
+spam; la alternativa buena a futuro es usar un dominio propio, o pasar Render a
+plan de pago y volver a SMTP (basta con quitar `BREVO_API_KEY`).
+
+**Envío en segundo plano:** aprobar no espera al correo. La factura guarda
+`send_queued_at` mientras el envío está en curso (el listado muestra "Enviando…"
+y se refresca solo); al terminar quedan `sent_at`/`sent_to` o `send_error`. Sin
+esto la respuesta tardaba ~4 s en vez de ~0,2 s.
+
 **Push:** requiere `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` en el entorno; sin ellas
 todo funciona salvo las notificaciones. Los listeners viven en
 `public/push-sw.js`, inyectado en el SW de Workbox vía `workbox.importScripts`
