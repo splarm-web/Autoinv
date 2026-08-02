@@ -17,17 +17,20 @@ export default function AutomationPage() {
   const [tab, setTab] = useState('pendientes')
   const [status, setStatus] = useState(null)
   const [pendientes, setPendientes] = useState([])
+  const [config, setConfig] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [revisando, setRevisando] = useState(false)
 
   const recargar = useCallback(async () => {
     try {
-      const [st, pend] = await Promise.all([
+      const [st, pend, cfg] = await Promise.all([
         automationApi.status(),
         automationApi.listPending(),
+        automationApi.getConfig().catch(() => null),
       ])
       setStatus(st)
       setPendientes(pend)
+      setConfig(cfg)
       // Refresca el badge del menú sin esperar a su siguiente sondeo
       window.dispatchEvent(new Event('automation:changed'))
     } catch (e) {
@@ -94,6 +97,7 @@ export default function AutomationPage() {
           activa={status?.enabled}
           onCambio={recargar}
           irAConfig={() => setTab('config')}
+          config={config}
         />
       ) : (
         <AutomationConfig status={status} onCambio={recargar} />

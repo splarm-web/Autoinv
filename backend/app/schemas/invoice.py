@@ -35,6 +35,12 @@ class InvoiceCreate(BaseModel):
     lines: List[InvoiceLineCreate]
 
 
+class InvoiceSendIn(BaseModel):
+    """Envío manual de una factura ya guardada. Sin `to_email` usa el
+    destinatario configurado (o el de la ficha del cliente)."""
+    to_email: Optional[str] = None
+
+
 class InvoiceOut(BaseModel):
     model_config = {"from_attributes": True}
 
@@ -54,5 +60,9 @@ class InvoiceOut(BaseModel):
     total: float
     kind: str = "standard"
     pdf_path: Optional[str] = None
+    # Constancia del envío por email (a quién, cuándo, o por qué falló)
+    sent_at: Optional[datetime] = None
+    sent_to: Optional[str] = None
+    send_error: Optional[str] = None
     created_at: datetime
     lines: List[InvoiceLineOut] = []

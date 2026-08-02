@@ -10,11 +10,12 @@ from ...api.deps import get_current_user, require_feature
 from ...core.config import settings
 from ...core.database import get_db
 from ...invoicing.designs.alfredo.render import render_transporte_pdf
+from ...models.email_automation import EmailAutomation
 from ...models.invoice import Invoice, InvoiceLine
 from ...models.user import User
-from ...schemas.invoice import InvoiceCreate, InvoiceOut
+from ...schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceSendIn
 from ...schemas.transporte import TransporteInvoiceIn
-from ...services import invoice_pdf, transporte_excel
+from ...services import automation_approve, invoice_pdf, transporte_excel
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 
@@ -247,6 +248,56 @@ def download_invoice_pdf(
         media_type="application/pdf",
         filename=f"Factura-{safe_number}.pdf",
     )
+
+
+@router.post("/{invoice_id}/send", response_model=InvoiceOut)
+def send_invoice_email(
+    invoice_id: int,
+    data: InvoiceSendIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Envía (o reenvía) la factura por email y deja constancia en ella.
+
+    Usa las credenciales de la automatización de email, que es donde vive la
+    cuenta configurada; no duplicamos ajustes de SMTP en otro sitio.
+    """
+    inv = db.query(Invoice).filter(
+        Invoice.id == invoice_id, Invoice.user_id == current_user.id,
+    ).first()
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+    config = db.query(EmailAutomation).filter(
+        EmailAutomation.user_id == current_user.id,
+    ).first()
+    if not config or not config.imap_app_password_enc:
+        raise HTTPException(
+            status_code=400,
+            detail="Configura la cuenta de correo en Automatización para poder enviar facturas",
+        )
+
+    # Se regenera el PDF en vez de fiarse de `pdf_path`: en el plan free de
+    # Render el disco es efímero y el fichero puede haber desaparecido.
+    pdf_path = invoice_pdf.render_invoice_pdf(inv, current_user)
+    inv.pdf_path = str(pdf_path.relative_to(settings.files_root))
+
+    payload = {}
+    if inv.kind == "transporte":
+        try:
+            payload = json.loads(inv.extra_json or "{}")
+        except ValueError:
+            payload = {}
+
+    resultado = automation_approve.enviar(
+        db, inv, config, payload, pdf_path, to_email=data.to_email,
+    )
+    db.commit()
+    db.refresh(inv)
+
+    if not resultado["ok"]:
+        raise HTTPException(status_code=400, detail=resultado["message"])
+    return inv
 
 
 @router.delete("/{invoice_id}", status_code=204)

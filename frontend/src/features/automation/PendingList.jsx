@@ -13,7 +13,7 @@ import { formatoRelativo } from './AutomationPage'
  * solo toque, y "Editar" queda como salida de emergencia, no como paso
  * obligatorio.
  */
-export default function PendingList({ pendientes, cargando, configurada, activa, onCambio, irAConfig }) {
+export default function PendingList({ pendientes, cargando, configurada, activa, onCambio, irAConfig, config }) {
   const [abierta, setAbierta] = useState(null)
 
   if (cargando) return <div style={s.vacio}>Cargando…</div>
@@ -47,6 +47,7 @@ export default function PendingList({ pendientes, cargando, configurada, activa,
       {abierta && (
         <PendingDetail
           id={abierta}
+          config={config}
           onClose={() => setAbierta(null)}
           onCambio={onCambio}
         />
@@ -82,7 +83,7 @@ function PendingCard({ p, onAbrir }) {
   )
 }
 
-function PendingDetail({ id, onClose, onCambio }) {
+function PendingDetail({ id, config, onClose, onCambio }) {
   const { toast } = useToast()
   const navigate = useNavigate()
   const [detalle, setDetalle] = useState(null)
@@ -189,6 +190,20 @@ function PendingDetail({ id, onClose, onCambio }) {
             <div style={{ ...s.vacio, padding: 30 }}>Cargando vista previa…</div>
           )}
 
+          {/* Decir de antemano si esto va a mandar un correo o no. Sin este
+              aviso es fácil aprobar esperando que se envíe, que no se envíe
+              (porque el interruptor está apagado) y no enterarse de nada. */}
+          {!bloqueada && (
+            <div style={s.queHara}>
+              {config?.send_on_approve
+                ? config?.destinatario_efectivo
+                  ? <>Al aprobar se guardará <strong>y se enviará por email a {config.destinatario_efectivo}</strong>.</>
+                  : <>El envío está activado pero <strong>no hay destinatario</strong>: se guardará sin enviar.</>
+                : <>Al aprobar <strong>solo se guardará</strong>. Para que se mande al cliente, activa
+                   «Enviarla al aprobarla» en Configuración (o mándala luego desde el listado de facturas).</>}
+            </div>
+          )}
+
           <div className="autom-actions">
             <button
               onClick={aprobar}
@@ -228,6 +243,7 @@ const s = {
   avisos: { fontSize: 11, color: 'var(--coral)', marginTop: 6 },
   importe: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   verDetalle: { fontSize: 11, color: 'var(--text-muted)', marginTop: 4 },
+  queHara: { fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, background: 'var(--surface-3)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '10px 12px' },
   origen: { fontSize: 12, color: 'var(--text-muted)', display: 'grid', gap: 3 },
   k: { display: 'inline-block', minWidth: 58, color: 'var(--text-muted)', opacity: 0.75 },
   btnPrimary: { padding: '10px 20px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },

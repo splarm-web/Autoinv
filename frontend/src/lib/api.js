@@ -112,6 +112,9 @@ export const invoicesApi = {
   create: (data) =>
     apiFetch('/api/invoices', { method: 'POST', body: JSON.stringify(data) }),
   get: (id) => apiFetch(`/api/invoices/${id}`),
+  // Envía o reenvía la factura por email; devuelve la factura con la constancia
+  send: (id, to_email) =>
+    apiFetch(`/api/invoices/${id}/send`, { method: 'POST', body: JSON.stringify({ to_email }) }),
   delete: (id) => apiFetch(`/api/invoices/${id}`, { method: 'DELETE' }),
   downloadPdf: async (id, number) => {
     const token = localStorage.getItem('autoinv_token')

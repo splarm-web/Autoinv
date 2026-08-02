@@ -21,6 +21,7 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
+  const [sending, setSending] = useState(null)
   const [page, setPage] = useState(1)
   const [showExport, setShowExport] = useState(false)
   const [dialOpen, setDialOpen] = useState(false)
@@ -43,6 +44,28 @@ export default function InvoicesPage() {
       toast.success('Factura eliminada')
     } catch (e) {
       toast.error(e.message || 'No se pudo eliminar')
+    }
+  }
+
+  const enviar = async (inv) => {
+    const destino = window.prompt(
+      inv.sent_at
+        ? `Esta factura ya se envió a ${inv.sent_to}.\n\n¿A qué dirección quieres volver a enviarla?`
+        : 'Enviar la factura por email a:\n\n(déjalo vacío para usar el destinatario configurado)',
+      inv.sent_to || '',
+    )
+    if (destino === null) return
+    setSending(inv.id)
+    try {
+      const actualizada = await invoicesApi.send(inv.id, destino.trim() || null)
+      setInvoices((prev) => prev.map((x) => (x.id === inv.id ? actualizada : x)))
+      toast.success(`Factura enviada a ${actualizada.sent_to}`)
+    } catch (e) {
+      toast.error(e.message || 'No se pudo enviar')
+      // Recargar para que quede visible el motivo del fallo en la propia fila
+      invoicesApi.list().then(setInvoices).catch(() => {})
+    } finally {
+      setSending(null)
     }
   }
 
@@ -94,8 +117,8 @@ export default function InvoicesPage() {
       ) : (
         <div style={s.card}>
           {pageItems.map((inv, i) => (
-            <div key={inv.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
+            <div key={inv.id} className="inv-row" style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
+              <div className="inv-row-main" style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
                 <span style={{ ...s.dot, background: 'var(--menta)' }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -106,12 +129,21 @@ export default function InvoicesPage() {
                     {fmtDate(inv.date)}
                     {inv.due_date ? ` · Vence ${fmtDate(inv.due_date)}` : ''}
                   </div>
+                  <EnvioInfo inv={inv} />
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+              <div className="inv-row-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
                 <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums' }}>
                   +{eur2(inv.total)}
                 </span>
+                <button
+                  onClick={() => enviar(inv)}
+                  disabled={sending === inv.id}
+                  style={inv.sent_at ? s.sentBtn : s.pdfBtn}
+                  title={inv.sent_at ? 'Volver a enviar por email' : 'Enviar por email'}
+                >
+                  {sending === inv.id ? '…' : inv.sent_at ? '↻' : '✉'}
+                </button>
                 <button
                   onClick={() => download(inv)}
                   disabled={downloading === inv.id}
@@ -161,6 +193,33 @@ export default function InvoicesPage() {
   )
 }
 
+/**
+ * Constancia del envío por email: a quién y cuándo, o por qué falló.
+ *
+ * Se muestra en la propia fila y no escondido en un detalle porque es lo que
+ * responde de un vistazo a "¿esta factura ya se la mandé al cliente?".
+ */
+function EnvioInfo({ inv }) {
+  if (inv.sent_at) {
+    return (
+      <div style={s.envioOk}>
+        ✓ Enviada a <strong>{inv.sent_to}</strong> el {fmtDateTime(inv.sent_at)}
+      </div>
+    )
+  }
+  if (inv.send_error) {
+    return <div style={s.envioError} title={inv.send_error}>⚠ No se pudo enviar: {inv.send_error}</div>
+  }
+  return <div style={s.envioNo}>Sin enviar</div>
+}
+
+// dd/mm/aaaa a las HH:MM, en hora local
+function fmtDateTime(iso) {
+  const d = new Date(iso)
+  if (isNaN(d)) return ''
+  return `${d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })} a las ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+}
+
 function EmptyState({ types }) {
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '48px 24px', textAlign: 'center' }}>
@@ -198,6 +257,10 @@ const s = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
   dot: { width: 8, height: 8, borderRadius: 99, flexShrink: 0 },
+  envioOk: { fontSize: 11, color: 'var(--menta)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
+  envioError: { fontSize: 11, color: 'var(--coral)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
+  envioNo: { fontSize: 11, color: 'var(--text-muted)', marginTop: 3, opacity: 0.75 },
+  sentBtn: { background: 'rgba(69,212,155,0.12)', border: '1px solid rgba(69,212,155,0.3)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   badge: { fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--cielo)', background: 'rgba(111,168,255,0.12)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 999, padding: '2px 8px' },
   pdfBtn: { background: 'none', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-sm)', letterSpacing: '0.02em' },
   delBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: '2px 4px', borderRadius: 4 },

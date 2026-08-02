@@ -254,3 +254,17 @@
    El importe nunca debe partirse en dos líneas ("−60\n€"); el texto
    descriptivo de la izquierda es el que puede ceder espacio y envolver. */
 .amount-nowrap { white-space: nowrap; flex-shrink: 0; }
+
+/* ── Filas del listado de facturas ──
+   Con importe + 3 acciones (enviar, PDF, borrar) a la derecha, en móvil no
+   queda ancho para el nombre del cliente: se parte letra a letra y la
+   constancia de envío se corta a la mitad. Se apila: datos arriba, acciones
+   debajo alineadas a la derecha. */
+@media (max-width: 680px) {
+  .inv-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px;
+  }
+  .inv-row-actions { justify-content: flex-end; }
+}

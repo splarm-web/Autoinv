@@ -30,6 +30,15 @@ class Invoice(Base):
     extra_json = Column(String, default="{}")
 
     pdf_path = Column(String)
+
+    # Constancia del envío por email: a quién y cuándo se mandó, o por qué
+    # falló. Vive en la factura y no solo en la pendiente de automatización
+    # porque es información fiscalmente relevante que hay que poder consultar
+    # mucho después, desde el listado de facturas.
+    sent_at = Column(DateTime(timezone=True))
+    sent_to = Column(String)
+    send_error = Column(String)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     lines = relationship(

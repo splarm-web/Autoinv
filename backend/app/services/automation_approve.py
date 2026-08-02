@@ -100,7 +100,10 @@ def approve(db: Session, pending: PendingInvoice,
     pending.pdf_path = invoice.pdf_path
 
     if config and config.send_on_approve:
-        _enviar(db, pending, config, payload, pdf_path)
+        enviar(db, invoice, config, payload, pdf_path)
+        # La pendiente refleja lo mismo que la factura, para el historial
+        pending.sent_at = invoice.sent_at
+        pending.send_error = invoice.send_error
 
     db.commit()
     db.refresh(pending)
@@ -118,16 +121,22 @@ def destinatario(db: Session, config: EmailAutomation) -> str:
     return ""
 
 
-def _enviar(db: Session, pending: PendingInvoice, config: EmailAutomation,
-            payload: dict, pdf_path):
-    """Envía la factura por email. Los fallos se registran, no rompen la aprobación."""
-    para = destinatario(db, config)
+def enviar(db: Session, invoice: Invoice, config: EmailAutomation,
+           payload: dict, pdf_path, to_email: str | None = None) -> dict:
+    """Envía la factura por email y deja constancia en la propia factura.
+
+    Nunca lanza: un fallo de envío no debe tumbar la aprobación (la factura ya
+    es válida y está guardada). El motivo queda en `invoice.send_error` para
+    poder verlo después desde el listado — antes se perdía en cuanto se cerraba
+    el aviso de la pantalla.
+    """
+    para = (to_email or "").strip() or destinatario(db, config)
     if not para:
-        pending.send_error = "No hay destinatario: ni en la configuración ni en la ficha del cliente"
-        return
-    if not config.imap_app_password_enc:
-        pending.send_error = "No hay credenciales de email configuradas"
-        return
+        invoice.send_error = "No hay destinatario: ni en la configuración ni en la ficha del cliente"
+        return {"ok": False, "message": invoice.send_error}
+    if not config or not config.imap_app_password_enc:
+        invoice.send_error = "No hay credenciales de email configuradas"
+        return {"ok": False, "message": invoice.send_error}
 
     try:
         password = email_crypto.decrypt_password(config.imap_app_password_enc)
@@ -140,18 +149,22 @@ def _enviar(db: Session, pending: PendingInvoice, config: EmailAutomation,
             body_template=config.reply_body or "Adjunto la factura {numero}.",
             pdf_path=pdf_path,
             invoice_vars={
-                "numero": payload.get("numero_factura", ""),
-                "fecha": payload.get("fecha_factura", ""),
-                "total": f"{float(payload.get('total', 0)):.2f}",
-                "cliente": payload.get("cliente", {}).get("nombre", ""),
+                "numero": payload.get("numero_factura", "") or invoice.number,
+                "fecha": payload.get("fecha_factura", "") or invoice.date.strftime("%d/%m/%Y"),
+                "total": f"{float(payload.get('total', invoice.total) or 0):.2f}",
+                "cliente": payload.get("cliente", {}).get("nombre", "") or invoice.client_name,
                 "concepto": payload.get("concepto_mes", ""),
             },
         )
-        if resultado["ok"]:
-            pending.sent_at = datetime.now(timezone.utc)
-            pending.send_error = None
-        else:
-            pending.send_error = resultado["message"]
     except Exception as e:
-        logger.error("automation_approve: fallo enviando la factura %s — %s", pending.id, e)
-        pending.send_error = str(e)
+        logger.error("automation_approve: fallo enviando la factura %s — %s", invoice.id, e)
+        invoice.send_error = str(e)
+        return {"ok": False, "message": str(e)}
+
+    if resultado["ok"]:
+        invoice.sent_at = datetime.now(timezone.utc)
+        invoice.sent_to = para
+        invoice.send_error = None
+    else:
+        invoice.send_error = resultado["message"]
+    return resultado

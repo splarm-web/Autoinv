@@ -42,6 +42,10 @@ _COLUMN_MIGRATIONS = [
     ("invoices", "kind", "VARCHAR DEFAULT 'standard'"),
     ("invoices", "extra_json", "VARCHAR DEFAULT '{}'"),
     ("clients", "email", "VARCHAR"),
+    # Constancia del envío por email de una factura
+    ("invoices", "sent_at", "TIMESTAMP"),
+    ("invoices", "sent_to", "VARCHAR"),
+    ("invoices", "send_error", "VARCHAR"),
     # Automatización de email: campos añadidos tras la primera versión del modelo
     ("email_automations", "attachment_filter", "VARCHAR"),
     ("email_automations", "client_id", "INTEGER"),
