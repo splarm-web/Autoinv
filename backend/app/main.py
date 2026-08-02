@@ -1,7 +1,9 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .core.config import settings
 from .core.database import create_tables, ensure_schema
@@ -17,6 +19,30 @@ app = FastAPI(
     description="Gestión de facturas y gastos para autónomos en España",
     version="0.1.0",
 )
+
+class ErroresConCors(BaseHTTPMiddleware):
+    """Convierte una excepción no controlada en una respuesta JSON normal.
+
+    Sin esto, Starlette la gestiona por encima del middleware de CORS: la
+    respuesta 500 sale sin las cabeceras y el navegador la bloquea, así que
+    en el frontend se ve un inútil "Failed to fetch" en vez del motivo real.
+    Se registra el error completo en el log del servidor.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception:
+            logger.exception("Error no controlado en %s %s", request.method, request.url.path)
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Error interno del servidor. Revisa los registros."},
+            )
+
+
+# El orden importa: lo añadido después envuelve a lo anterior, así que este
+# middleware queda DENTRO del de CORS y su respuesta sí pasa por él.
+app.add_middleware(ErroresConCors)
 
 origins = [o.strip() for o in settings.allowed_origins.split(",")]
 app.add_middleware(

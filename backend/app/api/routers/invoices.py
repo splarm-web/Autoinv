@@ -10,7 +10,7 @@ from ...api.deps import get_current_user, require_feature
 from ...core.config import settings
 from ...core.database import get_db
 from ...invoicing.designs.alfredo.render import render_transporte_pdf
-from ...models.email_automation import EmailAutomation
+from ...models.email_automation import EmailAutomation, PendingInvoice
 from ...models.invoice import Invoice, InvoiceLine
 from ...models.user import User
 from ...schemas.invoice import InvoiceCreate, InvoiceOut, InvoiceSendIn
@@ -311,5 +311,14 @@ def delete_invoice(
     ).first()
     if not inv:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+    # Si la factura vino de la automatización, la pendiente la sigue
+    # referenciando: en PostgreSQL esa clave ajena bloquea el borrado (en
+    # SQLite pasaba desapercibido porque no las aplica por defecto). Se
+    # desenlaza en vez de borrar la pendiente: su historial sigue siendo útil.
+    db.query(PendingInvoice).filter(
+        PendingInvoice.invoice_id == inv.id,
+    ).update({"invoice_id": None}, synchronize_session=False)
+
     db.delete(inv)
     db.commit()
