@@ -38,6 +38,11 @@ class Invoice(Base):
     sent_at = Column(DateTime(timezone=True))
     sent_to = Column(String)
     send_error = Column(String)
+    # Marcado al encolar el envío. Mientras esté puesto y no haya sent_at ni
+    # send_error, el envío está en curso: permite responder al instante y que
+    # la pantalla muestre "Enviando…" en vez de dejar al usuario esperando
+    # los segundos que tarda el diálogo con Gmail.
+    send_queued_at = Column(DateTime(timezone=True))
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

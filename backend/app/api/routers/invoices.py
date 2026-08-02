@@ -1,7 +1,7 @@
 import json
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
@@ -254,13 +254,16 @@ def download_invoice_pdf(
 def send_invoice_email(
     invoice_id: int,
     data: InvoiceSendIn,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Envía (o reenvía) la factura por email y deja constancia en ella.
+    """Encola el envío (o reenvío) de la factura por email.
 
-    Usa las credenciales de la automatización de email, que es donde vive la
-    cuenta configurada; no duplicamos ajustes de SMTP en otro sitio.
+    Usa las credenciales de la automatización, que es donde vive la cuenta
+    configurada. Responde en cuanto queda encolado: el diálogo con Gmail son
+    varios segundos y el resultado queda registrado en la propia factura,
+    así que no hay razón para bloquear la pantalla mientras tanto.
     """
     inv = db.query(Invoice).filter(
         Invoice.id == invoice_id, Invoice.user_id == current_user.id,
@@ -276,27 +279,21 @@ def send_invoice_email(
             status_code=400,
             detail="Configura la cuenta de correo en Automatización para poder enviar facturas",
         )
+    # Comprobar aquí lo que se puede saber sin hablar con Gmail: si no hay
+    # destinatario, mejor decirlo al momento que dejarlo fallar en diferido.
+    if not (data.to_email or "").strip() and not automation_approve.destinatario(db, config):
+        raise HTTPException(
+            status_code=400,
+            detail="No hay destinatario: indícalo o añade el email en la ficha del cliente",
+        )
 
-    # Se regenera el PDF en vez de fiarse de `pdf_path`: en el plan free de
-    # Render el disco es efímero y el fichero puede haber desaparecido.
-    pdf_path = invoice_pdf.render_invoice_pdf(inv, current_user)
-    inv.pdf_path = str(pdf_path.relative_to(settings.files_root))
-
-    payload = {}
-    if inv.kind == "transporte":
-        try:
-            payload = json.loads(inv.extra_json or "{}")
-        except ValueError:
-            payload = {}
-
-    resultado = automation_approve.enviar(
-        db, inv, config, payload, pdf_path, to_email=data.to_email,
-    )
+    automation_approve.marcar_encolado(inv)
     db.commit()
     db.refresh(inv)
 
-    if not resultado["ok"]:
-        raise HTTPException(status_code=400, detail=resultado["message"])
+    background.add_task(
+        automation_approve.enviar_en_segundo_plano, inv.id, data.to_email,
+    )
     return inv
 
 

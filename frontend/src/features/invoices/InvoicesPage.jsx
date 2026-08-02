@@ -33,6 +33,18 @@ export default function InvoicesPage() {
     invoicesApi.list().then(setInvoices).finally(() => setLoading(false))
   }, [])
 
+  // Mientras haya algún envío en curso se refresca solo: el correo se manda
+  // en segundo plano, así que el resultado llega después de la respuesta y
+  // sin esto el usuario se quedaría mirando un "Enviando…" eterno.
+  const enviando = invoices.some((i) => i.send_queued_at && !i.sent_at)
+  useEffect(() => {
+    if (!enviando) return
+    const id = setInterval(() => {
+      invoicesApi.list().then(setInvoices).catch(() => {})
+    }, 3000)
+    return () => clearInterval(id)
+  }, [enviando])
+
   const pageCount = Math.ceil(invoices.length / PAGE_SIZE)
   const pageItems = invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
@@ -59,7 +71,7 @@ export default function InvoicesPage() {
     try {
       const actualizada = await invoicesApi.send(inv.id, destino.trim() || null)
       setInvoices((prev) => prev.map((x) => (x.id === inv.id ? actualizada : x)))
-      toast.success(`Factura enviada a ${actualizada.sent_to}`)
+      toast.info('Enviando… te avisamos aquí mismo en cuanto salga')
     } catch (e) {
       toast.error(e.message || 'No se pudo enviar')
       // Recargar para que quede visible el motivo del fallo en la propia fila
@@ -138,11 +150,11 @@ export default function InvoicesPage() {
                 </span>
                 <button
                   onClick={() => enviar(inv)}
-                  disabled={sending === inv.id}
+                  disabled={sending === inv.id || !!inv.send_queued_at}
                   style={inv.sent_at ? s.sentBtn : s.pdfBtn}
                   title={inv.sent_at ? 'Volver a enviar por email' : 'Enviar por email'}
                 >
-                  {sending === inv.id ? '…' : inv.sent_at ? '↻' : '✉'}
+                  {sending === inv.id || inv.send_queued_at ? '…' : inv.sent_at ? '↻' : '✉'}
                 </button>
                 <button
                   onClick={() => download(inv)}
@@ -200,6 +212,9 @@ export default function InvoicesPage() {
  * responde de un vistazo a "¿esta factura ya se la mandé al cliente?".
  */
 function EnvioInfo({ inv }) {
+  if (inv.send_queued_at && !inv.sent_at) {
+    return <div style={s.envioCurso}>Enviando…</div>
+  }
   if (inv.sent_at) {
     return (
       <div style={s.envioOk}>
@@ -257,6 +272,7 @@ const s = {
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
   dot: { width: 8, height: 8, borderRadius: 99, flexShrink: 0 },
+  envioCurso: { fontSize: 11, color: 'var(--cielo)', marginTop: 3, lineHeight: 1.45 },
   envioOk: { fontSize: 11, color: 'var(--menta)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
   envioError: { fontSize: 11, color: 'var(--coral)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
   envioNo: { fontSize: 11, color: 'var(--text-muted)', marginTop: 3, opacity: 0.75 },

@@ -46,6 +46,7 @@ _COLUMN_MIGRATIONS = [
     ("invoices", "sent_at", "TIMESTAMP"),
     ("invoices", "sent_to", "VARCHAR"),
     ("invoices", "send_error", "VARCHAR"),
+    ("invoices", "send_queued_at", "TIMESTAMP"),
     # Automatización de email: campos añadidos tras la primera versión del modelo
     ("email_automations", "attachment_filter", "VARCHAR"),
     ("email_automations", "client_id", "INTEGER"),

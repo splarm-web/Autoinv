@@ -64,5 +64,6 @@ class InvoiceOut(BaseModel):
     sent_at: Optional[datetime] = None
     sent_to: Optional[str] = None
     send_error: Optional[str] = None
+    send_queued_at: Optional[datetime] = None
     created_at: datetime
     lines: List[InvoiceLineOut] = []

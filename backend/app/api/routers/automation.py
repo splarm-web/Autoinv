@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -368,10 +368,16 @@ def get_pending_excel(
 @router.post("/pending/{pending_id}/approve", response_model=PendingInvoiceDetail)
 def approve_pending(
     pending_id: int,
+    background: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_feature("automatizacion")),
 ):
-    """Aprueba la pendiente: se guarda como factura real y se envía si procede."""
+    """Aprueba la pendiente: la guarda como factura y encola el envío.
+
+    El correo se manda en segundo plano para poder responder al instante: el
+    diálogo con Gmail son varios segundos y no hay motivo para que el usuario
+    los espere mirando un botón, la factura ya está guardada y es válida.
+    """
     p = _buscar_pendiente(db, pending_id, current_user.id)
     if p.status != "pending":
         raise HTTPException(status_code=400, detail=f"La factura ya está en estado '{p.status}'")
@@ -379,6 +385,8 @@ def approve_pending(
     config = _get_config(db, current_user.id)
     try:
         automation_approve.approve(db, p, config, current_user)
+        if config and config.send_on_approve and p.invoice_id:
+            background.add_task(automation_approve.enviar_en_segundo_plano, p.invoice_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

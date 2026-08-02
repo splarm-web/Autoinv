@@ -121,10 +121,15 @@ function PendingDetail({ id, config, onClose, onCambio }) {
   const aprobar = async () => {
     setAccion('approve')
     try {
-      const r = await automationApi.approve(id)
-      if (r.send_error) toast.error(`Factura guardada, pero el email falló: ${r.send_error}`)
-      else if (r.sent_at) toast.success('Factura guardada y enviada por email')
-      else toast.success('Factura guardada')
+      await automationApi.approve(id)
+      // El correo sale en segundo plano: no tiene sentido bloquear la
+      // pantalla los segundos que tarda Gmail. El resultado se ve luego en
+      // la propia factura, dentro del listado.
+      if (config?.send_on_approve) {
+        toast.success('Factura aprobada · enviándose por email')
+      } else {
+        toast.success('Factura aprobada y guardada')
+      }
       onCambio()
       onClose()
     } catch (e) {

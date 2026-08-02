@@ -16,6 +16,7 @@ from ..invoicing.designs.alfredo.render import render_transporte_pdf
 from ..models.client import Client
 from ..models.email_automation import EmailAutomation, PendingInvoice
 from ..models.invoice import Invoice
+from ..models.user import User
 from ..services import email_crypto, email_sender, transporte_compose
 
 logger = logging.getLogger(__name__)
@@ -99,15 +100,72 @@ def approve(db: Session, pending: PendingInvoice,
     pending.approved_at = datetime.now(timezone.utc)
     pending.pdf_path = invoice.pdf_path
 
+    # El envío NO se hace aquí: hablar con Gmail son varios segundos y la
+    # factura ya está guardada y es válida. Se marca como encolado y lo manda
+    # una tarea en segundo plano, para responder al instante.
     if config and config.send_on_approve:
-        enviar(db, invoice, config, payload, pdf_path)
-        # La pendiente refleja lo mismo que la factura, para el historial
-        pending.sent_at = invoice.sent_at
-        pending.send_error = invoice.send_error
+        marcar_encolado(invoice)
 
     db.commit()
     db.refresh(pending)
     return pending
+
+
+def marcar_encolado(invoice: Invoice) -> None:
+    invoice.send_queued_at = datetime.now(timezone.utc)
+    invoice.send_error = None
+
+
+def enviar_en_segundo_plano(invoice_id: int, to_email: str | None = None) -> None:
+    """Tarea de fondo: manda la factura y guarda el resultado en ella.
+
+    Abre su propia sesión: la de la petición ya está cerrada cuando esto corre.
+    No propaga excepciones — nadie las recogería; el motivo queda en la factura.
+    """
+    from ..core.database import SessionLocal
+    from ..services import invoice_pdf
+
+    db = SessionLocal()
+    try:
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+        if not invoice:
+            return
+        config = db.query(EmailAutomation).filter(
+            EmailAutomation.user_id == invoice.user_id,
+        ).first()
+        user = db.query(User).filter(User.id == invoice.user_id).first()
+        if not config or not user:
+            invoice.send_error = "No hay cuenta de correo configurada"
+            invoice.send_queued_at = None
+            db.commit()
+            return
+
+        pdf_path = invoice_pdf.render_invoice_pdf(invoice, user)
+        invoice.pdf_path = str(pdf_path.relative_to(settings.files_root))
+
+        payload = {}
+        if invoice.kind == "transporte":
+            try:
+                payload = json.loads(invoice.extra_json or "{}")
+            except ValueError:
+                payload = {}
+
+        enviar(db, invoice, config, payload, pdf_path, to_email=to_email)
+        invoice.send_queued_at = None
+        db.commit()
+    except Exception as e:
+        logger.exception("Fallo enviando en segundo plano la factura %s", invoice_id)
+        try:
+            db.rollback()
+            inv = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+            if inv:
+                inv.send_error = str(e)
+                inv.send_queued_at = None
+                db.commit()
+        except Exception:
+            pass
+    finally:
+        db.close()
 
 
 def destinatario(db: Session, config: EmailAutomation) -> str:
@@ -161,6 +219,8 @@ def enviar(db: Session, invoice: Invoice, config: EmailAutomation,
         invoice.send_error = str(e)
         return {"ok": False, "message": str(e)}
 
+    # El envío ya no está en curso, haya salido bien o mal
+    invoice.send_queued_at = None
     if resultado["ok"]:
         invoice.sent_at = datetime.now(timezone.utc)
         invoice.sent_to = para

@@ -336,10 +336,10 @@ export default function TransporteInvoicePage() {
 
       if (automConfig?.send_on_approve) {
         try {
-          const enviada = await invoicesApi.send(creada.id, null)
-          toast.success(`Factura ${creada.number} aprobada y enviada a ${enviada.sent_to}`)
+          await invoicesApi.send(creada.id, null)
+          toast.success(`Factura ${creada.number} aprobada · enviándose por email`)
         } catch (e) {
-          toast.error(`Factura ${creada.number} aprobada, pero el envío falló: ${e.message}`)
+          toast.error(`Factura ${creada.number} aprobada, pero no se pudo enviar: ${e.message}`)
         }
       } else {
         toast.success(`Factura ${creada.number} aprobada y guardada (sin enviar)`)
