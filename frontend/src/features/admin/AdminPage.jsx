@@ -56,6 +56,29 @@ export default function AdminPage() {
     }
   }
 
+  const borrar = async (u) => {
+    const quien = u.legal_name || u.email
+    // Confirmación escribiendo el nombre: borra facturas y gastos, no hay
+    // deshacer, y un clic de más aquí cuesta muy caro.
+    const escrito = window.prompt(
+      `Vas a eliminar a "${quien}" y TODOS sus datos (facturas, gastos, clientes).\n` +
+      'Esto no se puede deshacer.\n\n' +
+      `Escribe el email exacto para confirmar: ${u.email}`,
+    )
+    if (escrito === null) return
+    if (escrito.trim() !== u.email) {
+      toast.error('El email no coincide: no se ha eliminado nada')
+      return
+    }
+    try {
+      await adminApi.deleteUser(u.id)
+      setUsers((prev) => prev.filter((x) => x.id !== u.id))
+      toast.success(`${quien} eliminado`)
+    } catch (e) {
+      toast.error(e.message || 'No se pudo eliminar')
+    }
+  }
+
   const save = async (u) => {
     setError(''); setSavingId(u.id)
     try {
@@ -140,9 +163,16 @@ export default function AdminPage() {
                     <button type="button" onClick={() => toggleReset(u.id)} style={s.linkBtn}>Cancelar</button>
                   </form>
                 ) : (
-                  <button type="button" onClick={() => toggleReset(u.id)} style={s.linkBtn}>
-                    Restablecer contraseña
-                  </button>
+                  <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => toggleReset(u.id)} style={s.linkBtn}>
+                      Restablecer contraseña
+                    </button>
+                    {u.id !== user?.id && (
+                      <button type="button" onClick={() => borrar(u)} style={s.deleteBtn}>
+                        Eliminar usuario
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -169,5 +199,6 @@ const s = {
   chip: { background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--text-muted)', borderRadius: 'var(--r-sm)', padding: '7px 13px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   chipActive: { background: 'rgba(69,212,155,0.14)', border: '1px solid rgba(69,212,155,0.4)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '7px 13px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   saveBtn: { padding: '8px 16px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0 },
+  deleteBtn: { background: 'none', border: 'none', color: 'var(--coral)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)', padding: '4px 2px', textDecoration: 'underline' },
   savedBtn: { padding: '8px 16px', background: 'rgba(69,212,155,0.14)', color: 'var(--menta)', border: '1px solid rgba(69,212,155,0.3)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-ui)', flexShrink: 0 },
 }

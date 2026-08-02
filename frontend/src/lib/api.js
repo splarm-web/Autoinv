@@ -227,6 +227,7 @@ export const adminApi = {
   listUsers: () => apiFetch('/api/admin/users'),
   setUserFeatures: (id, features) =>
     apiFetch(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify({ features }) }),
+  deleteUser: (id) => apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' }),
   resetPassword: (id, new_password) =>
     apiFetch(`/api/admin/users/${id}/password`, { method: 'PATCH', body: JSON.stringify({ new_password }) }),
 }
