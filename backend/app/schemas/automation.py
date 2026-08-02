@@ -148,6 +148,10 @@ class AutomationStatusOut(BaseModel):
     last_poll_at: Optional[datetime] = None
     last_error: Optional[str] = None
     pending_count: int = 0
+    # Minutos desde la última revisión y si eso ya es demasiado. Se calcula en
+    # el servidor: el reloj del móvil puede ir desviado y daría falsos avisos.
+    minutes_since_poll: Optional[int] = None
+    poll_stale: bool = False
     push_available: bool = False
     vapid_public_key: Optional[str] = None
 

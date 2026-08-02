@@ -7,13 +7,15 @@ y la deja pendiente de validación (o la aprueba sola, si así está configurado
 
 import json
 import logging
-from datetime import date, datetime, timedelta, timezone
+import threading
+from datetime import datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy.orm import Session
 
 from ..core.config import settings
 from ..core.database import SessionLocal
+from ..core.fechas import ahora, como_utc
 from ..invoicing.designs.alfredo.render import render_transporte_pdf
 from ..models.client import Client
 from ..models.email_automation import EmailAutomation, PendingInvoice
@@ -24,6 +26,10 @@ from . import email_crypto, email_reader, push_sender, transporte_compose, trans
 logger = logging.getLogger(__name__)
 
 _scheduler: BackgroundScheduler | None = None
+# Solo una revisión del buzón a la vez: el temporizador interno y el cron
+# externo pueden coincidir, y dos pasadas simultáneas se colarían el control
+# de duplicados (comprueba la BD antes de insertar).
+_lock = threading.Lock()
 
 
 # ── Polling ──
@@ -232,28 +238,50 @@ def _notify(db: Session, user_id: int, creadas: list[PendingInvoice]):
 # ── Scheduler ──
 
 
-def _poll_all():
-    """Job maestro: recorre las automatizaciones activas que toca revisar."""
-    db = SessionLocal()
-    try:
-        configs = db.query(EmailAutomation).filter(
-            EmailAutomation.enabled == True,  # noqa: E712
-        ).all()
-        pendientes = []
-        for config in configs:
-            if config.last_poll_at:
-                proximo = config.last_poll_at + timedelta(minutes=config.poll_interval_minutes)
-                if datetime.now(timezone.utc) < proximo:
-                    continue
-            pendientes.append(config.id)
-    finally:
-        db.close()
+def poll_todas(forzar: bool = False) -> dict:
+    """Revisa las automatizaciones activas a las que les toca.
 
-    for config_id in pendientes:
+    La usan el temporizador interno y el cron externo. El candado evita que
+    ambos entren a la vez y acaben creando la misma factura dos veces: el
+    control de duplicados por UID mira la base de datos antes de insertar, y
+    dos pasadas simultáneas podrían colarse las dos.
+    """
+    if not _lock.acquire(blocking=False):
+        logger.info("email_worker: ya hay una revisión en curso, se omite")
+        return {"omitido": True, "revisadas": 0, "creadas": 0}
+
+    try:
+        db = SessionLocal()
         try:
-            _process_automation(config_id)
-        except Exception as e:
-            logger.error("email_worker: error en automatización %s — %s", config_id, e)
+            configs = db.query(EmailAutomation).filter(
+                EmailAutomation.enabled == True,  # noqa: E712
+            ).all()
+            pendientes = []
+            for config in configs:
+                if not forzar and config.last_poll_at:
+                    proximo = como_utc(config.last_poll_at) + timedelta(
+                        minutes=config.poll_interval_minutes)
+                    if ahora() < proximo:
+                        continue
+                pendientes.append(config.id)
+        finally:
+            db.close()
+
+        creadas = 0
+        for config_id in pendientes:
+            try:
+                creadas += _process_automation(config_id)
+            except Exception as e:
+                logger.error("email_worker: error en automatización %s — %s", config_id, e)
+
+        return {"omitido": False, "revisadas": len(pendientes), "creadas": creadas}
+    finally:
+        _lock.release()
+
+
+def _poll_all():
+    """Job maestro del temporizador interno."""
+    poll_todas()
 
 
 def start_scheduler():

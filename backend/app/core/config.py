@@ -34,5 +34,16 @@ class Settings(BaseSettings):
     # proceso que duplicaría los polls).
     automation_worker_enabled: bool = True
 
+    # Clave para que un cron externo dispare la revisión del correo. Hace falta
+    # porque en un plan gratuito el servicio se duerme y el temporizador interno
+    # deja de correr: la propia llamada del cron lo despierta. Sin clave, el
+    # endpoint queda deshabilitado.
+    cron_secret: str = ""
+    # Minutos sin revisar el buzón a partir de los cuales se avisa en la UI.
+    # Un fallo del cron no rompe nada visible —las facturas simplemente dejan
+    # de llegar—, así que hay que hacerlo evidente antes de que se note por
+    # un cliente reclamando una factura que nunca se emitió.
+    poll_stale_minutes: int = 90
+
 
 settings = Settings()

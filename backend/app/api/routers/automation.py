@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from ...api.deps import require_feature
 from ...core.config import settings
 from ...core.database import get_db
+from ...core.fechas import ahora, como_utc
 from ...models.email_automation import EmailAutomation, PendingInvoice, PushSubscription
 from ...models.user import User
 from ...schemas.automation import (
@@ -449,12 +450,25 @@ def get_status(
         PendingInvoice.status == "pending",
     ).count()
     disponible = push_sender.push_disponible()
+
+    # Cuánto hace que no se revisa el buzón. Si la automatización está activa
+    # y lleva demasiado parada, es que algo falló sin hacer ruido (el cron
+    # externo caído, el servidor dormido…) y hay que decirlo.
+    minutos = None
+    parada = False
+    if config and config.last_poll_at:
+        delta = ahora() - como_utc(config.last_poll_at)
+        minutos = int(delta.total_seconds() // 60)
+        parada = bool(config.enabled) and minutos > settings.poll_stale_minutes
+
     return AutomationStatusOut(
         configured=config is not None,
         enabled=config.enabled if config else False,
         last_poll_at=config.last_poll_at if config else None,
         last_error=config.last_error if config else None,
         pending_count=pendientes,
+        minutes_since_poll=minutos,
+        poll_stale=parada,
         push_available=disponible,
         vapid_public_key=settings.vapid_public_key if disponible else None,
     )

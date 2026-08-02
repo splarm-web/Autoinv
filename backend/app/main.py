@@ -8,7 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .core.config import settings
 from .core.database import create_tables, ensure_schema
 from .api.routers import (
-    admin, auth, automation, dashboard, expenses, invoices, export, clients,
+    admin, auth, automation, cron, dashboard, expenses, invoices, export, clients,
 )
 from .services import email_worker
 
@@ -61,6 +61,7 @@ app.include_router(export.router, prefix="/api")
 app.include_router(clients.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(automation.router, prefix="/api")
+app.include_router(cron.router, prefix="/api")
 
 
 @app.on_event("startup")

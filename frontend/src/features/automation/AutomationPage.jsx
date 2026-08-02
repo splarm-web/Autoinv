@@ -131,6 +131,17 @@ function EstadoBanner({ status, cargando }) {
       </div>
     )
   }
+  // Que la revisión se pare no rompe nada visible: las facturas simplemente
+  // dejan de llegar. Sin este aviso se descubriría tarde y por el lado malo.
+  if (status.poll_stale) {
+    return (
+      <div className="autom-banner autom-banner--warn">
+        <strong>La revisión automática lleva parada {textoDesde(status.minutes_since_poll)}.</strong>{' '}
+        Puede que las facturas nuevas no estén llegando. Pulsa «Revisar ahora» para
+        comprobarlo; si se repite, revisa que el disparador externo siga activo.
+      </div>
+    )
+  }
   return (
     <div className="autom-banner autom-banner--ok">
       <span className="autom-dot" /> Activa · {status.last_poll_at
@@ -138,6 +149,15 @@ function EstadoBanner({ status, cargando }) {
         : 'aún sin revisar'}
     </div>
   )
+}
+
+// "3 horas", "2 días"… a partir de minutos
+function textoDesde(minutos) {
+  if (minutos == null) return 'un tiempo'
+  if (minutos < 120) return `${minutos} minutos`
+  const horas = Math.round(minutos / 60)
+  if (horas < 48) return `${horas} horas`
+  return `${Math.round(horas / 24)} días`
 }
 
 export function formatoRelativo(iso) {
