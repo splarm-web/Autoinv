@@ -123,3 +123,51 @@
   margin-top: 5px;
   line-height: 1.5;
 }
+
+/* ── Diálogo de confirmación ── */
+.confirm-panel { max-width: 420px; }
+.confirm-body {
+  display: flex;
+  gap: 14px;
+  padding: 22px 22px 6px;
+}
+.confirm-icono {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(240, 135, 106, 0.12);
+  color: var(--coral);
+  font-size: 18px;
+}
+.confirm-titulo {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  margin: 2px 0 6px;
+}
+.confirm-mensaje {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.55;
+}
+.confirm-detalle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 8px 0 0;
+  line-height: 1.55;
+}
+.confirm-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 22px 22px;
+}
+@media (max-width: 480px) {
+  .confirm-acciones { flex-direction: column-reverse; }
+  .confirm-acciones > .btn { width: 100%; }
+}

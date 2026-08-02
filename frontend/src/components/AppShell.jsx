@@ -11,7 +11,6 @@ const NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
-  { to: '/automation', label: 'Automático', Icon: IconAutomatizacion, feature: 'automatizacion' },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
   { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
@@ -108,7 +107,7 @@ export default function AppShell() {
           }>
             <span className="nav-icon-wrap">
               <Icon />
-              {to === '/automation' && pendingCount > 0 && (
+              {to === '/invoices' && pendingCount > 0 && (
                 <span className="nav-badge">{pendingCount}</span>
               )}
             </span>
@@ -193,7 +192,7 @@ function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature, pend
           >
             <Icon />
             {label}
-            {to === '/automation' && pendingCount > 0 && (
+            {to === '/invoices' && pendingCount > 0 && (
               <span className="nav-badge nav-badge--inline">{pendingCount}</span>
             )}
           </NavLink>
@@ -246,7 +245,7 @@ export function Logo() {
 
 function IconResumen() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <rect x="1" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
       <rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
       <rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" fill="currentColor" />
@@ -256,14 +255,14 @@ function IconResumen() {
 }
 function IconGastos() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <path d="M7.5 1v13M2 5l5.5 5.5L13 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 function IconFacturas() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <rect x="2" y="1" width="11" height="13" rx="2" stroke="currentColor" strokeWidth="1.4" />
       <path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
@@ -271,7 +270,7 @@ function IconFacturas() {
 }
 function IconClientes() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <circle cx="5.5" cy="4.5" r="2.5" stroke="currentColor" strokeWidth="1.4" />
       <path d="M1 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <path d="M10.5 6.5c1.5 0 2.5 1 2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -279,19 +278,9 @@ function IconClientes() {
     </svg>
   )
 }
-function IconAutomatizacion() {
-  // Sobre con una chispa: entra un correo y sale trabajo hecho solo.
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-      <path d="M1.5 4.2a1.2 1.2 0 011.2-1.2h7.6a1.2 1.2 0 011.2 1.2v5.1a1.2 1.2 0 01-1.2 1.2H2.7a1.2 1.2 0 01-1.2-1.2V4.2z" stroke="currentColor" strokeWidth="1.3" />
-      <path d="M1.8 4.4l4.7 3.2 4.7-3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M12.4 9.5l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="currentColor" />
-    </svg>
-  )
-}
 function IconAdmin() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <circle cx="7.5" cy="4" r="2.5" stroke="currentColor" strokeWidth="1.4" />
       <path d="M2 13c0-3 2.5-4.5 5.5-4.5S13 10 13 13" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <path d="M11.5 2.5l.6 1.2 1.3.2-.95.9.22 1.3-1.17-.62-1.17.62.22-1.3-.95-.9 1.3-.2z" fill="currentColor" />
@@ -303,7 +292,7 @@ function IconAjustes() {
   // visualmente casi idéntico al icono del sol (tema), y se confundían en
   // el mismo sidebar.
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <path d="M7.5 1L13 4.2v6.6L7.5 14 2 10.8V4.2L7.5 1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
       <circle cx="7.5" cy="7.5" r="2.1" stroke="currentColor" strokeWidth="1.3" />
     </svg>
@@ -311,14 +300,14 @@ function IconAjustes() {
 }
 function IconLogout() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg width="17" height="17" viewBox="0 0 14 14" fill="none">
       <path d="M5 1H2a1 1 0 00-1 1v10a1 1 0 001 1h3M9 10l3-3-3-3M12 7H5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 function IconSun() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <circle cx="7.5" cy="7.5" r="3" stroke="currentColor" strokeWidth="1.4" />
       <path d="M7.5 .8v1.7M7.5 12.5v1.7M.8 7.5h1.7M12.5 7.5h1.7M2.75 2.75l1.2 1.2M11.05 11.05l1.2 1.2M2.75 12.25l1.2-1.2M11.05 3.95l1.2-1.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
@@ -326,7 +315,7 @@ function IconSun() {
 }
 function IconMoon() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="18" height="18" viewBox="0 0 15 15" fill="none">
       <path d="M13 9.2A5.8 5.8 0 015.8 2a5.9 5.9 0 103.9 10.9c1.5-.5 2.7-1.8 3.3-3.7z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   )

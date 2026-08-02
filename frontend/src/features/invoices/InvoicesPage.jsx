@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { invoicesApi } from '../../lib/api'
+import { useCallback, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { automationApi, invoicesApi } from '../../lib/api'
 import { eur2, fmtDate } from '../../lib/format'
 import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
 import Pagination from '../../components/Pagination'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import {
+  IconDownload, IconMail, IconPlus, IconRefresh, IconSliders, IconTrash,
+} from '../../components/Icons'
 import ExportModal from '../export/ExportModal'
+import PendingList from '../automation/PendingList'
 
 const PAGE_SIZE = 15
 
@@ -15,27 +20,57 @@ const INVOICE_TYPES = [
   { key: 'transporte', label: 'Factura transporte (Alfredo)', to: '/invoices/transporte' },
 ]
 
+/**
+ * Facturas: todo lo relacionado con facturar, en una sola pantalla.
+ *
+ * Las que llegaron por correo y esperan validación van **arriba**, porque son
+ * lo único que pide una acción; el histórico va debajo. Tenerlas en pantallas
+ * separadas obligaba a recordar que existía otro sitio donde mirar.
+ * La configuración de la automatización, que se toca una vez, vive detrás de
+ * un botón.
+ */
 export default function InvoicesPage() {
   const { hasFeature } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
+  const automatiza = hasFeature('automatizacion')
+
   const [invoices, setInvoices] = useState([])
+  const [pendientes, setPendientes] = useState([])
+  const [automConfig, setAutomConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(null)
   const [sending, setSending] = useState(null)
+  const [porBorrar, setPorBorrar] = useState(null)
+  const [borrando, setBorrando] = useState(false)
   const [page, setPage] = useState(1)
   const [showExport, setShowExport] = useState(false)
   const [dialOpen, setDialOpen] = useState(false)
 
-  // Tipos que este usuario puede crear según su rol
   const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
 
-  useEffect(() => {
-    invoicesApi.list().then(setInvoices).finally(() => setLoading(false))
-  }, [])
+  const cargar = useCallback(async () => {
+    try {
+      const lista = await invoicesApi.list()
+      setInvoices(lista)
+      if (automatiza) {
+        const [pend, cfg] = await Promise.all([
+          automationApi.listPending().catch(() => []),
+          automationApi.getConfig().catch(() => null),
+        ])
+        setPendientes(pend)
+        setAutomConfig(cfg)
+        window.dispatchEvent(new Event('automation:changed'))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [automatiza])
 
-  // Mientras haya algún envío en curso se refresca solo: el correo se manda
-  // en segundo plano, así que el resultado llega después de la respuesta y
-  // sin esto el usuario se quedaría mirando un "Enviando…" eterno.
+  useEffect(() => { cargar() }, [cargar])
+
+  // Mientras haya algún envío en curso se refresca solo: el correo sale en
+  // segundo plano, así que el resultado llega después de la respuesta.
   const enviando = invoices.some((i) => i.send_queued_at && !i.sent_at)
   useEffect(() => {
     if (!enviando) return
@@ -48,14 +83,17 @@ export default function InvoicesPage() {
   const pageCount = Math.ceil(invoices.length / PAGE_SIZE)
   const pageItems = invoices.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const remove = async (id) => {
-    if (!confirm('¿Eliminar esta factura?')) return
+  const confirmarBorrado = async () => {
+    setBorrando(true)
     try {
-      await invoicesApi.delete(id)
-      setInvoices((prev) => prev.filter((i) => i.id !== id))
-      toast.success('Factura eliminada')
+      await invoicesApi.delete(porBorrar.id)
+      setInvoices((prev) => prev.filter((i) => i.id !== porBorrar.id))
+      toast.success(`Factura ${porBorrar.number} eliminada`)
+      setPorBorrar(null)
     } catch (e) {
       toast.error(e.message || 'No se pudo eliminar')
+    } finally {
+      setBorrando(false)
     }
   }
 
@@ -74,7 +112,6 @@ export default function InvoicesPage() {
       toast.info('Enviando… te avisamos aquí mismo en cuanto salga')
     } catch (e) {
       toast.error(e.message || 'No se pudo enviar')
-      // Recargar para que quede visible el motivo del fallo en la propia fila
       invoicesApi.list().then(setInvoices).catch(() => {})
     } finally {
       setSending(null)
@@ -94,32 +131,60 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10, flexWrap: 'wrap' }}>
+      <div style={s.header}>
         <h1 style={s.title}>Facturas</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {hasFeature('export') && (
-            <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
+          {automatiza && (
+            <button onClick={() => navigate('/automation')} className="btn btn-neutral btn-sm">
+              <IconSliders /> Automatización
+            </button>
           )}
-          {/* Un solo tipo: botón arriba a la derecha (FAB en móvil) */}
+          {hasFeature('export') && (
+            <button onClick={() => setShowExport(true)} className="btn btn-neutral btn-sm">
+              <IconDownload /> Exportar
+            </button>
+          )}
           {types.length === 1 && (
-            <Link to={types[0].to} className="fab-add" style={s.btnPrimary}>
-              <span className="fab-icon">+</span><span className="fab-label"> {types[0].label}</span>
+            <Link to={types[0].to} className="fab-add btn btn-primary">
+              <span className="fab-icon"><IconPlus /></span>
+              <span className="fab-label">{types[0].label}</span>
             </Link>
           )}
         </div>
       </div>
 
-      {/* Varios tipos, escritorio: CTAs prominentes en el flujo de la página.
-          En móvil se ocultan (ver .cta-row en responsive.css) y aparece en
-          su lugar el FAB con speed-dial de más abajo. */}
       {types.length >= 2 && (
         <div className="cta-row" style={s.ctaRow}>
           {types.map((t, i) => (
-            <Link key={t.key} to={t.to} style={i === 0 ? s.ctaPrimary : s.ctaSecondary}>
-              + {t.label}
+            <Link key={t.key} to={t.to} className={'btn ' + (i === 0 ? 'btn-primary' : 'btn-neutral')} style={s.cta}>
+              <IconPlus /> {t.label}
             </Link>
           ))}
         </div>
+      )}
+
+      {/* Pendientes de validar: lo único que reclama una acción, así que va
+          primero. Solo aparece si hay algo, para no meter ruido cuando no. */}
+      {automatiza && pendientes.length > 0 && (
+        <section style={{ marginBottom: 26 }}>
+          <h2 style={s.seccion}>
+            Pendientes de validar
+            <span style={s.contador}>{pendientes.length}</span>
+          </h2>
+          <PendingList
+            pendientes={pendientes}
+            cargando={false}
+            configurada
+            activa
+            config={automConfig}
+            onCambio={cargar}
+            irAConfig={() => navigate('/automation')}
+          />
+        </section>
+      )}
+
+      {automatiza && pendientes.length > 0 && !loading && invoices.length > 0 && (
+        <h2 style={s.seccion}>Todas las facturas</h2>
       )}
 
       {loading ? (
@@ -144,27 +209,32 @@ export default function InvoicesPage() {
                   <EnvioInfo inv={inv} />
                 </div>
               </div>
-              <div className="inv-row-actions" style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-                <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums' }}>
-                  +{eur2(inv.total)}
-                </span>
+              <div className="inv-row-actions" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span className="amount-nowrap" style={s.importe}>+{eur2(inv.total)}</span>
                 <button
                   onClick={() => enviar(inv)}
                   disabled={sending === inv.id || !!inv.send_queued_at}
-                  style={inv.sent_at ? s.sentBtn : s.pdfBtn}
+                  className={'btn btn-icon btn-sm ' + (inv.sent_at ? 'btn-neutral' : 'btn-neutral')}
                   title={inv.sent_at ? 'Volver a enviar por email' : 'Enviar por email'}
+                  aria-label={inv.sent_at ? 'Volver a enviar por email' : 'Enviar por email'}
                 >
-                  {sending === inv.id || inv.send_queued_at ? '…' : inv.sent_at ? '↻' : '✉'}
+                  {inv.sent_at ? <IconRefresh /> : <IconMail />}
                 </button>
                 <button
                   onClick={() => download(inv)}
                   disabled={downloading === inv.id}
-                  style={s.pdfBtn}
-                  title="Descargar PDF"
+                  className="btn btn-icon btn-sm btn-neutral"
+                  title="Descargar PDF" aria-label="Descargar PDF"
                 >
-                  {downloading === inv.id ? '…' : 'PDF'}
+                  <IconDownload />
                 </button>
-                <button onClick={() => remove(inv.id)} style={s.delBtn} title="Eliminar">✕</button>
+                <button
+                  onClick={() => setPorBorrar(inv)}
+                  className="btn btn-icon btn-sm btn-danger"
+                  title="Eliminar factura" aria-label="Eliminar factura"
+                >
+                  <IconTrash />
+                </button>
               </div>
             </div>
           ))}
@@ -177,9 +247,18 @@ export default function InvoicesPage() {
 
       {showExport && <ExportModal scope="facturas" onClose={() => setShowExport(false)} />}
 
-      {/* Varios tipos, móvil: FAB único que despliega los tipos al pulsar
-          (evita tener 2 botones grandes permanentes compitiendo con el
-          contenido de la página; en escritorio ya se ven en .cta-row). */}
+      {porBorrar && (
+        <ConfirmDialog
+          titulo="Eliminar factura"
+          mensaje={`Vas a eliminar la factura ${porBorrar.number} de ${porBorrar.client_name}.`}
+          detalle="Esta acción no se puede deshacer. Si ya se la enviaste al cliente, él seguirá teniendo su copia."
+          textoConfirmar="Eliminar factura"
+          cargando={borrando}
+          onConfirmar={confirmarBorrado}
+          onCancelar={() => setPorBorrar(null)}
+        />
+      )}
+
       {types.length >= 2 && (
         <div className={'fab-dial' + (dialOpen ? ' open' : '')}>
           {dialOpen && <div className="fab-dial-backdrop" onClick={() => setDialOpen(false)} />}
@@ -187,7 +266,7 @@ export default function InvoicesPage() {
             {types.map((t) => (
               <Link key={t.key} to={t.to} className="fab-dial-option" onClick={() => setDialOpen(false)}>
                 <span className="fab-dial-option-label">{t.label}</span>
-                <span className="fab-dial-option-icon">+</span>
+                <span className="fab-dial-option-icon"><IconPlus /></span>
               </Link>
             ))}
           </div>
@@ -207,9 +286,7 @@ export default function InvoicesPage() {
 
 /**
  * Constancia del envío por email: a quién y cuándo, o por qué falló.
- *
- * Se muestra en la propia fila y no escondido en un detalle porque es lo que
- * responde de un vistazo a "¿esta factura ya se la mandé al cliente?".
+ * Va en la propia fila porque responde de un vistazo a "¿esto ya se lo mandé?".
  */
 function EnvioInfo({ inv }) {
   if (inv.send_queued_at && !inv.sent_at) {
@@ -228,7 +305,6 @@ function EnvioInfo({ inv }) {
   return <div style={s.envioNo}>Sin enviar</div>
 }
 
-// dd/mm/aaaa a las HH:MM, en hora local
 function fmtDateTime(iso) {
   const d = new Date(iso)
   if (isNaN(d)) return ''
@@ -250,8 +326,8 @@ function EmptyState({ types }) {
       ) : (
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           {types.map((t, i) => (
-            <Link key={t.key} to={t.to} style={i === 0 ? s.btnPrimary : s.btnSecondary}>
-              + {t.label}
+            <Link key={t.key} to={t.to} className={'btn ' + (i === 0 ? 'btn-primary' : 'btn-neutral')}>
+              <IconPlus /> {t.label}
             </Link>
           ))}
         </div>
@@ -261,23 +337,20 @@ function EmptyState({ types }) {
 }
 
 const s = {
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 10, flexWrap: 'wrap' },
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
-  btnPrimary: { display: 'inline-block', padding: '9px 18px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
-  btnSecondary: { display: 'inline-block', padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, textDecoration: 'none' },
-  btnSecondaryBtn: { padding: '9px 18px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
+  seccion: { fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 9 },
+  contador: { fontSize: 11, fontWeight: 700, color: '#fff', background: 'var(--coral)', borderRadius: 999, minWidth: 20, height: 20, padding: '0 6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
   ctaRow: { display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' },
-  ctaPrimary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--menta)', color: 'var(--ink)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
-  ctaSecondary: { display: 'inline-flex', alignItems: 'center', padding: '14px 22px', background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', fontWeight: 600, fontSize: 15, textDecoration: 'none' },
+  cta: { padding: '14px 22px', fontSize: 15, borderRadius: 'var(--r-card)' },
   card: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-card)', padding: '0 20px' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0' },
   rowBorder: { borderBottom: '1px solid var(--border-soft)' },
   dot: { width: 8, height: 8, borderRadius: 99, flexShrink: 0 },
+  importe: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--menta)', fontVariantNumeric: 'tabular-nums', marginRight: 4 },
   envioCurso: { fontSize: 11, color: 'var(--cielo)', marginTop: 3, lineHeight: 1.45 },
   envioOk: { fontSize: 11, color: 'var(--menta)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
   envioError: { fontSize: 11, color: 'var(--coral)', marginTop: 3, lineHeight: 1.45, overflowWrap: 'anywhere' },
   envioNo: { fontSize: 11, color: 'var(--text-muted)', marginTop: 3, opacity: 0.75 },
-  sentBtn: { background: 'rgba(69,212,155,0.12)', border: '1px solid rgba(69,212,155,0.3)', color: 'var(--menta)', borderRadius: 'var(--r-sm)', padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
   badge: { fontSize: 10, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--cielo)', background: 'rgba(111,168,255,0.12)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 999, padding: '2px 8px' },
-  pdfBtn: { background: 'none', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 'var(--r-sm)', letterSpacing: '0.02em' },
-  delBtn: { background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, padding: '2px 4px', borderRadius: 4 },
 }

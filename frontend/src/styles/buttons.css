@@ -1,0 +1,89 @@
+/* =========================================================
+   Botones — el color comunica la intención
+   ---------------------------------------------------------
+   Cada variante significa algo, y solo una cosa:
+     .btn-primary   acción principal de la pantalla
+     .btn-success   confirma / aprueba  (verde)
+     .btn-danger    destruye  (coral)   → siempre con confirmación
+     .btn-neutral   acción secundaria sin carga
+     .btn-ghost     salida discreta (cancelar, cerrar)
+   Antes todo era del mismo gris y "Aprobar" pesaba visualmente lo mismo que
+   "Descartar", que hace lo contrario.
+
+   Los iconos van en `em`, así que escalan con el texto del botón: no hay que
+   ajustar tamaños a mano cada vez que cambia la tipografía.
+   ========================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 10px 18px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s, background 0.15s, border-color 0.15s;
+  text-decoration: none;
+}
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:not(:disabled):hover { filter: brightness(1.08); }
+.btn:not(:disabled):active { transform: translateY(1px); }
+
+.btn-primary,
+.btn-success {
+  background: var(--menta);
+  color: var(--ink);
+}
+.btn-danger {
+  background: transparent;
+  color: var(--coral);
+  border-color: rgba(240, 135, 106, 0.45);
+}
+.btn-danger:not(:disabled):hover { background: rgba(240, 135, 106, 0.1); }
+/* Solo para el botón que consuma de verdad la acción destructiva dentro de la
+   confirmación: en el listado nunca va en rojo sólido, para no invitar a
+   pulsarlo sin querer. */
+.btn-danger-solid {
+  background: var(--coral);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-neutral {
+  background: var(--btn-soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: transparent;
+}
+.btn-ghost:not(:disabled):hover { color: var(--text); }
+
+.btn-sm { padding: 7px 12px; font-size: 13px; }
+
+/* Solo icono: cuadrado y con etiqueta accesible en `title`/`aria-label` */
+.btn-icon {
+  padding: 8px;
+  width: 34px;
+  height: 34px;
+  gap: 0;
+}
+.btn-icon.btn-sm { width: 30px; height: 30px; padding: 6px; }
+
+/* En móvil los botones de una fila de acciones ocupan el ancho disponible:
+   con el pulgar, un objetivo pequeño se falla. */
+@media (max-width: 680px) {
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-row > .btn:not(.btn-icon) { flex: 1 1 calc(50% - 4px); }
+}

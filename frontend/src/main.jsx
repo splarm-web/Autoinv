@@ -7,6 +7,7 @@ import { ToastProvider } from './components/Toast'
 import AppRouter from './app/router'
 import { vigilarActualizaciones } from './lib/actualizacion'
 import './styles/tokens.css'
+import './styles/buttons.css'
 import './styles/responsive.css'
 
 vigilarActualizaciones()

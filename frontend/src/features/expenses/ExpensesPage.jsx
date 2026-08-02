@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { expensesApi } from '../../lib/api'
 import { eur0, fmtDate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import { IconTrash } from '../../components/Icons'
 import { useAuth } from '../../app/AuthContext'
 import Pagination from '../../components/Pagination'
 import DateInput from '../../components/DateInput'
@@ -39,17 +41,23 @@ export default function ExpensesPage() {
   const hasFilters = Object.values(filters).some(Boolean)
 
   const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const [porBorrar, setPorBorrar] = useState(null)
+  const [borrando, setBorrando] = useState(false)
+
   const pageCount = Math.ceil(expenses.length / PAGE_SIZE)
   const pageItems = expenses.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  const remove = async (id) => {
-    if (!confirm('¿Eliminar este gasto?')) return
+  const confirmarBorrado = async () => {
+    setBorrando(true)
     try {
-      await expensesApi.delete(id)
-      setExpenses((prev) => prev.filter((e) => e.id !== id))
+      await expensesApi.delete(porBorrar.id)
+      setExpenses((prev) => prev.filter((e) => e.id !== porBorrar.id))
       toast.success('Gasto eliminado')
+      setPorBorrar(null)
     } catch (e) {
       toast.error(e.message || 'No se pudo eliminar')
+    } finally {
+      setBorrando(false)
     }
   }
 
@@ -127,7 +135,13 @@ export default function ExpensesPage() {
                   <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
                     −{eur0(exp.amount)}
                   </span>
-                  <button onClick={() => remove(exp.id)} style={s.delBtn} title="Eliminar">✕</button>
+                  <button
+                    onClick={() => setPorBorrar(exp)}
+                    className="btn btn-icon btn-sm btn-danger"
+                    title="Eliminar gasto" aria-label="Eliminar gasto"
+                  >
+                    <IconTrash />
+                  </button>
                 </div>
               </div>
             ))}
@@ -148,6 +162,18 @@ export default function ExpensesPage() {
       )}
 
       {showExport && <ExportModal scope="gastos" onClose={() => setShowExport(false)} />}
+
+      {porBorrar && (
+        <ConfirmDialog
+          titulo="Eliminar gasto"
+          mensaje={`Vas a eliminar el gasto de ${porBorrar.supplier || porBorrar.concept || 'sin proveedor'}.`}
+          detalle="Esta acción no se puede deshacer y el justificante adjunto también se pierde."
+          textoConfirmar="Eliminar gasto"
+          cargando={borrando}
+          onConfirmar={confirmarBorrado}
+          onCancelar={() => setPorBorrar(null)}
+        />
+      )}
     </div>
   )
 }

@@ -1,42 +1,30 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { automationApi } from '../../lib/api'
 import { useToast } from '../../components/Toast'
-import PendingList from './PendingList'
+import { IconRefresh } from '../../components/Icons'
 import AutomationConfig from './AutomationConfig'
 import './automation.css'
 
 /**
- * Automatización por email.
+ * Ajustes de la automatización por email.
  *
- * Dos pestañas: la bandeja de facturas que han llegado por correo y esperan
- * validación, y la configuración. La bandeja va primero porque es lo que se
- * consulta a diario; la configuración se toca una vez y casi nunca más.
+ * Las facturas pendientes ya NO viven aquí: están en Facturas, junto al resto,
+ * que es donde se buscan. Esta pantalla es solo configuración — se toca una vez
+ * y casi nunca más.
  */
 export default function AutomationPage() {
   const { toast } = useToast()
-  const [tab, setTab] = useState('pendientes')
+  const navigate = useNavigate()
   const [status, setStatus] = useState(null)
-  const [pendientes, setPendientes] = useState([])
-  const [config, setConfig] = useState(null)
-  const [cargando, setCargando] = useState(true)
   const [revisando, setRevisando] = useState(false)
 
   const recargar = useCallback(async () => {
     try {
-      const [st, pend, cfg] = await Promise.all([
-        automationApi.status(),
-        automationApi.listPending(),
-        automationApi.getConfig().catch(() => null),
-      ])
-      setStatus(st)
-      setPendientes(pend)
-      setConfig(cfg)
-      // Refresca el badge del menú sin esperar a su siguiente sondeo
+      setStatus(await automationApi.status())
       window.dispatchEvent(new Event('automation:changed'))
     } catch (e) {
       toast.error(e.message || 'No se pudo cargar la automatización')
-    } finally {
-      setCargando(false)
     }
   }, [toast])
 
@@ -46,8 +34,12 @@ export default function AutomationPage() {
     setRevisando(true)
     try {
       const r = await automationApi.pollNow()
-      if (r.created) toast.success(r.message)
-      else toast.info(r.message)
+      if (r.created) {
+        toast.success(`${r.message}. Las tienes en Facturas.`)
+        navigate('/invoices')
+      } else {
+        toast.info(r.message)
+      }
       await recargar()
     } catch (e) {
       toast.error(e.message || 'No se pudo revisar el correo')
@@ -62,58 +54,32 @@ export default function AutomationPage() {
         <div>
           <h1 style={s.title}>Automatización</h1>
           <p style={s.subtitle}>
-            Las facturas que llegan por correo se preparan solas y esperan aquí tu visto bueno.
+            Las facturas que llegan por correo se preparan solas y aparecen en
+            Facturas esperando tu visto bueno.
           </p>
         </div>
         {status?.enabled && (
-          <button onClick={revisarAhora} disabled={revisando} style={s.btnSecondary}>
-            {revisando ? 'Revisando…' : '↻ Revisar ahora'}
+          <button onClick={revisarAhora} disabled={revisando} className="btn btn-neutral btn-sm">
+            <IconRefresh /> {revisando ? 'Revisando…' : 'Revisar ahora'}
           </button>
         )}
       </div>
 
-      <EstadoBanner status={status} cargando={cargando} />
+      <EstadoBanner status={status} />
 
-      <div className="modal-tabs autom-tabs">
-        <button
-          className={'modal-tab' + (tab === 'pendientes' ? ' active' : '')}
-          onClick={() => setTab('pendientes')}
-        >
-          Pendientes{pendientes.length > 0 ? ` (${pendientes.length})` : ''}
-        </button>
-        <button
-          className={'modal-tab' + (tab === 'config' ? ' active' : '')}
-          onClick={() => setTab('config')}
-        >
-          Configuración
-        </button>
-      </div>
-
-      {tab === 'pendientes' ? (
-        <PendingList
-          pendientes={pendientes}
-          cargando={cargando}
-          configurada={status?.configured}
-          activa={status?.enabled}
-          onCambio={recargar}
-          irAConfig={() => setTab('config')}
-          config={config}
-        />
-      ) : (
-        <AutomationConfig status={status} onCambio={recargar} />
-      )}
+      <AutomationConfig status={status} onCambio={recargar} />
     </div>
   )
 }
 
-function EstadoBanner({ status, cargando }) {
-  if (cargando || !status) return null
+function EstadoBanner({ status }) {
+  if (!status) return null
 
   if (!status.configured) {
     return (
       <div className="autom-banner autom-banner--info">
-        Todavía no has configurado la automatización. Ve a <strong>Configuración</strong> para
-        conectar tu correo y elegir el cliente al que se facturan los viajes.
+        Todavía no has configurado la automatización. Rellena la conexión y elige
+        el cliente al que se facturan los viajes.
       </div>
     )
   }
@@ -174,5 +140,4 @@ export function formatoRelativo(iso) {
 const s = {
   title: { fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 22, margin: 0, letterSpacing: '-0.01em' },
   subtitle: { color: 'var(--text-muted)', fontSize: 13, margin: '6px 0 0', maxWidth: 520 },
-  btnSecondary: { padding: '9px 16px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' },
 }

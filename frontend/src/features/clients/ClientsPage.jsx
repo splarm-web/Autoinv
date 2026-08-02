@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../../lib/api'
+import ConfirmDialog from '../../components/ConfirmDialog'
 import '../../styles/modal.css'
 import './clients.css'
 
@@ -7,6 +8,8 @@ export default function ClientsPage() {
   const [clients, setClients] = useState([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState(null) // null | 'new' | client_object
+  const [porBorrar, setPorBorrar] = useState(null)
+  const [borrando, setBorrando] = useState(false)
 
   useEffect(() => {
     load()
@@ -39,10 +42,15 @@ export default function ClientsPage() {
     )
   }
 
-  const handleDelete = async (id) => {
-    if (!confirm('¿Eliminar este cliente?')) return
-    await clientsApi.delete(id)
-    setClients((prev) => prev.filter((c) => c.id !== id))
+  const confirmarBorrado = async () => {
+    setBorrando(true)
+    try {
+      await clientsApi.delete(porBorrar.id)
+      setClients((prev) => prev.filter((c) => c.id !== porBorrar.id))
+      setPorBorrar(null)
+    } finally {
+      setBorrando(false)
+    }
   }
 
   return (
@@ -66,7 +74,7 @@ export default function ClientsPage() {
               client={client}
               onEdit={() => setModal(client)}
               onSetDefault={() => handleSetDefault(client.id)}
-              onDelete={() => handleDelete(client.id)}
+              onDelete={() => setPorBorrar(client)}
             />
           ))}
         </div>
@@ -77,6 +85,18 @@ export default function ClientsPage() {
           client={modal === 'new' ? null : modal}
           onSave={handleSave}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {porBorrar && (
+        <ConfirmDialog
+          titulo="Eliminar cliente"
+          mensaje={`Vas a eliminar a ${porBorrar.nombre} de tu lista de clientes.`}
+          detalle="Las facturas ya emitidas a este cliente se conservan; solo desaparece de la lista."
+          textoConfirmar="Eliminar cliente"
+          cargando={borrando}
+          onConfirmar={confirmarBorrado}
+          onCancelar={() => setPorBorrar(null)}
         />
       )}
     </div>

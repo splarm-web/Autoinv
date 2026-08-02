@@ -3,6 +3,7 @@ import { automationApi, clientsApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
 import { activarPush, desactivarPush, esIOS, esPWAInstalada, estadoPush } from '../../lib/push'
+import { IconStethoscope } from '../../components/Icons'
 
 const VACIA = {
   imap_email: '', imap_app_password: '',
@@ -360,8 +361,8 @@ export default function AutomationConfig({ status, onCambio }) {
         titulo="Diagnóstico"
         desc="Comprueba de una pasada todos los pasos: la conexión con el correo, el cliente, el envío y las notificaciones."
       >
-        <button onClick={diagnosticar} disabled={diagnosticando} style={s.btnSecondary}>
-          {diagnosticando ? 'Comprobando…' : '🩺 Comprobar todo'}
+        <button onClick={diagnosticar} disabled={diagnosticando} className="btn btn-neutral">
+          <IconStethoscope /> {diagnosticando ? 'Comprobando…' : 'Comprobar todo'}
         </button>
         {chequeos && (
           <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
@@ -388,7 +389,7 @@ export default function AutomationConfig({ status, onCambio }) {
         <button
           onClick={guardar}
           disabled={guardando || !hayCambios}
-          style={hayCambios ? s.btnPrimary : s.btnPrimaryOff}
+          className={'btn ' + (hayCambios ? 'btn-primary' : 'btn-neutral')}
         >
           {guardando ? 'Guardando…' : hayCambios ? 'Guardar configuración' : 'Todo guardado'}
         </button>

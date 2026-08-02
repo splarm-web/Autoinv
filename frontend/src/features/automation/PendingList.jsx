@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { automationApi } from '../../lib/api'
 import { eur2 } from '../../lib/format'
 import { useToast } from '../../components/Toast'
+import ConfirmDialog from '../../components/ConfirmDialog'
+import { IconCheck, IconDownload, IconEdit, IconTrash } from '../../components/Icons'
 import { formatoRelativo } from './AutomationPage'
 import TransportePreview from '../invoices/TransportePreview'
 
@@ -89,6 +91,7 @@ function PendingDetail({ id, config, onClose, onCambio }) {
   const navigate = useNavigate()
   const [detalle, setDetalle] = useState(null)
   const [accion, setAccion] = useState(null)   // 'approve' | 'reject'
+  const [confirmarDescarte, setConfirmarDescarte] = useState(false)
 
   useEffect(() => {
     // `cancelado` es necesario, no defensivo: en desarrollo StrictMode monta,
@@ -152,6 +155,7 @@ function PendingDetail({ id, config, onClose, onCambio }) {
       onClose()
     } catch (e) {
       toast.error(e.message || 'No se pudo descartar')
+      setConfirmarDescarte(false)
     } finally {
       setAccion(null)
     }
@@ -221,33 +225,45 @@ function PendingDetail({ id, config, onClose, onCambio }) {
             </div>
           )}
 
-          <div className="autom-actions">
+          <div className="autom-actions btn-row">
             <button
               onClick={aprobar}
               disabled={bloqueada || accion !== null}
-              style={bloqueada ? s.btnDisabled : s.btnPrimary}
+              className="btn btn-success"
               title={bloqueada ? 'Corrige los avisos antes de aprobar' : undefined}
             >
-              {accion === 'approve' ? 'Guardando…' : '✓ Aprobar'}
+              <IconCheck /> {accion === 'approve' ? 'Guardando…' : 'Aprobar'}
             </button>
-            <button onClick={editar} style={s.btnSecondary} disabled={accion !== null}>
-              ✎ Editar
+            <button onClick={editar} className="btn btn-neutral" disabled={accion !== null}>
+              <IconEdit /> Editar
             </button>
-            <button onClick={() => automationApi.downloadPendingPdf(id, detalle?.numero_factura)} style={s.btnSecondary}>
-              ⬇ PDF
+            <button onClick={() => automationApi.downloadPendingPdf(id, detalle?.numero_factura)} className="btn btn-neutral">
+              <IconDownload /> PDF
             </button>
             <button
               onClick={() => automationApi.downloadPendingExcel(id, detalle?.attachment_name)}
-              style={s.btnSecondary}
+              className="btn btn-neutral"
             >
-              ⬇ Excel
+              <IconDownload /> Excel
             </button>
-            <button onClick={rechazar} style={s.btnGhost} disabled={accion !== null}>
-              {accion === 'reject' ? 'Descartando…' : 'Descartar'}
+            <button onClick={() => setConfirmarDescarte(true)} className="btn btn-danger" disabled={accion !== null}>
+              <IconTrash /> Descartar
             </button>
           </div>
         </div>
       </div>
+
+      {confirmarDescarte && (
+        <ConfirmDialog
+          titulo="Descartar factura"
+          mensaje={`Vas a descartar la factura ${detalle?.numero_factura || ''} recibida de ${detalle?.email_from || 'el correo'}.`}
+          detalle="Desaparecerá de las pendientes y no se emitirá. El correo original seguirá en tu buzón."
+          textoConfirmar="Descartar"
+          cargando={accion === 'reject'}
+          onConfirmar={rechazar}
+          onCancelar={() => setConfirmarDescarte(false)}
+        />
+      )}
     </div>
   )
 }
