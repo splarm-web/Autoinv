@@ -20,6 +20,8 @@ export default function AutomationConfig({ status, onCambio }) {
   const { toast } = useToast()
   const { user } = useAuth()
   const [form, setForm] = useState(VACIA)
+  // Copia de lo último guardado, para saber si hay cambios pendientes
+  const [guardado, setGuardado] = useState(VACIA)
   const [clientes, setClientes] = useState([])
   const [tienePassword, setTienePassword] = useState(false)
   const [guardando, setGuardando] = useState(false)
@@ -31,14 +33,16 @@ export default function AutomationConfig({ status, onCambio }) {
   useEffect(() => {
     automationApi.getConfig().then((c) => {
       setTienePassword(c.has_password)
-      setForm({
+      const cargado = {
         ...VACIA,
         ...Object.fromEntries(
           Object.entries(c).filter(([k, v]) => k in VACIA && v !== null && v !== undefined),
         ),
         imap_app_password: '',
         client_id: c.client_id ?? '',
-      })
+      }
+      setForm(cargado)
+      setGuardado(cargado)
     }).catch(() => {})
     clientsApi.list().then(setClientes).catch(() => {})
     estadoPush().then(setPush)
@@ -58,7 +62,9 @@ export default function AutomationConfig({ status, onCambio }) {
       if (!payload.imap_app_password) delete payload.imap_app_password
       const c = await automationApi.saveConfig(payload)
       setTienePassword(c.has_password)
-      setForm((f) => ({ ...f, imap_app_password: '' }))
+      const limpio = { ...form, imap_app_password: '' }
+      setForm(limpio)
+      setGuardado(limpio)
       toast.success('Configuración guardada')
       onCambio()
     } catch (e) {
@@ -124,6 +130,11 @@ export default function AutomationConfig({ status, onCambio }) {
       toast.error(e.message)
     }
   }
+
+  // Los interruptores de este formulario NO se guardan solos (a diferencia del
+  // maestro de arriba, que sí). Sin avisarlo, es facilísimo activar "Enviarla
+  // al aprobarla", irse, y que no haya surtido efecto.
+  const hayCambios = JSON.stringify(form) !== JSON.stringify(guardado)
 
   const clienteElegido = clientes.find((c) => String(c.id) === String(form.client_id))
   const prefijo = user?.transporte_invoice_prefix || 'A'
@@ -328,9 +339,16 @@ export default function AutomationConfig({ status, onCambio }) {
         )}
       </Seccion>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <button onClick={guardar} disabled={guardando} style={s.btnPrimary}>
-          {guardando ? 'Guardando…' : 'Guardar configuración'}
+      <div className={'autom-guardar' + (hayCambios ? ' pendiente' : '')}>
+        {hayCambios && (
+          <span style={s.avisoCambios}>⬤ Cambios sin guardar</span>
+        )}
+        <button
+          onClick={guardar}
+          disabled={guardando || !hayCambios}
+          style={hayCambios ? s.btnPrimary : s.btnPrimaryOff}
+        >
+          {guardando ? 'Guardando…' : hayCambios ? 'Guardar configuración' : 'Todo guardado'}
         </button>
       </div>
     </div>
@@ -443,6 +461,8 @@ const s = {
   avisoPush: { fontSize: 12, color: 'var(--cielo)', background: 'rgba(111,168,255,0.08)', border: '1px solid rgba(111,168,255,0.25)', borderRadius: 'var(--r-sm)', padding: '10px 12px', marginTop: 10, lineHeight: 1.6 },
   filaPush: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 10, flexWrap: 'wrap' },
   btnMini: { padding: '5px 12px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-ui)' },
+  avisoCambios: { fontSize: 12, fontWeight: 600, color: '#E8B84B' },
+  btnPrimaryOff: { padding: '11px 24px', background: 'var(--surface-3)', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'default' },
   btnPrimary: { padding: '11px 24px', background: 'var(--menta)', color: 'var(--ink)', border: 'none', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   btnSecondary: { padding: '9px 16px', background: 'var(--btn-soft)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', fontFamily: 'var(--font-ui)', fontSize: 13, cursor: 'pointer' },
 }

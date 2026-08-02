@@ -34,11 +34,17 @@ function _wakeEnd() {
 async function apiFetch(path, opts = {}) {
   const token = localStorage.getItem('autoinv_token')
   const isFormData = opts.body instanceof FormData
+  // `slow`: operaciones que tardan por naturaleza (hablar con Gmail por
+  // SMTP/IMAP son varios segundos). Sin esto saltaría el aviso de
+  // "despertando el servidor", que sería falso: el servidor está despierto,
+  // simplemente la operación es lenta. Estas acciones ya muestran su propio
+  // estado de progreso en el botón que las lanza.
+  const { slow, ...fetchOpts } = opts
 
-  _wakeStart()
+  if (!slow) _wakeStart()
   try {
     const res = await fetch(`${API_URL}${path}`, {
-      ...opts,
+      ...fetchOpts,
       headers: {
         ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -54,7 +60,9 @@ async function apiFetch(path, opts = {}) {
     if (res.status === 204) return null
     return await res.json()
   } finally {
-    _wakeEnd()
+    // Solo si se contabilizó al entrar: descontar de más dejaría el contador
+    // descuadrado y el aviso no volvería a aparecer cuando hace falta
+    if (!slow) _wakeEnd()
   }
 }
 
@@ -114,7 +122,7 @@ export const invoicesApi = {
   get: (id) => apiFetch(`/api/invoices/${id}`),
   // Envía o reenvía la factura por email; devuelve la factura con la constancia
   send: (id, to_email) =>
-    apiFetch(`/api/invoices/${id}/send`, { method: 'POST', body: JSON.stringify({ to_email }) }),
+    apiFetch(`/api/invoices/${id}/send`, { method: 'POST', body: JSON.stringify({ to_email }), slow: true }),
   delete: (id) => apiFetch(`/api/invoices/${id}`, { method: 'DELETE' }),
   downloadPdf: async (id, number) => {
     const token = localStorage.getItem('autoinv_token')
@@ -179,16 +187,16 @@ export const automationApi = {
   toggle: (enabled) =>
     apiFetch('/api/automation/toggle', { method: 'PATCH', body: JSON.stringify({ enabled }) }),
   testConnection: (data) =>
-    apiFetch('/api/automation/test-connection', { method: 'POST', body: JSON.stringify(data) }),
+    apiFetch('/api/automation/test-connection', { method: 'POST', body: JSON.stringify(data), slow: true }),
   testFilters: (data) =>
-    apiFetch('/api/automation/test-filters', { method: 'POST', body: JSON.stringify(data) }),
+    apiFetch('/api/automation/test-filters', { method: 'POST', body: JSON.stringify(data), slow: true }),
   status: () => apiFetch('/api/automation/status'),
-  pollNow: () => apiFetch('/api/automation/poll-now', { method: 'POST' }),
+  pollNow: () => apiFetch('/api/automation/poll-now', { method: 'POST', slow: true }),
 
   listPending: () => apiFetch('/api/automation/pending'),
   history: () => apiFetch('/api/automation/history'),
   getPending: (id) => apiFetch(`/api/automation/pending/${id}`),
-  approve: (id) => apiFetch(`/api/automation/pending/${id}/approve`, { method: 'POST' }),
+  approve: (id) => apiFetch(`/api/automation/pending/${id}/approve`, { method: 'POST', slow: true }),
   reject: (id) => apiFetch(`/api/automation/pending/${id}/reject`, { method: 'POST' }),
   // Cierra una pendiente que el usuario ha guardado a mano desde "Editar"
   resolve: (id, invoiceId) =>
