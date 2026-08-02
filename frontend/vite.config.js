@@ -28,7 +28,16 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         // Listeners de push/notificationclick. Se importan en el SW generado
         // para no tener que pasar toda la PWA a injectManifest.
-        importScripts: ['push-sw.js'],
+        // Ruta absoluta a propósito: relativa depende del scope del SW.
+        importScripts: ['/push-sw.js'],
+        // Un service worker antiguo sirve su index.html cacheado, que apunta a
+        // ficheros JS con hash que ya no existen tras el redespliegue → pantalla
+        // en blanco. Estas tres opciones hacen que el SW nuevo tome el control
+        // de inmediato y borre las cachés viejas en vez de esperar a que se
+        // cierren todas las pestañas.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
