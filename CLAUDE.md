@@ -36,17 +36,27 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 
 ## Infraestructura desplegada
 
-- **Backend:** https://autoinv-production.up.railway.app (Railway, Python 3.14)
-- **Frontend:** https://autoinv.vercel.app (Vercel, React PWA)
-- **GitHub:** https://github.com/splarm-web/Autoinv
-- **BD:** PostgreSQL en Railway (servicio "Postgres", `DATABASE_URL` por referencia `${{Postgres.DATABASE_URL}}`). Ya NO es efímera. `database.py` normaliza `postgres://`→`postgresql://`
-- **Variables Railway:** `SECRET_KEY`, `REGISTRATION_ENABLED`, `ALLOWED_ORIGINS`, `ANTHROPIC_API_KEY` (vacía — OCR desactivado), `DATABASE_URL`, `FILES_ROOT`
+- **Backend:** https://autoinv-backend.onrender.com (**Render**, plan free, ver `render.yaml`).
+  El free duerme por inactividad: la primera petición tarda ~50 s (de ahí el indicador
+  de "cold start" en `lib/api.js`). La URL vieja de Railway ya no existe (404)
+- **Frontend:** https://autoinv.vercel.app (Vercel, React PWA). Apunta al backend
+  vía `frontend/.env.production` → `VITE_API_URL`
+- **GitHub:** https://github.com/splarm-web/Autoinv — push a `main` redespliega ambos
+- **BD:** PostgreSQL en **Neon** (neon.tech); la cadena se pega a mano en `DATABASE_URL`
+  en el panel de Render. `database.py` normaliza `postgres://`→`postgresql://`
+- **Variables en Render:** `DATABASE_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS`,
+  `REGISTRATION_ENABLED`, `ANTHROPIC_API_KEY` (vacía — OCR desactivado),
+  `FILES_ROOT`, y para el push `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT`
+
+> ⚠️ Los ficheros subidos (justificantes, PDFs) viven en el disco del contenedor de
+> Render, que es **efímero en el plan free**: se pierden en cada redespliegue. La BD
+> (Neon) sí persiste. Migrar a S3/GCS cambiando `storage.py` sigue pendiente.
 
 ### Hecho y funcionando en producción
 
 **Backend:**
 - Auth completa: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `PATCH /api/auth/me`. **Login admite usuario plano** (no solo email): `UserLogin.email` es `str` (registro sí exige email)
-- Toggle registro: `REGISTRATION_ENABLED` en Railway Variables (poner `false` tras registrarte)
+- Toggle registro: `REGISTRATION_ENABLED` en las variables de Render (poner `false` tras registrarte)
 - Dashboard: `GET /api/dashboard?periodo=mes|trimestre|anio` → KPIs (ingresos=Σ totales, gastos, **ingresos netos = ingresos − IVA − IRPF**), card impuestos (IVA repercutido/soportado/a liquidar + **IRPF retenido**), barras, últimos movimientos
 - Expenses: CRUD completo + filtros (`from_date`, `to_date`, `category`) + upload foto/PDF + OCR Claude Vision + confirmación
 - Invoices: CRUD + auto-numeración (`YYYY-NNN`) + `client_id` + **renderer PDF real** + **facturas de transporte**
@@ -70,14 +80,14 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 
 **Decisiones tomadas:**
 - OCR (Claude Vision) desactivado por ahora — requiere cuenta Anthropic de pago
-- Registro abierto temporalmente para setup inicial; cerrar con `REGISTRATION_ENABLED=false` en Railway
+- Registro abierto temporalmente para setup inicial; cerrar con `REGISTRATION_ENABLED=false` en Render
 - passlib eliminado (incompatible Python 3.14) → bcrypt directo
 - **Sergio = autónomo** (features: gastos,facturas,clientes,export); **Alfredo = transportista** (features: transporte,clientes,export). Cuentas separadas; el emisor sale del perfil fiscal del usuario logueado
-- PDF: **fpdf2** para minimal (encoding cp1252 para €) y **reportlab** para alfredo; ambos Python puro (sin libs de sistema → despliegan en Railway sin config). WeasyPrint descartado por dependencias nativas
+- PDF: **fpdf2** para minimal (encoding cp1252 para €) y **reportlab** para alfredo; ambos Python puro (sin libs de sistema → despliegan en Render sin config). WeasyPrint descartado por dependencias nativas
 
 ### Hecho esta iteración (2026-06-21)
 
-- ✅ BD migrada a PostgreSQL en Railway
+- ✅ BD migrada a PostgreSQL (hoy en Neon; entonces Railway)
 - ✅ Filtros de fecha/categoría en gastos (con total)
 - ✅ `client_id` + selector de cliente en alta de facturas
 - ✅ Renderer PDF real `minimal` con fpdf2 + endpoint `GET /invoices/{id}/pdf` + botón PDF en listado
@@ -137,7 +147,7 @@ instalada en la pantalla de inicio** — la UI lo explica cuando detecta ese cas
 2. **Pantalla de admin de features** — gestionar `users.features` desde la UI sin tocar la BD (necesario para asignar features a usuarios nuevos en producción)
 3. **Igualar "Descargar PDF" en factura estándar** — la de transporte tiene Guardar + Descargar PDF; la estándar solo guarda (PDF desde el listado)
 4. **Paginación** en movimientos del dashboard y listados de gastos/facturas
-5. **Activar OCR** — cuando haya API key de Anthropic, añadir `ANTHROPIC_API_KEY` en Railway Variables
+5. **Activar OCR** — cuando haya API key de Anthropic, añadir `ANTHROPIC_API_KEY` en las variables de Render
 6. **Cerrar registro** en producción tras dar de alta a los usuarios (`REGISTRATION_ENABLED=false`)
 
 ## Arquitectura clave
