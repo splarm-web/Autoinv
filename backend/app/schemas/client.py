@@ -8,6 +8,7 @@ class ClientCreate(BaseModel):
     cif: Optional[str] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
+    email: Optional[str] = None
     notas: Optional[str] = None
     is_default: bool = False
 
@@ -17,6 +18,7 @@ class ClientUpdate(BaseModel):
     cif: Optional[str] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
+    email: Optional[str] = None
     notas: Optional[str] = None
     is_default: Optional[bool] = None
 
@@ -29,6 +31,7 @@ class ClientOut(BaseModel):
     cif: Optional[str] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
+    email: Optional[str] = None
     notas: Optional[str] = None
     is_default: bool
     created_at: datetime

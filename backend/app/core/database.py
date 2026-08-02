@@ -24,6 +24,11 @@ def get_db():
 
 
 def create_tables():
+    # Importar los modelos aquí y no arriba evita el import circular
+    # (models importa Base de este módulo) y, sobre todo, garantiza que
+    # TODAS las tablas estén registradas en el metadata: si se depende de que
+    # algún router los haya importado antes, una tabla nueva puede no crearse.
+    from .. import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
 
@@ -36,6 +41,21 @@ _COLUMN_MIGRATIONS = [
     ("invoices", "client_id", "INTEGER"),
     ("invoices", "kind", "VARCHAR DEFAULT 'standard'"),
     ("invoices", "extra_json", "VARCHAR DEFAULT '{}'"),
+    ("clients", "email", "VARCHAR"),
+    # Automatización de email: campos añadidos tras la primera versión del modelo
+    ("email_automations", "attachment_filter", "VARCHAR"),
+    ("email_automations", "client_id", "INTEGER"),
+    ("email_automations", "fecha_origen", "VARCHAR DEFAULT 'fin_de_mes'"),
+    ("email_automations", "default_cabeza", "VARCHAR"),
+    ("email_automations", "default_cisterna", "VARCHAR"),
+    ("email_automations", "require_validation", "BOOLEAN DEFAULT TRUE"),
+    ("email_automations", "notify_push", "BOOLEAN DEFAULT TRUE"),
+    ("email_automations", "send_on_approve", "BOOLEAN DEFAULT FALSE"),
+    ("email_automations", "reply_cc_email", "VARCHAR"),
+    ("pending_invoices", "attachment_name", "VARCHAR"),
+    ("pending_invoices", "numero_factura", "VARCHAR"),
+    ("pending_invoices", "total", "VARCHAR"),
+    ("pending_invoices", "warnings_json", "VARCHAR"),
 ]
 
 

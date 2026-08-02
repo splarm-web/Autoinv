@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useTheme } from '../app/ThemeContext'
+import { automationApi } from '../lib/api'
 import '../styles/modal.css'
 import './AppShell.css'
 
@@ -10,6 +11,7 @@ const NAV = [
   { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
+  { to: '/automation', label: 'Automático', Icon: IconAutomatizacion, feature: 'automatizacion' },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },
   { to: '/admin',     label: 'Admin',    Icon: IconAdmin,    feature: 'admin' },
   { to: '/settings',  label: 'Ajustes',  Icon: IconAjustes },
@@ -27,11 +29,42 @@ function sectionTitle(pathname) {
   return match?.label || 'autoinv'
 }
 
+/**
+ * Contador de facturas pendientes de validar, para el badge del menú.
+ *
+ * Se refresca cada minuto y, además, al vuelo cuando la propia página de
+ * Automatización aprueba o descarta algo (evento `automation:changed`): sin
+ * eso el badge seguiría marcando facturas que el usuario acaba de resolver.
+ */
+function usePendingCount(activo) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!activo) { setCount(0); return }
+    let vivo = true
+    const cargar = () => automationApi.status()
+      .then((s) => { if (vivo) setCount(s.pending_count || 0) })
+      .catch(() => {})
+
+    cargar()
+    const id = setInterval(cargar, 60000)
+    window.addEventListener('automation:changed', cargar)
+    return () => {
+      vivo = false
+      clearInterval(id)
+      window.removeEventListener('automation:changed', cargar)
+    }
+  }, [activo])
+
+  return count
+}
+
 export default function AppShell() {
   const { user, logout, hasFeature } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [accountOpen, setAccountOpen] = useState(false)
+  const pendingCount = usePendingCount(hasFeature('automatizacion'))
 
   // Bottom bar móvil = navegación primaria completa salvo Admin, que va al
   // panel de cuenta (es cosa de un único usuario, no merece hueco fijo para
@@ -51,7 +84,7 @@ export default function AppShell() {
     <div className="shell-root">
       {/* Desktop sidebar */}
       <aside className="shell-sidebar">
-        <SidebarContent initials={initials} user={user} onLogout={handleLogout} hasFeature={hasFeature} />
+        <SidebarContent initials={initials} user={user} onLogout={handleLogout} hasFeature={hasFeature} pendingCount={pendingCount} />
       </aside>
 
       {/* Content */}
@@ -73,7 +106,12 @@ export default function AppShell() {
           <NavLink key={to} to={to} className={({ isActive }) =>
             'bottom-nav-item' + (isActive ? ' active' : '')
           }>
-            <Icon />
+            <span className="nav-icon-wrap">
+              <Icon />
+              {to === '/automation' && pendingCount > 0 && (
+                <span className="nav-badge">{pendingCount}</span>
+              )}
+            </span>
             <span>{label}</span>
           </NavLink>
         ))}
@@ -138,7 +176,7 @@ function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout 
   )
 }
 
-function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature }) {
+function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature, pendingCount = 0 }) {
   const items = NAV.filter((item) => navAllowed(item, hasFeature))
   return (
     <div className="shell-sidebar-inner">
@@ -155,6 +193,9 @@ function SidebarContent({ initials, user, onLogout, onNavClick, hasFeature }) {
           >
             <Icon />
             {label}
+            {to === '/automation' && pendingCount > 0 && (
+              <span className="nav-badge nav-badge--inline">{pendingCount}</span>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -235,6 +276,16 @@ function IconClientes() {
       <path d="M1 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <path d="M10.5 6.5c1.5 0 2.5 1 2.5 2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <circle cx="10.5" cy="3.5" r="1.5" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+function IconAutomatizacion() {
+  // Sobre con una chispa: entra un correo y sale trabajo hecho solo.
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M1.5 4.2a1.2 1.2 0 011.2-1.2h7.6a1.2 1.2 0 011.2 1.2v5.1a1.2 1.2 0 01-1.2 1.2H2.7a1.2 1.2 0 01-1.2-1.2V4.2z" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M1.8 4.4l4.7 3.2 4.7-3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.4 9.5l.5 1.4 1.4.5-1.4.5-.5 1.4-.5-1.4-1.4-.5 1.4-.5z" fill="currentColor" />
     </svg>
   )
 }

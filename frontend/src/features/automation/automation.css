@@ -1,0 +1,135 @@
+/* Automatización por email */
+
+.autom-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.autom-tabs { margin-bottom: 16px; }
+
+/* ── Banner de estado ── */
+.autom-banner {
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid;
+  margin-bottom: 16px;
+}
+.autom-banner--ok {
+  color: var(--menta);
+  border-color: rgba(69, 212, 155, 0.3);
+  background: rgba(69, 212, 155, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.autom-banner--warn {
+  color: #E8B84B;
+  border-color: rgba(232, 184, 75, 0.35);
+  background: rgba(232, 184, 75, 0.06);
+}
+.autom-banner--error {
+  color: var(--coral);
+  border-color: rgba(240, 135, 106, 0.3);
+  background: rgba(240, 135, 106, 0.06);
+}
+.autom-banner--info {
+  color: var(--cielo);
+  border-color: rgba(111, 168, 255, 0.28);
+  background: rgba(111, 168, 255, 0.06);
+}
+.autom-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--menta);
+  flex-shrink: 0;
+}
+
+/* ── Tarjeta de factura pendiente ── */
+.autom-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  color: var(--text);
+  transition: border-color 0.15s, transform 0.1s;
+}
+.autom-card:hover { border-color: var(--menta); }
+.autom-card:active { transform: scale(0.995); }
+
+/* ── Modal de detalle ── */
+.autom-modal {
+  max-width: 720px;
+  width: 100%;
+}
+.autom-modal-body {
+  display: grid;
+  gap: 14px;
+  padding: 18px 22px 22px;
+}
+.autom-pdf {
+  width: 100%;
+  height: 460px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: #fff;
+}
+.autom-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 680px) {
+  /* En móvil el PDF a esa altura deja las acciones fuera de pantalla: se
+     reduce y se fijan los botones al final del modal, que es lo que se va
+     a pulsar. */
+  .autom-pdf { height: 320px; }
+  .autom-actions > button { flex: 1 1 calc(50% - 5px); }
+}
+
+/* ── Interruptor ── */
+.autom-switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.18s, border-color 0.18s;
+}
+.autom-switch.on {
+  background: var(--menta);
+  border-color: var(--menta);
+}
+.autom-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.18s, background 0.18s;
+}
+.autom-switch.on .autom-switch-knob {
+  transform: translateX(18px);
+  background: var(--ink);
+}

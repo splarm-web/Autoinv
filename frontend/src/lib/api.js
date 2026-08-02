@@ -168,6 +168,59 @@ export const clientsApi = {
   delete: (id) => apiFetch(`/api/clients/${id}`, { method: 'DELETE' }),
 }
 
+// Automatización por email
+export const automationApi = {
+  getConfig: () => apiFetch('/api/automation/config'),
+  saveConfig: (data) =>
+    apiFetch('/api/automation/config', { method: 'PUT', body: JSON.stringify(data) }),
+  toggle: (enabled) =>
+    apiFetch('/api/automation/toggle', { method: 'PATCH', body: JSON.stringify({ enabled }) }),
+  testConnection: (data) =>
+    apiFetch('/api/automation/test-connection', { method: 'POST', body: JSON.stringify(data) }),
+  testFilters: (data) =>
+    apiFetch('/api/automation/test-filters', { method: 'POST', body: JSON.stringify(data) }),
+  status: () => apiFetch('/api/automation/status'),
+  pollNow: () => apiFetch('/api/automation/poll-now', { method: 'POST' }),
+
+  listPending: () => apiFetch('/api/automation/pending'),
+  history: () => apiFetch('/api/automation/history'),
+  getPending: (id) => apiFetch(`/api/automation/pending/${id}`),
+  approve: (id) => apiFetch(`/api/automation/pending/${id}/approve`, { method: 'POST' }),
+  reject: (id) => apiFetch(`/api/automation/pending/${id}/reject`, { method: 'POST' }),
+  // Cierra una pendiente que el usuario ha guardado a mano desde "Editar"
+  resolve: (id, invoiceId) =>
+    apiFetch(`/api/automation/pending/${id}/resolve${invoiceId ? `?invoice_id=${invoiceId}` : ''}`, { method: 'POST' }),
+
+  // El PDF se pide como blob para poder mostrarlo embebido, no solo descargarlo
+  pendingPdfUrl: async (id) => {
+    const token = localStorage.getItem('autoinv_token')
+    const res = await fetch(`${API_URL}/api/automation/pending/${id}/pdf`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error('No se pudo cargar el PDF')
+    return URL.createObjectURL(await res.blob())
+  },
+  downloadPendingExcel: async (id, name) => {
+    const token = localStorage.getItem('autoinv_token')
+    const res = await fetch(`${API_URL}/api/automation/pending/${id}/excel`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error('No se pudo descargar el Excel')
+    const blobUrl = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = name || 'viajes.xlsx'
+    a.click()
+    URL.revokeObjectURL(blobUrl)
+  },
+
+  pushSubscribe: (data) =>
+    apiFetch('/api/automation/push/subscribe', { method: 'POST', body: JSON.stringify(data) }),
+  pushUnsubscribe: (data) =>
+    apiFetch('/api/automation/push/unsubscribe', { method: 'POST', body: JSON.stringify(data) }),
+  pushTest: () => apiFetch('/api/automation/push/test', { method: 'POST' }),
+}
+
 // Admin
 export const adminApi = {
   featuresCatalog: () => apiFetch('/api/admin/features'),

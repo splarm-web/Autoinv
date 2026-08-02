@@ -12,6 +12,7 @@ import TransporteInvoicePage from '../features/invoices/TransporteInvoicePage'
 import SettingsPage from '../features/settings/SettingsPage'
 import ClientsPage from '../features/clients/ClientsPage'
 import AdminPage from '../features/admin/AdminPage'
+import AutomationPage from '../features/automation/AutomationPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -52,6 +53,7 @@ export default function AppRouter() {
         <Route path="invoices/new" element={<FeatureRoute feature="facturas"><NewInvoicePage /></FeatureRoute>} />
         <Route path="invoices/transporte" element={<FeatureRoute feature="transporte"><TransporteInvoicePage /></FeatureRoute>} />
         <Route path="clients" element={<FeatureRoute feature="clientes"><ClientsPage /></FeatureRoute>} />
+        <Route path="automation" element={<FeatureRoute feature="automatizacion"><AutomationPage /></FeatureRoute>} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="admin" element={<FeatureRoute feature="admin"><AdminPage /></FeatureRoute>} />
       </Route>

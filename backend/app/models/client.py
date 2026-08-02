@@ -12,6 +12,8 @@ class Client(Base):
     cif = Column(String)
     direccion = Column(String)
     ciudad = Column(String)
+    # Destinatario por defecto al enviar facturas por email (automatización)
+    email = Column(String)
     notas = Column(String)
     is_default = Column(Boolean, default=False, nullable=False)
 

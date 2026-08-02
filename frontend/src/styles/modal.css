@@ -115,3 +115,11 @@
   .modal-panel { border-radius: var(--r-lg) var(--r-lg) 0 0; max-height: 92vh; }
   .modal-tabs { margin: 16px 20px 0; }
 }
+
+/* Texto de ayuda bajo un campo del formulario */
+.form-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}

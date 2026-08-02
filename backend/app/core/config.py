@@ -15,5 +15,16 @@ class Settings(BaseSettings):
     registration_enabled: bool = True
     allowed_origins: str = "*"
 
+    # Web Push (VAPID). Sin claves, las notificaciones quedan desactivadas
+    # silenciosamente: el resto de la automatización sigue funcionando.
+    vapid_public_key: str = ""
+    vapid_private_key: str = ""
+    vapid_subject: str = "mailto:splar.work@gmail.com"
+
+    # Worker de automatización de email. Desactivable por si se despliega en un
+    # entorno donde no interesa que arranque el scheduler (p. ej. un segundo
+    # proceso que duplicaría los polls).
+    automation_worker_enabled: bool = True
+
 
 settings = Settings()

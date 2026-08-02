@@ -135,6 +135,7 @@ function ClientModal({ client, onSave, onClose }) {
     cif: client?.cif ?? '',
     direccion: client?.direccion ?? '',
     ciudad: client?.ciudad ?? '',
+    email: client?.email ?? '',
     notas: client?.notas ?? '',
     is_default: client?.is_default ?? false,
   })
@@ -160,6 +161,7 @@ function ClientModal({ client, onSave, onClose }) {
         cif: form.cif.trim() || null,
         direccion: form.direccion.trim() || null,
         ciudad: form.ciudad.trim() || null,
+        email: form.email.trim() || null,
         notas: form.notas.trim() || null,
       }
       const saved = isEdit
@@ -221,6 +223,20 @@ function ClientModal({ client, onSave, onClose }) {
                 onChange={(e) => set('ciudad', e.target.value)}
                 placeholder="46000 Valencia"
               />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Email</label>
+            <input
+              className="form-input"
+              type="email"
+              value={form.email}
+              onChange={(e) => set('email', e.target.value)}
+              placeholder="facturas@empresa.com"
+            />
+            <div className="form-hint">
+              Destinatario por defecto al enviarle facturas por email.
             </div>
           </div>
 

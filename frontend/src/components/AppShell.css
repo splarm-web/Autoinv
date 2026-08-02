@@ -253,3 +253,31 @@
   .shell-bottom-nav    { display: flex; }
   .shell-main          { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* ── Badge de pendientes (Automatización) ── */
+.nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--coral);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  box-sizing: border-box;
+}
+/* En el sidebar el badge va al final de la fila, no encima del icono:
+   ahí sí hay sitio y encaja mejor con el texto de la etiqueta. */
+.nav-badge--inline {
+  position: static;
+  margin-left: auto;
+}

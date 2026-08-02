@@ -89,6 +89,48 @@ La BD SQLite se crea automáticamente en `backend/data/app.db` al arrancar.
 - ✅ Fix: dashboard crasheaba en Windows por `strftime('%-d')`
 - ✅ Dashboard: IRPF retenido + ingresos netos
 
+### Automatización por email (feature `automatizacion`)
+
+Alfredo recibe por correo el Excel de viajes → el sistema lo detecta, compone la
+factura **completa** y la deja pendiente de un toque de aprobación.
+
+**Cómo identifica el correo correcto:** cuatro capas con Y. Remitente / asunto /
+nombre del adjunto (las tres opcionales, "contiene", no exacto) + comprobación de
+contenido siempre activa: que sea Excel y que al parsearlo salga ≥1 viaje. Esta
+última es la fiable. Botón "Probar filtros" para verlo antes de activar.
+
+**Qué aporta la configuración (lo que el Excel no trae):** cliente (de la tabla
+`clients`), origen de la fecha, cabeza/cisterna por defecto. Con el cliente fijado,
+el PDF que se ve en la bandeja **ya es el definitivo** — no hay borradores.
+
+**Reglas de composición** (`services/transporte_compose.py`, compartidas con el alta
+manual para que ambas produzcan lo mismo):
+- fecha = último día del mes de los viajes (configurable a "fecha del correo")
+- número = `user.transporte_invoice_prefix` + mes de la fecha → `A8`
+- concepto = `AGOSTO 2025` del mes de los viajes
+
+Fechar con "hoy" rompía la coherencia: viajes de agosto facturados en septiembre
+daban nº `A9` con concepto `AGOSTO`. Por eso el alta manual también fija la fecha
+a fin de mes al subir el Excel.
+
+**Interruptores independientes:** validar sí/no, avisar por push sí/no, enviar al
+aprobar sí/no (por defecto: validar sí, enviar no). Con la validación desactivada
+se aprueba sola, **pero nunca si hay avisos** (nº duplicado o datos incompletos):
+el automatismo se salta el trámite, no las comprobaciones. Ese bloqueo vive en
+`automation_approve.approve()`, no solo en el botón deshabilitado de la UI.
+
+**Piezas:** `services/email_reader` (IMAP; no marca leído hasta procesar bien, así
+un fallo se reintenta en vez de perderse), `email_worker` (APScheduler cada min),
+`transporte_compose`, `automation_approve` (usado por el worker y por el router),
+`email_sender` (SMTP), `push_sender` + `email_crypto` (Fernet derivado de
+`SECRET_KEY`). Frontend en `features/automation/`.
+
+**Push:** requiere `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` en el entorno; sin ellas
+todo funciona salvo las notificaciones. Los listeners viven en
+`public/push-sw.js`, inyectado en el SW de Workbox vía `workbox.importScripts`
+(no hizo falta pasar la PWA a injectManifest). **En iOS solo llegan si la PWA está
+instalada en la pantalla de inicio** — la UI lo explica cuando detecta ese caso.
+
 ### Próximos pasos en orden de prioridad
 
 1. **Endurecer enforcement de features en backend** — hoy solo `transporte` está gateado en el backend; gastos/facturas/clientes/export se ocultan en UI pero sus endpoints no rechazan aún. Añadir `require_feature` a esos routers

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { clientsApi, invoicesApi } from '../../lib/api'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { automationApi, clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
@@ -42,12 +42,28 @@ function diaFromIso(iso) {
   return d ? String(parseInt(d, 10)) : ''
 }
 
+// Último día del mes al que pertenece una fecha (2025-08-05 → 2025-08-31).
+// La factura de un mes se fecha al cierre de ese mes: si se fechara "hoy",
+// unos viajes de agosto facturados en septiembre saldrían con nº A9 y
+// concepto AGOSTO, que no cuadra.
+function finDeMesIso(iso) {
+  if (!iso) return ''
+  const [y, m] = iso.split('-').map(Number)
+  if (!y || !m) return ''
+  const ultimo = new Date(y, m, 0).getDate()
+  return `${y}-${String(m).padStart(2, '0')}-${String(ultimo).padStart(2, '0')}`
+}
+
 export default function TransporteInvoicePage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
   const fileRef = useRef(null)
   const prefix = user?.transporte_invoice_prefix || 'A'
+  // Viene de "Editar" en una factura pendiente de la automatización
+  const prefill = location.state?.prefill || null
+  const pendingId = location.state?.pendingId || null
 
   const [emisor, setEmisor] = useState({ nombre: '', nif: '', direccion: '' })
   const [cliente, setCliente] = useState({ ...EMPTY_CLIENTE })
@@ -74,8 +90,11 @@ export default function TransporteInvoicePage() {
   const [showPreview, setShowPreview] = useState(false)
   const [error, setError] = useState('')
 
-  // Pre-rellenar emisor con datos fiscales del usuario logueado (Alfredo)
+  // Pre-rellenar emisor con datos fiscales del usuario logueado (Alfredo).
+  // Si venimos de una factura pendiente, sus datos mandan: ya traen el emisor
+  // tal como se compuso, y sobrescribirlo aquí desharía lo que se va a editar.
   useEffect(() => {
+    if (prefill) return
     if (user) {
       setEmisor({
         nombre: user.legal_name || '',
@@ -83,7 +102,36 @@ export default function TransporteInvoicePage() {
         direccion: user.address || '',
       })
     }
-  }, [user])
+  }, [user, prefill])
+
+  // Carga inicial desde una factura pendiente ("Editar" en Automatización)
+  useEffect(() => {
+    if (!prefill) return
+    setEmisor({
+      nombre: prefill.emisor?.nombre || '',
+      nif: prefill.emisor?.nif || '',
+      direccion: prefill.emisor?.direccion || '',
+    })
+    setCliente({
+      nombre: prefill.cliente?.nombre || '',
+      cif: prefill.cliente?.cif || '',
+      direccion: prefill.cliente?.direccion || '',
+      ciudad: prefill.cliente?.ciudad || '',
+    })
+    setMeta({
+      numero_factura: prefill.numero_factura || '',
+      fecha: prefill.fecha_iso || toISODate(),
+      concepto_mes: prefill.concepto_mes || '',
+      cabeza: prefill.cabeza || '',
+      cisterna: prefill.cisterna || '',
+    })
+    const vs = (prefill.viajes || []).map((v) => ({
+      fecha: v.fecha || '', viaje: v.viaje || '',
+      kilos: v.kilos ?? '', precio: v.precio ?? '',
+    }))
+    setViajes(vs.length ? vs : [{ ...EMPTY_VIAJE }])
+    setAutofilled({ viajes: true, cabeza: !!prefill.cabeza, cisterna: !!prefill.cisterna, concepto: !!prefill.concepto_mes })
+  }, [prefill])
 
   useEffect(() => {
     clientsApi.list().then(setClients).catch(() => {})
@@ -135,8 +183,12 @@ export default function TransporteInvoicePage() {
       }))
       setViajes(parsed.length ? parsed : [{ ...EMPTY_VIAJE }])
       const concepto = conceptoFromIso(parsed[0]?.fecha)
+      const cierre = finDeMesIso(parsed[0]?.fecha)
       setMeta((m) => ({
         ...m,
+        // La fecha sigue al mes de los viajes, no al día en que se sube el
+        // Excel: así el nº (prefijo + mes) y el concepto siempre coinciden.
+        fecha: cierre || m.fecha,
         cabeza: data.cabeza || m.cabeza,
         cisterna: data.cisterna || m.cisterna,
         concepto_mes: concepto || m.concepto_mes,
@@ -146,6 +198,7 @@ export default function TransporteInvoicePage() {
         cabeza: !!data.cabeza,
         cisterna: !!data.cisterna,
         concepto: !!concepto,
+        fecha: !!cierre,
       })
       toast.success(`${parsed.length} viajes cargados desde el Excel`)
     } catch (err) {
@@ -229,9 +282,15 @@ export default function TransporteInvoicePage() {
     if (!guard()) return
     setSaving(true)
     try {
-      await invoicesApi.saveTransporte(buildPayload())
+      const creada = await invoicesApi.saveTransporte(buildPayload())
+      // Si veníamos de una pendiente de la automatización, se cierra: si no,
+      // seguiría en la bandeja pidiendo validación de algo ya facturado.
+      if (pendingId) {
+        await automationApi.resolve(pendingId, creada?.id).catch(() => {})
+        window.dispatchEvent(new Event('automation:changed'))
+      }
       toast.success('Factura guardada')
-      navigate('/invoices')
+      navigate(pendingId ? '/automation' : '/invoices')
     } catch (err) {
       toast.error(err.message || 'No se pudo guardar la factura')
     } finally {
@@ -269,7 +328,9 @@ export default function TransporteInvoicePage() {
         </button>
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, marginBottom: 20 }}>
-        Sube el Excel para autorellenar los viajes, edítalos si hace falta y genera el PDF.
+        {pendingId
+          ? 'Estás revisando una factura llegada por correo. Al guardarla se quitará de la bandeja de pendientes.'
+          : 'Sube el Excel para autorellenar los viajes, edítalos si hace falta y genera el PDF.'}
       </p>
 
       {error && <div style={{ ...s.banner, color: 'var(--coral)', borderColor: 'rgba(240,135,106,0.3)' }}>{error}</div>}

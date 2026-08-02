@@ -12,6 +12,7 @@ FEATURE_CATALOG = [
     {"key": "transporte", "label": "Facturas de transporte"},
     {"key": "clientes", "label": "Clientes"},
     {"key": "export", "label": "Exportar"},
+    {"key": "automatizacion", "label": "Automatización por email"},
     {"key": "admin", "label": "Administración"},
 ]
 
