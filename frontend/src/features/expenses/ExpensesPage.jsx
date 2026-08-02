@@ -5,6 +5,7 @@ import { eur0, fmtDate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import ConfirmDialog from '../../components/ConfirmDialog'
 import { IconTrash } from '../../components/Icons'
+import { IconDownload, IconPlus } from '../../components/Icons'
 import { useAuth } from '../../app/AuthContext'
 import Pagination from '../../components/Pagination'
 import DateInput from '../../components/DateInput'
@@ -67,9 +68,9 @@ export default function ExpensesPage() {
         <h1 style={s.title}>Gastos</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {hasFeature('export') && (
-            <button onClick={() => setShowExport(true)} style={s.btnSecondaryBtn}>⬇ Exportar</button>
+            <button onClick={() => setShowExport(true)} className="btn btn-neutral btn-sm"><IconDownload /> Exportar</button>
           )}
-          <Link to="/expenses/new" className="fab-add" style={s.btnPrimary}>
+          <Link to="/expenses/new" className="fab-add btn btn-primary">
             <span className="fab-icon">+</span><span className="fab-label"> Nuevo gasto</span>
           </Link>
         </div>
@@ -102,7 +103,7 @@ export default function ExpensesPage() {
           </select>
         </div>
         {hasFilters && (
-          <button onClick={clearFilters} style={s.clearBtn}>Limpiar</button>
+          <button onClick={clearFilters} className="btn btn-ghost btn-sm">Limpiar</button>
         )}
       </div>
 
@@ -184,7 +185,7 @@ function EmptyState() {
       <div style={{ fontSize: 32, marginBottom: 12 }}>🧾</div>
       <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Sin gastos todavía</div>
       <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>Añade tu primer gasto de forma manual o sube una foto de tu ticket.</div>
-      <Link to="/expenses/new" style={s.btnPrimary}>+ Añadir primer gasto</Link>
+      <Link to="/expenses/new" className="btn btn-primary"><IconPlus /> Añadir primer gasto</Link>
     </div>
   )
 }

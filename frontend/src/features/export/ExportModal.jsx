@@ -3,6 +3,7 @@ import { exportApi } from '../../lib/api'
 import { toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import DateInput from '../../components/DateInput'
+import { IconDownload, IconX } from '../../components/Icons'
 import '../../styles/modal.css'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -82,7 +83,7 @@ export default function ExportModal({ onClose, scope = 'todo' }) {
       <div className="modal-panel">
         <div className="modal-header">
           <h2 className="modal-title">{cfg.title}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar"><IconX /></button>
         </div>
 
         <div className="modal-tabs">
@@ -140,9 +141,9 @@ export default function ExportModal({ onClose, scope = 'todo' }) {
               </div>
 
               <div className="modal-footer">
-                <button onClick={onClose} style={s.btnGhost}>Cancelar</button>
-                <button onClick={exportQuarters} style={s.btn} disabled={loading}>
-                  {loading ? 'Preparando ZIP…' : '⬇ Descargar'}
+                <button onClick={onClose} className="btn btn-ghost">Cancelar</button>
+                <button onClick={exportQuarters} className="btn btn-primary" disabled={loading}>
+                  <IconDownload /> {loading ? 'Preparando ZIP…' : 'Descargar'}
                 </button>
               </div>
             </>
@@ -164,9 +165,9 @@ export default function ExportModal({ onClose, scope = 'todo' }) {
               </div>
 
               <div className="modal-footer">
-                <button onClick={onClose} style={s.btnGhost}>Cancelar</button>
-                <button onClick={exportRange} style={s.btn} disabled={loading || !from || !to}>
-                  {loading ? 'Preparando ZIP…' : '⬇ Descargar'}
+                <button onClick={onClose} className="btn btn-ghost">Cancelar</button>
+                <button onClick={exportRange} className="btn btn-primary" disabled={loading || !from || !to}>
+                  <IconDownload /> {loading ? 'Preparando ZIP…' : 'Descargar'}
                 </button>
               </div>
             </>

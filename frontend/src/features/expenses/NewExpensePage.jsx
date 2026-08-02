@@ -148,10 +148,10 @@ export default function NewExpensePage() {
         </Field>
 
         <div style={{ display: 'flex', gap: 10, marginTop: 6, flexWrap: 'wrap' }}>
-          <button type="submit" style={s.btnPrimary} disabled={saving || extracting}>
+          <button type="submit" className="btn btn-primary" disabled={saving || extracting}>
             {saving ? 'Guardando…' : 'Guardar gasto'}
           </button>
-          <button type="button" onClick={() => navigate('/expenses')} style={s.btnSecondary}>
+          <button type="button" onClick={() => navigate('/expenses')} className="btn btn-ghost">
             Cancelar
           </button>
         </div>

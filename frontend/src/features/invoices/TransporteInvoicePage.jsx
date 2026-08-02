@@ -6,6 +6,7 @@ import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import DateInput from '../../components/DateInput'
 import TransportePreview from './TransportePreview'
+import { IconCheck, IconDownload, IconEye, IconFile, IconPlus, IconTrash } from '../../components/Icons'
 
 const MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE']
@@ -378,9 +379,9 @@ export default function TransporteInvoicePage() {
         <button
           type="button"
           onClick={() => setShowPreview((v) => !v)}
-          style={showPreview ? s.btnActive : s.btnSecondary}
+          className={'btn btn-sm ' + (showPreview ? 'btn-primary' : 'btn-neutral')}
         >
-          {showPreview ? 'Ver formulario' : '👁 Vista previa'}
+          <IconEye /> {showPreview ? 'Ver formulario' : 'Vista previa'}
         </button>
       </div>
       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, marginBottom: 20 }}>
@@ -413,12 +414,12 @@ export default function TransporteInvoicePage() {
         <div>
           <TransportePreview {...previewData} />
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
-            <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
-              {saving ? 'Guardando…' : pendingId ? '✓ Aprobar y guardar' : 'Guardar factura'}
+            <button type="button" onClick={() => setShowPreview(false)} className="btn btn-neutral">← Editar</button>
+            <button type="button" onClick={save} className={'btn ' + (pendingId ? 'btn-success' : 'btn-primary')} disabled={saving || generating}>
+              {pendingId && <IconCheck />} {saving ? 'Guardando…' : pendingId ? 'Aprobar y guardar' : 'Guardar factura'}
             </button>
-            <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
-              {generating ? 'Generando…' : '⬇ Descargar PDF'}
+            <button type="button" onClick={generate} className="btn btn-neutral" disabled={saving || generating}>
+              <IconDownload /> {generating ? 'Generando…' : 'Descargar PDF'}
             </button>
           </div>
         </div>
@@ -432,8 +433,8 @@ export default function TransporteInvoicePage() {
             Columnas: Fecha · Viaje · Kilos (toneladas) · Precio
           </div>
         </div>
-        <label style={s.btnSecondary}>
-          {uploading ? 'Leyendo…' : '📄 Subir Excel'}
+        <label className="btn btn-neutral">
+          <IconFile /> {uploading ? 'Leyendo…' : 'Subir Excel'}
           <input ref={fileRef} type="file" accept=".xlsx,.xlsm,.xls" onChange={handleUpload} style={{ display: 'none' }} />
         </label>
       </div>
@@ -456,7 +457,7 @@ export default function TransporteInvoicePage() {
             <span>Cliente</span>
             {clientId === '' && cliente.nombre.trim() && (
               <button type="button" onClick={saveNewClient} disabled={savingClient} style={s.saveClientBtn}>
-                {savingClient ? 'Guardando…' : '＋ Guardar como cliente'}
+                {savingClient ? 'Guardando…' : '+ Guardar como cliente'}
               </button>
             )}
           </div>
@@ -526,12 +527,12 @@ export default function TransporteInvoicePage() {
                 <div style={{ textAlign: 'right', fontSize: 13, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
                   {eur(lineTotal(v))}
                 </div>
-                <button type="button" onClick={() => removeViaje(i)} style={s.delBtn} title="Eliminar fila">✕</button>
+                <button type="button" onClick={() => removeViaje(i)} className="btn btn-icon btn-sm btn-danger" title="Eliminar viaje" aria-label="Eliminar viaje"><IconTrash /></button>
               </div>
             ))}
           </div>
         </div>
-        <button type="button" onClick={addViaje} style={s.addLineBtn}>+ Añadir viaje</button>
+        <button type="button" onClick={addViaje} style={s.addLineBtn}><IconPlus /> Añadir viaje</button>
 
         {/* Totales */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
@@ -547,14 +548,14 @@ export default function TransporteInvoicePage() {
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-        <button type="button" onClick={save} style={s.btnPrimary} disabled={saving || generating}>
-          {saving ? 'Guardando…' : pendingId ? '✓ Aprobar y guardar' : 'Guardar factura'}
+        <button type="button" onClick={save} className={'btn ' + (pendingId ? 'btn-success' : 'btn-primary')} disabled={saving || generating}>
+          {pendingId && <IconCheck />} {saving ? 'Guardando…' : pendingId ? 'Aprobar y guardar' : 'Guardar factura'}
         </button>
-        <button type="button" onClick={generate} style={s.btnSecondary} disabled={saving || generating}>
-          {generating ? 'Generando…' : '⬇ Descargar PDF'}
+        <button type="button" onClick={generate} className="btn btn-neutral" disabled={saving || generating}>
+          <IconDownload /> {generating ? 'Generando…' : 'Descargar PDF'}
         </button>
-        <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>👁 Vista previa</button>
-        <button type="button" onClick={() => navigate(pendingId ? '/automation' : '/invoices')} style={s.btnGhost}>Cancelar</button>
+        <button type="button" onClick={() => setShowPreview(true)} className="btn btn-neutral"><IconEye /> Vista previa</button>
+        <button type="button" onClick={() => navigate(pendingId ? '/automation' : '/invoices')} className="btn btn-ghost">Cancelar</button>
       </div>
       </>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { clientsApi } from '../../lib/api'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import { IconPlus, IconX } from '../../components/Icons'
 import '../../styles/modal.css'
 import './clients.css'
 
@@ -57,8 +58,8 @@ export default function ClientsPage() {
     <div className="clients-root">
       <div className="clients-header">
         <h1 className="clients-title">Clientes</h1>
-        <button className="btn-primary fab-add" onClick={() => setModal('new')}>
-          <span className="fab-icon">+</span><span className="fab-label"> Añadir cliente</span>
+        <button className="btn btn-primary fab-add" onClick={() => setModal('new')}>
+          <span className="fab-icon"><IconPlus /></span><span className="fab-label">Añadir cliente</span>
         </button>
       </div>
 
@@ -200,7 +201,7 @@ function ClientModal({ client, onSave, onClose }) {
       <div className="modal-panel">
         <div className="modal-header">
           <h2 className="modal-title">{isEdit ? 'Editar cliente' : 'Nuevo cliente'}</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar"><IconX /></button>
         </div>
 
         <form className="modal-form" onSubmit={handleSubmit}>
@@ -286,10 +287,10 @@ function ClientModal({ client, onSave, onClose }) {
           {error && <div className="form-error">{error}</div>}
 
           <div className="modal-footer">
-            <button type="button" className="btn-ghost" onClick={onClose}>
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
               Cancelar
             </button>
-            <button type="submit" className="btn-primary" disabled={saving}>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Añadir cliente'}
             </button>
           </div>
@@ -310,7 +311,7 @@ function EmptyState({ onAdd }) {
         Añade tus clientes para seleccionarlos rápidamente al crear facturas.<br />
         Puedes marcar uno como principal y se usará por defecto.
       </div>
-      <button className="btn-primary" onClick={onAdd}>
+      <button className="btn btn-primary" onClick={onAdd}>
         + Añadir primer cliente
       </button>
     </div>
@@ -321,7 +322,7 @@ function EmptyState({ onAdd }) {
 
 function IconStar() {
   return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+    <svg width="17" height="17" viewBox="0 0 15 15" fill="none">
       <path d="M7.5 1.5l1.545 3.13 3.455.502-2.5 2.437.59 3.44L7.5 9.387 4.91 10.009l.59-3.44L3 4.132l3.455-.502L7.5 1.5z"
         stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
@@ -330,7 +331,7 @@ function IconStar() {
 
 function IconEdit() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg width="17" height="17" viewBox="0 0 14 14" fill="none">
       <path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
     </svg>
   )
@@ -338,7 +339,7 @@ function IconEdit() {
 
 function IconTrash() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <svg width="17" height="17" viewBox="0 0 14 14" fill="none">
       <path d="M2 3.5h10M5.5 3.5V2h3v1.5M4 3.5l.7 8h4.6l.7-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )

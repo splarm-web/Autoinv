@@ -135,7 +135,7 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <button type="submit" style={s.btn} disabled={saving}>
+        <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Guardando…' : saved ? '✓ Guardado' : 'Guardar cambios'}
         </button>
       </form>
@@ -155,7 +155,7 @@ export default function SettingsPage() {
               <PasswordInput name="confirm" autoComplete="new-password" value={pw.confirm} onChange={handlePw} required style={s.input} />
             </Field>
           </div>
-          <button type="submit" style={s.btn} disabled={pwSaving}>
+          <button type="submit" className="btn btn-primary" disabled={pwSaving}>
             {pwSaving ? 'Cambiando…' : 'Cambiar contraseña'}
           </button>
         </div>

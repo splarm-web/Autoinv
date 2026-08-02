@@ -3,6 +3,7 @@ import { adminApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
 import PasswordInput from '../../components/PasswordInput'
+import { IconTrash } from '../../components/Icons'
 
 export default function AdminPage() {
   const { user, updateUser } = useAuth()
@@ -120,7 +121,7 @@ export default function AdminPage() {
                 <button
                   onClick={() => save(u)}
                   disabled={savingId === u.id}
-                  style={savedId === u.id ? s.savedBtn : s.saveBtn}
+                  className={'btn btn-sm ' + (savedId === u.id ? 'btn-neutral' : 'btn-primary')}
                 >
                   {savingId === u.id ? 'Guardando…' : savedId === u.id ? '✓ Guardado' : 'Guardar'}
                 </button>
@@ -157,7 +158,7 @@ export default function AdminPage() {
                       wrapperStyle={{ flex: 1, minWidth: 180 }}
                       style={s.pwInput}
                     />
-                    <button type="submit" disabled={pwSaving} style={s.saveBtn}>
+                    <button type="submit" disabled={pwSaving} className="btn btn-sm btn-primary">
                       {pwSaving ? 'Guardando…' : 'Guardar'}
                     </button>
                     <button type="button" onClick={() => toggleReset(u.id)} style={s.linkBtn}>Cancelar</button>
@@ -168,8 +169,8 @@ export default function AdminPage() {
                       Restablecer contraseña
                     </button>
                     {u.id !== user?.id && (
-                      <button type="button" onClick={() => borrar(u)} style={s.deleteBtn}>
-                        Eliminar usuario
+                      <button type="button" onClick={() => borrar(u)} className="btn btn-sm btn-danger">
+                        <IconTrash /> Eliminar usuario
                       </button>
                     )}
                   </div>

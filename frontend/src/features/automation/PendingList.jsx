@@ -4,7 +4,7 @@ import { automationApi } from '../../lib/api'
 import { eur2 } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import ConfirmDialog from '../../components/ConfirmDialog'
-import { IconCheck, IconDownload, IconEdit, IconTrash } from '../../components/Icons'
+import { IconCheck, IconDownload, IconEdit, IconTrash, IconX } from '../../components/Icons'
 import { formatoRelativo } from './AutomationPage'
 import TransportePreview from '../invoices/TransportePreview'
 
@@ -182,7 +182,7 @@ function PendingDetail({ id, config, onClose, onCambio }) {
               {detalle?.total != null ? `· ${eur2(detalle.total)}` : ''}
             </span>
           </h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar"><IconX /></button>
         </div>
 
         <div className="autom-modal-body">

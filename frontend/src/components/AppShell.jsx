@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useTheme } from '../app/ThemeContext'
 import { automationApi } from '../lib/api'
+import { IconX } from './Icons'
 import '../styles/modal.css'
 import './AppShell.css'
 
@@ -143,7 +144,7 @@ function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout 
       <div className="modal-panel">
         <div className="modal-header">
           <h2 className="modal-title">Cuenta</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Cerrar"><IconX /></button>
         </div>
 
         <div className="account-sheet-body">

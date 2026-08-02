@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clientsApi, invoicesApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
+import { IconPlus, IconTrash } from '../../components/Icons'
 import { eur2, toISODate } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import DateInput from '../../components/DateInput'
@@ -185,11 +186,11 @@ export default function NewInvoicePage() {
         <div>
           <InvoicePreview {...previewData} />
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setShowPreview(false)} style={s.btnSecondary}>← Editar</button>
-            <button type="button" onClick={submit} style={s.btnPrimary} disabled={saving || downloading}>
+            <button type="button" onClick={() => setShowPreview(false)} className="btn btn-neutral">← Editar</button>
+            <button type="button" onClick={submit} className="btn btn-primary" disabled={saving || downloading}>
               {saving ? 'Guardando…' : 'Guardar factura'}
             </button>
-            <button type="button" onClick={submitAndDownload} style={s.btnSecondary} disabled={saving || downloading}>
+            <button type="button" onClick={submitAndDownload} className="btn btn-neutral" disabled={saving || downloading}>
               {downloading ? 'Generando…' : '⬇ Guardar y descargar PDF'}
             </button>
           </div>
@@ -271,12 +272,12 @@ export default function NewInvoicePage() {
                     <div style={{ textAlign: 'right', fontSize: 14, fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--font-display)', color: 'var(--text)', paddingTop: 10 }}>
                       {eur2((line.quantity || 0) * (line.unit_price || 0))}
                     </div>
-                    <button type="button" onClick={() => removeLine(i)} style={s.delBtn} title="Eliminar línea">✕</button>
+                    <button type="button" onClick={() => removeLine(i)} className="btn btn-icon btn-sm btn-danger" title="Eliminar línea" aria-label="Eliminar línea"><IconTrash /></button>
                   </div>
                 ))}
               </div>
             </div>
-            <button type="button" onClick={addLine} style={s.addLineBtn}>+ Añadir línea</button>
+            <button type="button" onClick={addLine} style={s.addLineBtn}><IconPlus /> Añadir línea</button>
 
             {/* Totales inline */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
@@ -292,16 +293,16 @@ export default function NewInvoicePage() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setShowPreview(true)} style={s.btnSecondary}>
+            <button type="button" onClick={() => setShowPreview(true)} className="btn btn-neutral">
               👁 Vista previa
             </button>
-            <button type="submit" style={s.btnPrimary} disabled={saving || downloading}>
+            <button type="submit" className="btn btn-primary" disabled={saving || downloading}>
               {saving ? 'Guardando…' : 'Guardar factura'}
             </button>
-            <button type="button" onClick={submitAndDownload} style={s.btnSecondary} disabled={saving || downloading}>
+            <button type="button" onClick={submitAndDownload} className="btn btn-neutral" disabled={saving || downloading}>
               {downloading ? 'Generando…' : '⬇ Guardar y descargar PDF'}
             </button>
-            <button type="button" onClick={() => navigate('/invoices')} style={s.btnGhost}>
+            <button type="button" onClick={() => navigate('/invoices')} className="btn btn-ghost">
               Cancelar
             </button>
           </div>
