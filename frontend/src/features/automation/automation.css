@@ -81,13 +81,6 @@
   gap: 14px;
   padding: 18px 22px 22px;
 }
-.autom-pdf {
-  width: 100%;
-  height: 460px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: #fff;
-}
 .autom-actions {
   display: flex;
   gap: 10px;
@@ -95,10 +88,18 @@
 }
 
 @media (max-width: 680px) {
-  /* En móvil el PDF a esa altura deja las acciones fuera de pantalla: se
-     reduce y se fijan los botones al final del modal, que es lo que se va
-     a pulsar. */
-  .autom-pdf { height: 320px; }
+  /* La factura es un A4 y no cabe a lo ancho. Se reduce con `zoom` para verla
+     entera de un vistazo: para decidir si está bien no hace falta leer la letra
+     pequeña, y el botón «PDF» sigue ahí para mirarla en detalle. Se usa `zoom`
+     y no `transform: scale` porque sí recalcula el hueco que ocupa, sin lo cual
+     quedaría un enorme espacio en blanco debajo.
+     Si algún navegador no lo soportara, se queda como estaba: con scroll. */
+  .autom-preview > * { zoom: 0.44; }
+  /* El componente trae su propio scroll horizontal para pantallas estrechas;
+     aquí sobra y lo único que hacía era recortar el borde derecho, porque el
+     escalado ya se encarga de que quepa entero. */
+  .autom-preview .prev-scroll { overflow-x: visible; }
+  .autom-preview { max-height: 360px; overflow-y: auto; }
   .autom-actions > button { flex: 1 1 calc(50% - 5px); }
 }
 
@@ -157,3 +158,14 @@
 /* Nada de compensar aquí la barra de navegación inferior: el contenedor de
    scroll (.shell-main) ya reserva ese hueco con su padding-bottom, y sumarle
    otro offset dejaba la barra flotando 90px por encima de donde toca. */
+
+/* La vista previa replica un A4: en móvil no cabe, así que se desliza
+   horizontalmente en vez de deformarse (igual que en el alta manual). */
+.autom-preview {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+  padding: 10px;
+}

@@ -4,6 +4,7 @@ import { automationApi } from '../../lib/api'
 import { eur2 } from '../../lib/format'
 import { useToast } from '../../components/Toast'
 import { formatoRelativo } from './AutomationPage'
+import TransportePreview from '../invoices/TransportePreview'
 
 /**
  * Bandeja de facturas llegadas por correo.
@@ -87,7 +88,6 @@ function PendingDetail({ id, config, onClose, onCambio }) {
   const { toast } = useToast()
   const navigate = useNavigate()
   const [detalle, setDetalle] = useState(null)
-  const [pdfUrl, setPdfUrl] = useState(null)
   const [accion, setAccion] = useState(null)   // 'approve' | 'reject'
 
   useEffect(() => {
@@ -95,25 +95,29 @@ function PendingDetail({ id, config, onClose, onCambio }) {
     // desmonta y vuelve a montar. Sin esta guarda, el blob de la primera
     // ejecución nunca se libera y puede acabar pintándose uno ya revocado.
     let cancelado = false
-    let url = null
-
     automationApi.getPending(id)
       .then((d) => { if (!cancelado) setDetalle(d) })
       .catch((e) => { if (!cancelado) toast.error(e.message) })
-
-    automationApi.pendingPdfUrl(id)
-      .then((u) => {
-        if (cancelado) { URL.revokeObjectURL(u); return }
-        url = u
-        setPdfUrl(u)
-      })
-      .catch(() => {})
-
-    return () => {
-      cancelado = true
-      if (url) URL.revokeObjectURL(url)
-    }
+    return () => { cancelado = true }
   }, [id, toast])
+
+  // El payload guardado y el que espera la preview no tienen la misma forma
+  const d = detalle?.invoice_data
+  const datosPreview = d ? {
+    emisor: d.emisor,
+    cliente: d.cliente,
+    meta: {
+      numero_factura: d.numero_factura,
+      fecha: d.fecha_factura,
+      concepto_mes: d.concepto_mes,
+      cabeza: d.cabeza,
+    },
+    viajes: (d.viajes || []).map((v) => ({
+      dia: (v.fecha || '').split('-')[2]?.replace(/^0/, '') || '',
+      viaje: v.viaje, kilos: v.kilos, precio: v.precio, total: v.total,
+    })),
+    totals: { base: d.base, irpf: d.irpf, iva: d.iva, total: d.total },
+  } : null
 
   const avisos = detalle?.warnings || []
   const bloqueada = avisos.length > 0
@@ -191,8 +195,14 @@ function PendingDetail({ id, config, onClose, onCambio }) {
             <div><span style={s.k}>Adjunto</span> {detalle?.attachment_name || '—'}</div>
           </div>
 
-          {pdfUrl ? (
-            <iframe title="Factura" src={pdfUrl} className="autom-pdf" />
+          {/* Vista previa en HTML, no el PDF embebido: los navegadores móviles
+              no saben mostrar un PDF dentro de un iframe (sale en blanco con un
+              botón de "abrir" que no lleva a ninguna parte). Este componente es
+              el mismo que usa el alta manual y replica el diseño del PDF. */}
+          {datosPreview ? (
+            <div className="autom-preview">
+              <TransportePreview {...datosPreview} />
+            </div>
           ) : (
             <div style={{ ...s.vacio, padding: 30 }}>Cargando vista previa…</div>
           )}
@@ -222,6 +232,9 @@ function PendingDetail({ id, config, onClose, onCambio }) {
             </button>
             <button onClick={editar} style={s.btnSecondary} disabled={accion !== null}>
               ✎ Editar
+            </button>
+            <button onClick={() => automationApi.downloadPendingPdf(id, detalle?.numero_factura)} style={s.btnSecondary}>
+              ⬇ PDF
             </button>
             <button
               onClick={() => automationApi.downloadPendingExcel(id, detalle?.attachment_name)}

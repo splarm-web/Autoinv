@@ -204,14 +204,18 @@ export const automationApi = {
   resolve: (id, invoiceId) =>
     apiFetch(`/api/automation/pending/${id}/resolve${invoiceId ? `?invoice_id=${invoiceId}` : ''}`, { method: 'POST' }),
 
-  // El PDF se pide como blob para poder mostrarlo embebido, no solo descargarlo
-  pendingPdfUrl: async (id) => {
+  downloadPendingPdf: async (id, numero) => {
     const token = localStorage.getItem('autoinv_token')
     const res = await fetch(`${API_URL}/api/automation/pending/${id}/pdf`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) throw new Error('No se pudo cargar el PDF')
-    return URL.createObjectURL(await res.blob())
+    const blobUrl = URL.createObjectURL(await res.blob())
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = `${(numero || 'factura').toString().replace(/[/\\]/g, '-')}.pdf`
+    a.click()
+    URL.revokeObjectURL(blobUrl)
   },
   downloadPendingExcel: async (id, name) => {
     const token = localStorage.getItem('autoinv_token')
