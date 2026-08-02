@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useTheme } from '../app/ThemeContext'
+import { useDensity } from '../app/DensityContext'
 import { automationApi } from '../lib/api'
 import { IconX } from './Icons'
 import '../styles/modal.css'
@@ -172,10 +173,40 @@ function AccountSheet({ user, initials, hasFeature, navigate, onClose, onLogout 
             {isLight ? 'Tema oscuro' : 'Tema claro'}
           </button>
 
+          <SelectorDensidad />
+
           <button className="account-sheet-row account-sheet-row--danger" onClick={onLogout}>
             <IconLogout /> Cerrar sesión
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Tamaño de la interfaz. La "A" de cada opción crece con el nivel, así que se
+ * ve lo que hace antes de pulsarla; y como el cambio se aplica al instante,
+ * el propio panel crece delante del usuario y sirve de vista previa.
+ */
+function SelectorDensidad() {
+  const { densidad, cambiar, densidades } = useDensity()
+  return (
+    <div className="account-sheet-densidad">
+      <div className="account-sheet-etiqueta">Tamaño de la interfaz</div>
+      <div className="densidad-opciones">
+        {densidades.map((d) => (
+          <button
+            key={d.key}
+            className={'densidad-opcion' + (densidad === d.key ? ' activa' : '')}
+            onClick={() => cambiar(d.key)}
+            title={d.desc}
+            aria-pressed={densidad === d.key}
+          >
+            <span className="densidad-muestra">A</span>
+            {d.label}
+          </button>
+        ))}
       </div>
     </div>
   )

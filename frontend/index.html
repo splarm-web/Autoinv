@@ -27,6 +27,13 @@
         var meta = document.querySelector('meta[name="theme-color"]')
         if (meta) meta.setAttribute('content', theme === 'light' ? '#F4F6F8' : '#0E1014')
       } catch (e) { document.documentElement.dataset.theme = 'dark' }
+      // Densidad, por el mismo motivo: aplicada después haría que la página
+      // diera un salto de tamaño delante del usuario.
+      try {
+        var d = localStorage.getItem('autoinv_density')
+        document.documentElement.dataset.density =
+          ['compacta', 'normal', 'comoda', 'grande'].indexOf(d) >= 0 ? d : 'normal'
+      } catch (e) { document.documentElement.dataset.density = 'normal' }
     })()
   </script>
 </head>

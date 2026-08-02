@@ -1,0 +1,58 @@
+/* =========================================================
+   Densidad de la interfaz
+   ---------------------------------------------------------
+   `zoom` escala todo de golpe (texto, iconos, espaciados y áreas táctiles) y
+   recalcula el layout, así que el contenido se reordena solo y no aparecen
+   barras horizontales. Con `transform: scale` no ocurriría: el hueco ocupado
+   seguiría siendo el de antes y todo se saldría de la pantalla.
+
+   Los saltos son suaves a propósito: entre un nivel y el siguiente hay poco
+   más de un 10%, suficiente para notarse sin que la app parezca otra.
+   ========================================================= */
+
+:root[data-density='compacta'] { zoom: 0.92; }
+:root[data-density='normal']   { zoom: 1; }
+:root[data-density='comoda']   { zoom: 1.12; }
+:root[data-density='grande']   { zoom: 1.25; }
+
+/* Sin atributo (primera visita o si falla el script) se ve como siempre. */
+
+/* ── Selector de densidad ── */
+.densidad-opciones {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+.densidad-opcion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 4px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.densidad-opcion:hover { color: var(--text); }
+.densidad-opcion.activa {
+  border-color: var(--menta);
+  background: var(--menta-tint);
+  color: var(--menta);
+}
+/* La "A" de muestra crece con cada nivel: se ve qué hace antes de pulsarlo */
+.densidad-muestra {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+}
+.densidad-opcion:nth-child(1) .densidad-muestra { font-size: 12px; }
+.densidad-opcion:nth-child(2) .densidad-muestra { font-size: 15px; }
+.densidad-opcion:nth-child(3) .densidad-muestra { font-size: 18px; }
+.densidad-opcion:nth-child(4) .densidad-muestra { font-size: 21px; }
