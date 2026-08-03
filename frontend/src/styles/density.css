@@ -8,14 +8,22 @@
 
    Los saltos son suaves a propósito: entre un nivel y el siguiente hay poco
    más de un 10%, suficiente para notarse sin que la app parezca otra.
+
+   Cada nivel publica además su factor en `--zoom`. Hace falta porque `zoom`
+   escala el layout pero **no** las unidades de viewport: `100dvh` sigue
+   valiendo la pantalla entera y luego el zoom lo multiplica, así que en
+   "Grande" el armazón medía 1000px en una pantalla de 800 y lo que sobraba
+   —el bloque de cuenta al pie del menú— quedaba recortado. Quien mida contra
+   la pantalla divide por `--zoom` para compensar (`calc(100dvh / var(--zoom))`).
    ========================================================= */
 
-:root[data-density='compacta'] { zoom: 0.92; }
-:root[data-density='normal']   { zoom: 1; }
-:root[data-density='comoda']   { zoom: 1.12; }
-:root[data-density='grande']   { zoom: 1.25; }
+:root[data-density='compacta'] { zoom: 0.92; --zoom: 0.92; }
+:root[data-density='normal']   { zoom: 1;    --zoom: 1; }
+:root[data-density='comoda']   { zoom: 1.12; --zoom: 1.12; }
+:root[data-density='grande']   { zoom: 1.25; --zoom: 1.25; }
 
-/* Sin atributo (primera visita o si falla el script) se ve como siempre. */
+/* Sin atributo (primera visita o si falla el script) se ve como siempre:
+   de ahí el `var(--zoom, 1)` en cada uso. */
 
 /* ── Selector de densidad ── */
 .densidad-opciones {

@@ -5,9 +5,14 @@
      se volvía desplazable, así que al hacer scroll se movía todo —cabecera
      incluida— en cuanto el contenido interior no tenía recorrido propio.
      `100dvh` sigue al área visible real; `100vh` queda de reserva para
-     navegadores que no lo entiendan. */
-  height: 100vh;
-  height: 100dvh;
+     navegadores que no lo entiendan.
+
+     La división por `--zoom` es por el modo de densidad: `zoom` no escala las
+     unidades de viewport, así que sin ella el armazón acaba tan alto como la
+     pantalla *por* el factor y el pie del menú lateral se sale (y con el
+     `overflow: hidden` de arriba, se recorta sin poder alcanzarlo). */
+  height: calc(100vh / var(--zoom, 1));
+  height: calc(100dvh / var(--zoom, 1));
   overflow: hidden;
   background: var(--ink);
 }

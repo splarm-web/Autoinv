@@ -1,5 +1,6 @@
 .auth-page {
-  min-height: 100vh;
+  /* Dividido por `--zoom` (densidad): ver la nota en density.css */
+  min-height: calc(100dvh / var(--zoom, 1));
   background: var(--ink);
   display: flex;
   align-items: center;

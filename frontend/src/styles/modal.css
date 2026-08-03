@@ -26,7 +26,8 @@
   border-radius: var(--r-lg);
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
+  /* Dividido por `--zoom` (densidad): ver la nota en density.css */
+  max-height: calc(90dvh / var(--zoom, 1));
   overflow-y: auto;
   animation: slide-up 0.18s ease;
 }
