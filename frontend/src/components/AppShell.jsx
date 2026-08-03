@@ -11,7 +11,7 @@ import './AppShell.css'
 // Menú principal: las áreas de trabajo del día a día.
 // `feature`: exige esa función. `anyFeature`: basta con tener una. Sin nada: siempre.
 const NAV = [
-  { to: '/dashboard', label: 'Resumen',  Icon: IconResumen },
+  { to: '/dashboard', label: 'General',  Icon: IconResumen },
   { to: '/expenses',  label: 'Gastos',   Icon: IconGastos,   feature: 'gastos' },
   { to: '/invoices',  label: 'Facturas', Icon: IconFacturas, anyFeature: ['facturas', 'transporte'] },
   { to: '/clients',   label: 'Clientes', Icon: IconClientes, feature: 'clientes' },

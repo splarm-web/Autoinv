@@ -6,6 +6,7 @@ import { useAuth } from '../../app/AuthContext'
 import { useToast } from '../../components/Toast'
 import Pagination from '../../components/Pagination'
 import ConfirmDialog from '../../components/ConfirmDialog'
+import FabDial from '../../components/FabDial'
 import {
   IconDownload, IconMail, IconPlus, IconRefresh, IconSliders, IconTrash,
 } from '../../components/Icons'
@@ -45,7 +46,6 @@ export default function InvoicesPage() {
   const [borrando, setBorrando] = useState(false)
   const [page, setPage] = useState(1)
   const [showExport, setShowExport] = useState(false)
-  const [dialOpen, setDialOpen] = useState(false)
 
   const types = INVOICE_TYPES.filter((t) => hasFeature(t.key))
 
@@ -143,12 +143,6 @@ export default function InvoicesPage() {
             <button onClick={() => setShowExport(true)} className="btn btn-neutral btn-sm">
               <IconDownload /> Exportar
             </button>
-          )}
-          {types.length === 1 && (
-            <Link to={types[0].to} className="fab-add btn btn-primary">
-              <span className="fab-icon"><IconPlus /></span>
-              <span className="fab-label">{types[0].label}</span>
-            </Link>
           )}
         </div>
       </div>
@@ -259,27 +253,9 @@ export default function InvoicesPage() {
         />
       )}
 
-      {types.length >= 2 && (
-        <div className={'fab-dial' + (dialOpen ? ' open' : '')}>
-          {dialOpen && <div className="fab-dial-backdrop" onClick={() => setDialOpen(false)} />}
-          <div className="fab-dial-options">
-            {types.map((t) => (
-              <Link key={t.key} to={t.to} className="fab-dial-option" onClick={() => setDialOpen(false)}>
-                <span className="fab-dial-option-label">{t.label}</span>
-                <span className="fab-dial-option-icon"><IconPlus /></span>
-              </Link>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="fab-dial-trigger"
-            onClick={() => setDialOpen((v) => !v)}
-            aria-label={dialOpen ? 'Cerrar opciones' : 'Nueva factura'}
-          >
-            <span className="fab-dial-trigger-icon">{dialOpen ? '×' : '+'}</span>
-          </button>
-        </div>
-      )}
+      {/* Mismo botón flotante que en General: un único componente para las dos
+          pantallas, así no se separan con el tiempo. */}
+      <FabDial acciones={types.map((t) => ({ to: t.to, label: t.label }))} />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { dashboardApi } from '../../lib/api'
 import { useAuth } from '../../app/AuthContext'
 import { IconDownload, IconPlus } from '../../components/Icons'
+import FabDial from '../../components/FabDial'
 import { eur0, eur2, fmtDate } from '../../lib/format'
 import Pagination from '../../components/Pagination'
 import ExportModal from '../export/ExportModal'
@@ -49,7 +50,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="dash-header">
         <div>
-          <h1 className="dash-title">Resumen</h1>
+          <h1 className="dash-title">General</h1>
           <div className="dash-subtitle">{loading ? '…' : (data?.periodo_label ?? '')}</div>
         </div>
         <div className="segmented">
@@ -100,22 +101,36 @@ export default function DashboardPage() {
       </div>
 
       {showExport && <ExportModal scope="todo" onClose={() => setShowExport(false)} />}
+
+      <FabDial acciones={accionesCrear(hasFeature)} />
     </div>
   )
 }
 
+export function accionesCrear(hasFeature) {
+  const acciones = []
+  if (hasFeature('facturas')) acciones.push({ to: '/invoices/new', label: 'Factura' })
+  if (hasFeature('transporte')) acciones.push({ to: '/invoices/transporte', label: 'Factura de transporte' })
+  if (hasFeature('gastos')) acciones.push({ to: '/expenses/new', label: 'Gasto' })
+  return acciones
+}
+
 function QuickActions({ hasFeature, onExport }) {
-  const actions = []
-  if (hasFeature('facturas')) actions.push({ to: '/invoices/new', label: 'Factura', Icon: IconPlus })
-  if (hasFeature('transporte')) actions.push({ to: '/invoices/transporte', label: 'Factura de transporte', Icon: IconPlus })
-  if (hasFeature('gastos')) actions.push({ to: '/expenses/new', label: 'Gasto', Icon: IconPlus })
+  const acciones = accionesCrear(hasFeature)
   const canExport = hasFeature('export')
-  if (!actions.length && !canExport) return null
+  if (!acciones.length && !canExport) return null
   return (
     <div className="quick-actions">
-      {actions.map((a) => (
-        <Link key={a.to} to={a.to} className="btn btn-neutral btn-sm quick-action"><a.Icon /> {a.label}</Link>
-      ))}
+      {/* Los de crear se ocultan en móvil (.cta-row): allí los agrupa el botón
+          flotante, igual que en Facturas. Exportar se queda: no es "crear" y
+          mezclarlo en el mismo botón confundiría. */}
+      <div className="cta-row quick-actions-crear">
+        {acciones.map((a) => (
+          <Link key={a.to} to={a.to} className="btn btn-neutral btn-sm quick-action">
+            <IconPlus /> {a.label}
+          </Link>
+        ))}
+      </div>
       {canExport && (
         <button type="button" onClick={onExport} className="btn btn-neutral btn-sm quick-action">
           <IconDownload /> Exportar ingresos y gastos
