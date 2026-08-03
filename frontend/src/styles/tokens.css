@@ -103,6 +103,10 @@
 html, body, #root {
   height: 100%;
   margin: 0;
+  /* El documento NO se desplaza: de eso se encarga .shell-main por dentro.
+     Sin esto, en un móvil real la página entera podía moverse y arrastraba
+     consigo la cabecera y la barra inferior. */
+  overflow: hidden;
 }
 
 body {

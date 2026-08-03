@@ -1,6 +1,13 @@
 .shell-root {
   display: flex;
+  /* `100vh` en móvil es la altura CON la barra del navegador oculta, no la
+     que se ve: el armazón quedaba más alto que la pantalla y el documento
+     se volvía desplazable, así que al hacer scroll se movía todo —cabecera
+     incluida— en cuanto el contenido interior no tenía recorrido propio.
+     `100dvh` sigue al área visible real; `100vh` queda de reserva para
+     navegadores que no lo entiendan. */
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--ink);
 }
