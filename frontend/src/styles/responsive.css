@@ -268,3 +268,25 @@
   }
   .inv-row-actions { justify-content: flex-end; }
 }
+
+/* ── Barra de filtros (gastos) ──
+   Las dos fechas van siempre juntas en su línea y a mitad de ancho cada una:
+   sueltas en el flex se quedaban estrechas y con el resto de controles
+   colándose entre ellas. */
+.filtros-fechas {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.filtros-fechas > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 680px) {
+  /* En móvil cada bloque ocupa el ancho completo: las dos fechas comparten
+     su línea al 50%, y la categoría va debajo entera. */
+  .filtros-fechas { flex: 1 1 100%; }
+  .filtros-categoria { flex: 1 1 100% !important; }
+}

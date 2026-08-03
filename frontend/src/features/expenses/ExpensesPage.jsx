@@ -77,7 +77,8 @@ export default function ExpensesPage() {
       </div>
 
       {/* Filtros */}
-      <div style={s.filterBar}>
+      <div className="filtros" style={s.filterBar}>
+        <div className="filtros-fechas">
         <DateInput
           value={filters.from_date}
           onChange={(e) => setFilter('from_date', e.target.value)}
@@ -90,7 +91,8 @@ export default function ExpensesPage() {
           style={s.filterInput}
           title="Hasta"
         />
-        <div className="select-wrap" style={{ flex: '1 1 160px' }}>
+        </div>
+        <div className="select-wrap filtros-categoria" style={{ flex: '1 1 160px' }}>
           <select
             value={filters.category}
             onChange={(e) => setFilter('category', e.target.value)}
@@ -121,8 +123,8 @@ export default function ExpensesPage() {
         <>
           <div style={s.card}>
             {pageItems.map((exp, i) => (
-              <div key={exp.id} style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
+              <div key={exp.id} className="inv-row" style={{ ...s.row, ...(i < pageItems.length - 1 ? s.rowBorder : {}) }}>
+                <div className="inv-row-main" style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
                   <span style={{ ...s.dot, background: 'var(--coral)' }} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500 }}>{exp.concept || exp.supplier || 'Gasto'}</div>
@@ -132,7 +134,7 @@ export default function ExpensesPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                <div className="inv-row-actions" style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
                   <span className="amount-nowrap" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--coral)', fontVariantNumeric: 'tabular-nums' }}>
                     −{eur0(exp.amount)}
                   </span>
